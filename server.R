@@ -239,6 +239,10 @@ shinyServer(function(input, output) {
     
     #ggplotly(p.out)
     cat(file=stderr(), 'trajPlot: out\n')
+    
+    if (names(dev.cur()) != "null device") dev.off()
+    pdf(NULL)
+    
     return(ggplotly(p.out))
   })
   
