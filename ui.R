@@ -6,6 +6,7 @@
 #
 
 library(shiny)
+library(shinyjs) #http://deanattali.com/shinyjs/
 library(plotly)
 
 shinyUI(fluidPage(
