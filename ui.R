@@ -31,23 +31,40 @@ shinyUI(fluidPage(
              accept = c('text/csv', 'text/comma-separated-values,text/plain')
            ),
            
+           h4("Plot format"),
+           fluidRow(
+             column(4, 
+                    numericInput('inFacetNcol', '#Columns:', value = 4, min = 1, width = '100px', step = 1)),
+             column(4, 
+                    numericInput('inPlotHeight', 'Height [px]:', value = 800, min = 100, width = '100px', step = 50)),
+             column(4, 
+                    numericInput('inPlotWidth', 'Width [%]:', value = 100, min = 10, max = 100, width = '100px', step = 10))
+           ),
+           
            actionButton("butReset", "Reset file input"),
            actionButton('butDataGen', 'Generate artificial dataset'),
            actionButton('butGo', 'Go!')),
     
-    column(4, offset = 1,
+    column(3, offset = 1,
            uiOutput('varSelSite'),
            uiOutput('varSelTrackLabel'),
            uiOutput('varSelTime'),
            uiOutput('varSelMeas1'),
            uiOutput('varSelRatio'),
+           radioButtons('inSelMath', 'Math operation 1st and 2nd meas.:', c('None' = '', 
+                                                                            'Divide' = " / ", 
+                                                                            'Sum' = " + ", 
+                                                                            'Multiply' = " * ", 
+                                                                            'Subtract' = ' - ')),
            uiOutput('varSelMeas2')),
   
-    column(2, offset = 1,
-           numericInput('inFacetNcol', 'No. of plot columns:', value = 4, min = 1, width = '150px', step = 1),
-           numericInput('inPlotHeight', 'Plot Height [px]:', value = 400, min = 100, width = '150px', step = 50),
-           numericInput('inPlotWidth', 'Plot Width [%]:', value = 100, min = 10, max = 100, width = '150px', step = 10))
-  ),
+    column(3, offset = 1,
+           uiOutput('varSelGroup'),
+           checkboxInput('inGroupMore1', 'More grouping?'),
+           uiOutput('varSelGroup2'),
+           checkboxInput('inGroupMore2', 'More grouping?'),
+           uiOutput('varSelGroup3'))
+),
   br(),
   uiOutput('outPlot')
 ))

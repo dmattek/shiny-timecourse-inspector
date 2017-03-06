@@ -36,9 +36,7 @@ myGgplotTraj = function(dt.arg,
                         plotlab.arg = NULL,
                         dt.stim.arg = NULL,
                         tfreq.arg = 1,
-                        maxrt.arg = 60,
-                        xaxisbreaks.arg = 10,
-                        ylim.arg = c(0,1),
+                        ylim.arg = NULL,
                         stim.bar.height.arg = 0.1,
                         stim.bar.width.arg = 0.5) {
   p.tmp = ggplot(dt.arg,
@@ -75,9 +73,10 @@ myGgplotTraj = function(dt.arg,
                                  group = 1) 
   }
   
+  if (!is.null(ylim.arg)) 
+    p.tmp = p.tmp + coord_cartesian(ylim = ylim.arg)
+  
   p.tmp = p.tmp + 
-    scale_x_continuous(breaks = seq(0, maxrt.arg, xaxisbreaks.arg)) +
-    coord_cartesian(ylim = ylim.arg) +
     xlab(paste0(xlab.arg, "\n")) +
     ylab(paste0("\n", ylab.arg)) +
     ggtitle(plotlab.arg) +
