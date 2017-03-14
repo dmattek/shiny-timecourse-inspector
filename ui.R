@@ -20,16 +20,19 @@ shinyUI(fluidPage(
            h4("Load data files"),
            #Selector for file upload
            fileInput(
-             'inFileNucLoad',
-             'Choose CSV file with measurement data, e.g. tCoursesSelected.csv',
+             'inFileLoadNuc',
+             'Select file (e.g. tCoursesSelected.csv) and press "Load Data"',
              accept = c('text/csv', 'text/comma-separated-values,text/plain')
            ),
+           actionButton("inButLoadNuc", "Load Data"),
+           actionButton("butReset", "Reset file input"),
+           actionButton('inDataGen1', 'Generate artificial dataset'),
            
-           fileInput(
-             'inFileStimLoad',
-             'Choose CSV file with stimulation times, e.g. stimT.csv',
-             accept = c('text/csv', 'text/comma-separated-values,text/plain')
-           ),
+           # fileInput(
+           #   'inFileStimLoad',
+           #   'Choose CSV file with stimulation times, e.g. stimT.csv',
+           #   accept = c('text/csv', 'text/comma-separated-values,text/plain')
+           # ),
            
            h4("Plot format"),
            fluidRow(
@@ -41,31 +44,25 @@ shinyUI(fluidPage(
                     numericInput('inPlotWidth', 'Width [%]:', value = 100, min = 10, max = 100, width = '100px', step = 10))
            ),
            
-           actionButton("butReset", "Reset file input"),
-           actionButton('butDataGen', 'Generate artificial dataset'),
-           actionButton('butGo', 'Go!')),
+           actionButton('butGo', 'Plot!')),
     
     column(3, offset = 1,
            uiOutput('varSelSite'),
            uiOutput('varSelTrackLabel'),
            uiOutput('varSelTime'),
            uiOutput('varSelMeas1'),
-           uiOutput('varSelRatio'),
            radioButtons('inSelMath', 'Math operation 1st and 2nd meas.:', c('None' = '', 
                                                                             'Divide' = " / ", 
                                                                             'Sum' = " + ", 
                                                                             'Multiply' = " * ", 
-                                                                            'Subtract' = ' - ')),
+                                                                            'Subtract' = ' - ',
+                                                                            '1 / X' = '1 / ')),
            uiOutput('varSelMeas2')),
   
     column(3, offset = 1,
-           uiOutput('varSelGroup'),
-           checkboxInput('inGroupMore1', 'More grouping?'),
-           uiOutput('varSelGroup2'),
-           checkboxInput('inGroupMore2', 'More grouping?'),
-           uiOutput('varSelGroup3'))
-),
+           uiOutput('varSelGroup'))
+    ),
   br(),
-  uiOutput('outPlot')
+  uiOutput('uiPlot')
 ))
 
