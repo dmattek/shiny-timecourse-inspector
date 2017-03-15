@@ -228,7 +228,7 @@ shinyServer(function(input, output, session) {
   output$varSelTime = renderUI({
     cat(file = stderr(), 'UI varSelTime\n')
     locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'ime'][1] # index 1 at the end in case more matches; select 1st
+    locColSel = locCols[locCols %like% 'RealTime'][1] # index 1 at the end in case more matches; select 1st
     
     cat(locColSel, '\n')
     selectInput(
