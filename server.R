@@ -184,12 +184,24 @@ shinyServer(function(input, output, session) {
     
     loc.s.rt = input$inSelTime
     
-    loc.out = loc.dt[, .(
-      y = eval(parse(text = loc.s.y)),
-      id = trackObjectsLabelUni,
-      group = eval(parse(text = loc.s.gr)),
-      realtime = eval(parse(text = loc.s.rt))
-    )]
+    # if dataset contains column mid.in with trajectory filtering status,
+    # then, include it in plotting
+    if (sum(names(loc.dt) %in% 'mid.in') > 0) {
+      loc.out = loc.dt[, .(
+        y = eval(parse(text = loc.s.y)),
+        id = trackObjectsLabelUni,
+        group = eval(parse(text = loc.s.gr)),
+        realtime = eval(parse(text = loc.s.rt)),
+        mid.in = mid.in
+      )]
+    } else {
+      loc.out = loc.dt[, .(
+        y = eval(parse(text = loc.s.y)),
+        id = trackObjectsLabelUni,
+        group = eval(parse(text = loc.s.gr)),
+        realtime = eval(parse(text = loc.s.rt))
+      )]
+    }
     
     # remove rows with NA
     return(loc.out[complete.cases(loc.out)])
@@ -333,6 +345,12 @@ shinyServer(function(input, output, session) {
     
     cat(file=stderr(), 'plotTraj:dt not NULL\n')
     
+    # colour trajectories, if dataset contains mi.din column
+    # with filtering status of trajectory
+    if(sum(names(loc.dt) %in% 'mid.in') > 0)
+      loc.line.col.arg = 'mid.in'
+    else
+      loc.line.col.arg = NULL
     
     p.out = myGgplotTraj(
       dt.arg = loc.dt,
@@ -341,8 +359,10 @@ shinyServer(function(input, output, session) {
       group.arg = "id",
       facet.arg = 'group',
       facet.ncol.arg = input$inPlotTrajFacetNcol,
-      xlab.arg = 'Time (min)'
+      xlab.arg = 'Time (min)',
+      line.col.arg = loc.line.col.arg
     )
+      
     
     # This is required to avoid 
     # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
