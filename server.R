@@ -29,6 +29,9 @@ shinyServer(function(input, output, session) {
     #dataLoadStim = isolate(input$inButLoadStim)
   )
   
+  ####
+  ## UI for side panel
+  
   # This button will reset the inFileLoad
   observeEvent(input$inButReset, {
     reset("inFileLoadNuc")  # reset is a shinyjs function
@@ -56,14 +59,136 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # load stimulation pattern
-  # dataLoadStim <- eventReactive(input$inButLoadStim, {
-  #   cat("dataLoadStim\n")
-  #   locFilePath = input$inFileLoadStim$datapath
-  #   counter$dataLoadStim <- input$inButLoadStim - 1
-  #   
-  #   return(fread(locFilePath))
-  # })
+  # This button will reset the inFileLoad
+  observeEvent(input$butReset, {
+    reset("inFileLoadNuc")  # reset is a shinyjs function
+    #    reset("inFileStimLoad")  # reset is a shinyjs function
+    
+  })
+  
+
+  output$varSelTrackLabel = renderUI({
+    cat(file = stderr(), 'UI varSelTrackLabel\n')
+    locCols = getDataNucCols()
+    locColSel = locCols[locCols %like% 'rack'][1] # index 1 at the end in case more matches; select 1st
+    
+    cat(locColSel, '\n')
+    selectInput(
+      'inSelTrackLabel',
+      'Select Track Label (e.g. objNuc_Track_ObjectsLabel):',
+      locCols,
+      width = '100%',
+      selected = locColSel
+    )
+  })
+  
+  output$varSelTime = renderUI({
+    cat(file = stderr(), 'UI varSelTime\n')
+    locCols = getDataNucCols()
+    locColSel = locCols[locCols %like% 'RealTime'][1] # index 1 at the end in case more matches; select 1st
+    
+    cat(locColSel, '\n')
+    selectInput(
+      'inSelTime',
+      'Select time column (e.g. RealTime):',
+      locCols,
+      width = '100%',
+      selected = locColSel
+    )
+  })
+  
+  # This is main field to select plot facet grouping
+  # It's typically a column with the entire experimental description,
+  # e.g. in Yannick's case it's Stim_All_Ch or Stim_All_S.
+  # In Coralie's case it's a combination of 3 columns called Stimulation_...
+  output$varSelGroup = renderUI({
+    cat(file = stderr(), 'UI varSelGroup\n')
+    locCols = getDataNucCols()
+    
+    if (!is.null(locCols)) {
+      locColSel = locCols[locCols %like% 'ite']
+      if (length(locColSel) == 0)
+        locColSel = locCols[locCols %like% 'eries'][1] # index 1 at the end in case more matches; select 1st
+      else if (length(locColSel) > 1) {
+        locColSel = locColSel[1]
+      }
+      #    cat('UI varSelGroup::locColSel ', locColSel, '\n')
+      selectInput(
+        'inSelGroup',
+        'Select one or more facet groupings (e.g. Site, Well, Channel):',
+        locCols,
+        width = '100%',
+        selected = locColSel,
+        multiple = TRUE
+      )
+    }
+    
+  })
+  
+  output$varSelSite = renderUI({
+    cat(file = stderr(), 'UI varSelSite\n')
+    locCols = getDataNucCols()
+    locColSel = locCols[locCols %like% 'ite'][1] # index 1 at the end in case more matches; select 1st
+    
+    cat(locColSel, '\n')
+    selectInput(
+      'inSelSite',
+      'Select FOV (e.g. Metadata_Site or Metadata_Series):',
+      locCols,
+      width = '100%',
+      selected = locColSel
+    )
+  })
+  
+  
+  
+  
+  output$varSelMeas1 = renderUI({
+    cat(file = stderr(), 'UI varSelMeas1\n')
+    locCols = getDataNucCols()
+    
+    if (!is.null(locCols)) {
+      locColSel = locCols[locCols %like% 'objCyto_Intensity_MeanIntensity_imErkCor.*' | locCols %like% 'Ratio'][1] # index 1 at the end in case more matches; select 1st
+      #    cat(locColSel, '\n')
+      selectInput(
+        'inSelMeas1',
+        'Select 1st measurement:',
+        locCols,
+        width = '100%',
+        selected = locColSel
+      )
+    }
+  })
+  
+  
+  output$varSelMeas2 = renderUI({
+    cat(file = stderr(), 'UI varSelMeas2\n')
+    locCols = getDataNucCols()
+    
+    if (!is.null(locCols) &&
+        !(input$inSelMath %in% c('', '1 / '))) {
+      locColSel = locCols[locCols %like% 'objNuc_Intensity_MeanIntensity_imErkCor.*'][1] # index 1 at the end in case more matches; select 1st
+      #    cat(locColSel, '\n')
+      selectInput(
+        'inSelMeas2',
+        'Select 2nd measurement',
+        locCols,
+        width = '100%',
+        selected = locColSel
+      )
+    }
+  })
+  
+  
+  ####
+  ## data processing
+  
+  # generate random dataset 1
+  dataGen1 <- eventReactive(input$inDataGen1, {
+    cat("dataGen1\n")
+    
+    return(userDataGen())
+  })
   
   dataInBoth <- reactive({
     # Without direct references to inDataGen1,2 and inFileLoad, inDataGen2
@@ -137,31 +262,41 @@ shinyServer(function(input, output, session) {
     
     return(loc.dt)
   })
-
   
-
-  
-  # This button will reset the inFileLoad
-  observeEvent(input$butReset, {
-    reset("inFileLoadNuc")  # reset is a shinyjs function
-    #    reset("inFileStimLoad")  # reset is a shinyjs function
+  # return all unique track object labels (created in dataMod)
+  # This will be used to display in UI for trajectory highlighting
+  getDataTrackObjLabUni <- reactive({
+    cat(file = stderr(), 'getDataTrackObjLabUni\n')
+    loc.dt = dataMod()
     
+    if (is.null(loc.dt))
+      return(NULL)
+    else
+      return(unique(loc.dt$trackObjectsLabelUni))
   })
   
-  # generate random dataset 1
-  dataGen1 <- eventReactive(input$inDataGen1, {
-    cat("dataGen1\n")
+  # return all unique time points (real time)
+  # This will be used to display in UI for trajectory highlighting
+  getDataTpts <- reactive({
+    cat(file = stderr(), 'getDataTpts\n')
+    loc.dt = dataMod()
     
-    return(userDataGen())
+    if (is.null(loc.dt))
+      return(NULL)
+    else
+      return(unique(loc.dt[[input$inSelTime]]))
   })
   
   
   # prepare data for plotting time courses
   # returns dt with these columns:
-  # realtime - selected from input
-  # y - measurement selected from input (can be a single column or result of an operation on two cols)
-  # id - trackObjectsLabelUni (created in dataMod)
-  # group - grouping variable from input
+  #    realtime - selected from input
+  #    y        - measurement selected from input 
+  #               (can be a single column or result of an operation on two cols)
+  #    id       - trackObjectsLabelUni (created in dataMod)
+  #    group    - grouping variable for facetting from input
+  #    mid.in   - column with trajectory selection status from the input file or
+  #               highlight status from UI
   data4trajPlot <- reactive({
     cat(file=stderr(), 'data4trajPlot\n')
     
@@ -184,6 +319,10 @@ shinyServer(function(input, output, session) {
     
     loc.s.rt = input$inSelTime
     
+    # Assign tracks selected for highlighting in UI
+    loc.tracks.highlight = input$inSelHighlight
+    locBut = input$chBhighlightTraj
+    
     # if dataset contains column mid.in with trajectory filtering status,
     # then, include it in plotting
     if (sum(names(loc.dt) %in% 'mid.in') > 0) {
@@ -194,6 +333,13 @@ shinyServer(function(input, output, session) {
         realtime = eval(parse(text = loc.s.rt)),
         mid.in = mid.in
       )]
+      
+      # add 3rd level with status of track selection
+      # to a column with trajectory filtering status
+      if (locBut) {
+        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', mid.in)]
+      }
+      
     } else {
       loc.out = loc.dt[, .(
         y = eval(parse(text = loc.s.y)),
@@ -201,133 +347,61 @@ shinyServer(function(input, output, session) {
         group = eval(parse(text = loc.s.gr)),
         realtime = eval(parse(text = loc.s.rt))
       )]
+      
+      # add a column with status of track selection
+      if (locBut) {
+        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
+      }
     }
     
     # remove rows with NA
     return(loc.out[complete.cases(loc.out)])
   })
   
-  output$varSelSite = renderUI({
-    cat(file = stderr(), 'UI varSelSite\n')
-    locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'ite'][1] # index 1 at the end in case more matches; select 1st
+  # prepare data for plotting boxplots
+  # uses the same dt as for trajectory plotting
+  # returns dt with these columns:
+  data4boxPlot <- reactive({
+    cat(file=stderr(), 'data4trajPlot\n')
     
-    cat(locColSel, '\n')
-    selectInput(
-      'inSelSite',
-      'Select FOV (e.g. Metadata_Site or Metadata_Series):',
-      locCols,
-      width = '100%',
-      selected = locColSel
-    )
+    loc.dt = data4trajPlot()
+    if(is.null(loc.dt))
+      return(NULL)
+    
+    loc.out = loc.dt[realtime %in% input$inSelTpts]
   })
   
-  output$varSelTrackLabel = renderUI({
-    cat(file = stderr(), 'UI varSelTrackLabel\n')
-    locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'rack'][1] # index 1 at the end in case more matches; select 1st
-    
-    cat(locColSel, '\n')
-    selectInput(
-      'inSelTrackLabel',
-      'Select Track Label (e.g. objNuc_Track_ObjectsLabel):',
-      locCols,
-      width = '100%',
-      selected = locColSel
-    )
-  })
+  ####
+  ## UI for trajectory plot
   
-  output$varSelTime = renderUI({
-    cat(file = stderr(), 'UI varSelTime\n')
-    locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'RealTime'][1] # index 1 at the end in case more matches; select 1st
+  output$varSelHighlight = renderUI({
+    cat(file = stderr(), 'UI varSelHighlight\n')
     
-    cat(locColSel, '\n')
-    selectInput(
-      'inSelTime',
-      'Select X-axis (e.g. RealTime):',
-      locCols,
-      width = '100%',
-      selected = locColSel
-    )
-  })
-  
-  # This is main field to select plot facet grouping
-  # It's typically a column with the entire experimental description,
-  # e.g. in Yannick's case it's Stim_All_Ch or Stim_All_S.
-  # In Coralie's case it's a combination of 3 columns called Stimulation_...
-  output$varSelGroup = renderUI({
-    cat(file = stderr(), 'UI varSelGroup\n')
-    locCols = getDataNucCols()
+    locBut = input$chBhighlightTraj
+    if (!locBut)
+      return(NULL)
     
-    if (!is.null(locCols)) {
-      locColSel = locCols[locCols %like% 'ite']
-      if (length(locColSel) == 0)
-        locColSel = locCols[locCols %like% 'eries'][1] # index 1 at the end in case more matches; select 1st
-      else if (length(locColSel) > 1) {
-        locColSel = locColSel[1]
-      }
-      #    cat('UI varSelGroup::locColSel ', locColSel, '\n')
+    loc.v = getDataTrackObjLabUni()
+    if(!is.null(loc.v)) {
       selectInput(
-        'inSelGroup',
-        'Select one or more facet groupings (e.g. Site, Well, Channel):',
-        locCols,
+        'inSelHighlight',
+        'Select one or more rajectories:',
+        loc.v,
         width = '100%',
-        selected = locColSel,
         multiple = TRUE
       )
     }
-    
   })
   
   
-  output$varSelMeas1 = renderUI({
-    cat(file = stderr(), 'UI varSelMeas1\n')
-    locCols = getDataNucCols()
+  output$uiPlotTraj = renderUI({
     
-    if (!is.null(locCols)) {
-      locColSel = locCols[locCols %like% 'objCyto_Intensity_MeanIntensity_imErkCor.*'][1] # index 1 at the end in case more matches; select 1st
-      #    cat(locColSel, '\n')
-      selectInput(
-        'inSelMeas1',
-        'Select Y-axis:',
-        locCols,
-        width = '100%',
-        selected = locColSel
-      )
-    }
+    plotlyOutput("plotTraj", width = paste0(input$inPlotTrajWidth, '%'), height = paste0(input$inPlotTrajHeight, 'px'))
   })
   
-  
-  output$varSelMeas2 = renderUI({
-    cat(file = stderr(), 'UI varSelMeas2\n')
-    locCols = getDataNucCols()
-    
-    if (!is.null(locCols) &&
-        !(input$inSelMath %in% c('', '1 / '))) {
-      locColSel = locCols[locCols %like% 'objNuc_Intensity_MeanIntensity_imErkCor.*'][1] # index 1 at the end in case more matches; select 1st
-      #    cat(locColSel, '\n')
-      selectInput(
-        'inSelMeas2',
-        'Select 2nd opernad for Y-axis',
-        locCols,
-        width = '100%',
-        selected = locColSel
-      )
-    }
-  })
-  
-  
-  output$uiPlot = renderUI({
-    
-    plotlyOutput("plotTraj", width = paste0(input$inPlotWidth, '%'), height = paste0(input$inPlotHeight, 'px'))
-  })
-  
-
   output$plotTraj <- renderPlotly({
-    
     cat(file=stderr(), 'plotTraj: in\n')
-    locBut = input$butGo
+    locBut = input$butPlotTraj
     
     if (locBut == 0) {
       cat(file=stderr(), 'plotTraj: Go button not pressed\n')
@@ -362,7 +436,7 @@ shinyServer(function(input, output, session) {
       xlab.arg = 'Time (min)',
       line.col.arg = loc.line.col.arg
     )
-      
+    
     
     # This is required to avoid 
     # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
@@ -375,4 +449,95 @@ shinyServer(function(input, output, session) {
     return(p.out.ly)
   })
   
+
+  ####
+  ## UI for box-plot
+  
+  output$varSelTpts = renderUI({
+    cat(file = stderr(), 'UI varSelTpts\n')
+    
+    loc.v = getDataTpts()
+    if(!is.null(loc.v)) {
+      selectInput(
+        'inSelTpts',
+        'Select one or more timepoints:',
+        loc.v,
+        width = '100%', 
+        selected = 0,
+        multiple = TRUE
+      )
+    }
+  })
+  
+  # Boxplot - display
+  output$outPlotBox = renderPlot({
+    
+    locBut = input$butPlotBox
+    
+    if (locBut == 0) {
+      cat(file=stderr(), 'plotBox: Go button not pressed\n')
+      return(NULL)
+    }
+    
+    plotBox()
+
+  }, height = 800)
+  
+  # Boxplot - download pdf
+  output$downPlotBox <- downloadHandler(
+    filename = 'boxplot.pdf',
+    
+    content = function(file) {
+      cat(file = stderr(), input$inPlotBoxWidth, input$inPlotBoxHeight, "\n")
+      ggsave(file, limitsize = FALSE,
+             plotBox(), 
+             width  = input$inPlotBoxWidth,
+             height = input$inPlotBoxHeight)
+    }
+  )
+  
+  
+  # Function instead of reactive as per:
+  # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
+  # This function is used to plot and to downoad a pdf
+
+  plotBox <- function(){
+    cat(file = stderr(), 'plotBox\n')
+    
+    loc.dt = data4boxPlot()
+    
+    cat(file=stderr(), "plotBox: on to plot\n\n")
+    if (is.null(loc.dt)) {
+      cat(file=stderr(), 'plotBox: dt is NULL\n')
+      return(NULL)
+    }
+    
+    cat(file=stderr(), 'plotBox:dt not NULL\n')
+    
+    ggplot(loc.dt, aes(x = as.factor(realtime), y = y)) +
+      geom_boxplot(aes(fill = group), 
+                   #position = position_dodge(width = 1), 
+                   notch = input$inPlotBoxNotches, 
+                   outlier.colour = ifelse(input$inPlotBoxOutliers, 'red', NA)) + 
+      scale_fill_discrete(name = '') +
+      xlab('\nTime (min)') +
+      ylab('') +
+      theme_bw(base_size = 18, base_family = "Helvetica") +
+      theme(
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(),
+        axis.line.x = element_line(color = "black", size = 0.25),
+        axis.line.y = element_line(color = "black", size = 0.25),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        strip.text.x = element_text(size = 14, face = "bold"),
+        strip.text.y = element_text(size = 14, face = "bold"),
+        strip.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.height = unit(1, "lines"),
+        legend.key.width = unit(2, "lines"),
+        legend.position = input$selPlotBoxLegendPos
+      )
+  }
 })

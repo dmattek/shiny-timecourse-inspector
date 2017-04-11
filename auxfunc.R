@@ -41,12 +41,22 @@ myGgplotTraj = function(dt.arg,
                         stim.bar.width.arg = 0.5) {
   p.tmp = ggplot(dt.arg,
                  aes_string(x = x.arg,
-                            y = y.arg))
+                            y = y.arg,
+                            group = group.arg))
   
-  if (is.null(line.col.arg))
-    p.tmp = p.tmp + geom_line(aes_string(group = group.arg), alpha = 0.25, size = 0.25)
-  else
-    p.tmp = p.tmp + geom_line(aes_string(group = group.arg, colour = line.col.arg), alpha = 0.5, size = 0.5)
+  if (is.null(line.col.arg)) {
+    p.tmp = p.tmp +
+      geom_line(alpha = 0.25, 
+                              size = 0.25)
+  }
+  else {
+    p.tmp = p.tmp + 
+      geom_line(aes_string(colour = line.col.arg), 
+                              alpha = 0.5, 
+                              size = 0.5) +
+      scale_color_manual(name = '', 
+                         values =c("FALSE" = rhg_cols[7], "TRUE" = rhg_cols[3], "SELECTED" = 'green', "NOT SEL" = rhg_cols[7]))
+  }
   
   p.tmp = p.tmp + 
     stat_summary(
