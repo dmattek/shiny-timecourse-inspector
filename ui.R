@@ -19,17 +19,16 @@ shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      h4("Load data files"),
-      
       #Selector for file upload
       fileInput(
         'inFileLoadNuc',
-        'Select file (e.g. tCoursesSelected.csv) and press "Load Data"',
+        'Select data file (e.g. tCoursesSelected.csv) and press "Load Data"',
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       ),
       actionButton("inButLoadNuc", "Load Data"),
       actionButton("butReset", "Reset file input"),
       actionButton('inDataGen1', 'Generate artificial dataset'),
+
       tags$hr(),
       uiOutput('varSelSite'),
       uiOutput('varSelTrackLabel'),
@@ -48,7 +47,14 @@ shinyUI(fluidPage(
           '1 / X' = '1 / '
         )
       ),
-      uiOutput('varSelMeas2')
+      uiOutput('varSelMeas2'),
+      
+      tags$hr(),
+      checkboxInput('chBnorm', 'Normalization', FALSE),
+      uiOutput('uiChBnorm'),
+      uiOutput('uiSlNorm'),
+      uiOutput('uiChBnormRobust'),
+      uiOutput('uiChBnormGroup')
     ),
     
     mainPanel(tabsetPanel(

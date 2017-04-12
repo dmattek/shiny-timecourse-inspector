@@ -1,5 +1,6 @@
 
 
+
 # This is the server logic for a Shiny web application.
 # You can find out more about building applications with Shiny here:
 #
@@ -32,6 +33,7 @@ shinyServer(function(input, output, session) {
   ####
   ## UI for side panel
   
+  # FILE LOAD
   # This button will reset the inFileLoad
   observeEvent(input$inButReset, {
     reset("inFileLoadNuc")  # reset is a shinyjs function
@@ -66,7 +68,8 @@ shinyServer(function(input, output, session) {
     
   })
   
-
+  
+  # COLUMN SELECTION
   output$varSelTrackLabel = renderUI({
     cat(file = stderr(), 'UI varSelTrackLabel\n')
     locCols = getDataNucCols()
@@ -148,7 +151,8 @@ shinyServer(function(input, output, session) {
     locCols = getDataNucCols()
     
     if (!is.null(locCols)) {
-      locColSel = locCols[locCols %like% 'objCyto_Intensity_MeanIntensity_imErkCor.*' | locCols %like% 'Ratio'][1] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[locCols %like% 'objCyto_Intensity_MeanIntensity_imErkCor.*' |
+                            locCols %like% 'Ratio'][1] # index 1 at the end in case more matches; select 1st
       #    cat(locColSel, '\n')
       selectInput(
         'inSelMeas1',
@@ -178,6 +182,64 @@ shinyServer(function(input, output, session) {
       )
     }
   })
+  
+  
+  # UI for normalization
+  
+  output$uiChBnorm = renderUI({
+    cat(file = stderr(), 'UI uiChBnorm\n')
+    
+    if (input$chBnorm) {
+      radioButtons(
+        'rBnormMeth',
+        label = 'Select method',
+        choices = list('fold-change' = 'mean', 'z-score' = 'z.score')
+      )
+    }
+  })
+  
+  output$uiSlNorm = renderUI({
+    cat(file = stderr(), 'UI uiSlNorm\n')
+    
+    if (input$chBnorm) {
+      locTpts  = getDataTpts()
+      
+      if(is.null(locTpts))
+        return(NULL)
+      
+      locRTmin = min(locTpts)
+      locRTmax = max(locTpts)
+      
+      sliderInput(
+        'slNormRtMinMax',
+        label = 'Time range for norm.',
+        min = locRTmin,
+        max = locRTmax,
+        value = c(locRTmin, 0.1 * locRTmax)
+      )
+    }
+  })
+  
+  output$uiChBnormRobust = renderUI({
+    cat(file = stderr(), 'UI uiChBnormRobust\n')
+    
+    if (input$chBnorm) {
+      checkboxInput('chBnormRobust',
+                    label = 'Robust stats',
+                    FALSE)
+    }
+  })
+  
+  output$uiChBnormGroup = renderUI({
+    cat(file = stderr(), 'UI uiChBnormGroup\n')
+    
+    if (input$chBnorm) {
+      radioButtons('chBnormGroup',
+                  label = 'Normalisation grouping',
+                  choices = list('Entire dataset' = 'none', 'Per facet' = 'group', 'Per trajectory (Korean way)' = 'id'))
+    }
+  })
+  
   
   
   ####
@@ -250,10 +312,10 @@ shinyServer(function(input, output, session) {
   
   # return dt with an added column with unique track object label
   dataMod <- reactive({
-    cat(file=stderr(), 'dataMod\n')
+    cat(file = stderr(), 'dataMod\n')
     loc.dt = dataInBoth()
     
-    if(is.null(loc.dt))
+    if (is.null(loc.dt))
       return(NULL)
     
     loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
@@ -291,21 +353,21 @@ shinyServer(function(input, output, session) {
   # prepare data for plotting time courses
   # returns dt with these columns:
   #    realtime - selected from input
-  #    y        - measurement selected from input 
+  #    y        - measurement selected from input
   #               (can be a single column or result of an operation on two cols)
   #    id       - trackObjectsLabelUni (created in dataMod)
   #    group    - grouping variable for facetting from input
   #    mid.in   - column with trajectory selection status from the input file or
   #               highlight status from UI
   data4trajPlot <- reactive({
-    cat(file=stderr(), 'data4trajPlot\n')
+    cat(file = stderr(), 'data4trajPlot\n')
     
     loc.dt = dataMod()
-    if(is.null(loc.dt))
+    if (is.null(loc.dt))
       return(NULL)
     
     
-    if(input$inSelMath == '')
+    if (input$inSelMath == '')
       loc.s.y = input$inSelMeas1
     else if (input$inSelMath == '1 / ')
       loc.s.y = paste0(input$inSelMath, input$inSelMeas1)
@@ -315,7 +377,10 @@ shinyServer(function(input, output, session) {
     # create expression for parsing
     # creates a merged column based on other columns from input
     # used for grouping of plot facets
-    loc.s.gr = sprintf("paste(%s, sep=';')", paste(input$inSelGroup, sep = '', collapse = ','))
+    if(length(input$inSelGroup) == 0)
+      return(NULL)
+    loc.s.gr = sprintf("paste(%s, sep=';')",
+                       paste(input$inSelGroup, sep = '', collapse = ','))
     
     loc.s.rt = input$inSelTime
     
@@ -354,6 +419,24 @@ shinyServer(function(input, output, session) {
       }
     }
     
+    
+    # Normalization
+    if (input$chBnorm) {
+      loc.out = myNorm(
+        in.dt = loc.out,
+        in.meas.col = 'y',
+        in.rt.col = 'realtime',
+        in.rt.min = input$slNormRtMinMax[1],
+        in.rt.max = input$slNormRtMinMax[2],
+        in.type = input$rBnormMeth,
+        in.robust = input$chBnormRobust,
+        in.by.cols = if(input$chBnormGroup %in% 'none') NULL else input$chBnormGroup
+      )
+      
+      loc.out[, y := NULL]
+      setnames(loc.out, 'y.norm', 'y')
+    }
+    
     # remove rows with NA
     return(loc.out[complete.cases(loc.out)])
   })
@@ -362,10 +445,10 @@ shinyServer(function(input, output, session) {
   # uses the same dt as for trajectory plotting
   # returns dt with these columns:
   data4boxPlot <- reactive({
-    cat(file=stderr(), 'data4trajPlot\n')
+    cat(file = stderr(), 'data4trajPlot\n')
     
     loc.dt = data4trajPlot()
-    if(is.null(loc.dt))
+    if (is.null(loc.dt))
       return(NULL)
     
     loc.out = loc.dt[realtime %in% input$inSelTpts]
@@ -382,7 +465,7 @@ shinyServer(function(input, output, session) {
       return(NULL)
     
     loc.v = getDataTrackObjLabUni()
-    if(!is.null(loc.v)) {
+    if (!is.null(loc.v)) {
       selectInput(
         'inSelHighlight',
         'Select one or more rajectories:',
@@ -393,18 +476,20 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  
   output$uiPlotTraj = renderUI({
-    
-    plotlyOutput("plotTraj", width = paste0(input$inPlotTrajWidth, '%'), height = paste0(input$inPlotTrajHeight, 'px'))
+    plotlyOutput(
+      "plotTraj",
+      width = paste0(input$inPlotTrajWidth, '%'),
+      height = paste0(input$inPlotTrajHeight, 'px')
+    )
   })
   
   output$plotTraj <- renderPlotly({
-    cat(file=stderr(), 'plotTraj: in\n')
+    cat(file = stderr(), 'plotTraj: in\n')
     locBut = input$butPlotTraj
     
     if (locBut == 0) {
-      cat(file=stderr(), 'plotTraj: Go button not pressed\n')
+      cat(file = stderr(), 'plotTraj: Go button not pressed\n')
       
       return(NULL)
     }
@@ -413,15 +498,35 @@ shinyServer(function(input, output, session) {
     
     cat("plotScatter on to plot\n\n")
     if (is.null(loc.dt)) {
-      cat(file=stderr(), 'plotTraj: dt is NULL\n')
+      cat(file = stderr(), 'plotTraj: dt is NULL\n')
       return(NULL)
     }
     
-    cat(file=stderr(), 'plotTraj:dt not NULL\n')
+    cat(file = stderr(), 'plotTraj:dt not NULL\n')
     
+    # Normalization
+    # if (input$chBnorm) {
+    #   loc.dt = myNorm(
+    #     in.dt = loc.dt,
+    #     in.meas.col = 'y',
+    #     in.rt.col = 'realtime',
+    #     in.rt.min = input$slNormRtMinMax[1],
+    #     in.rt.max = input$slNormRtMinMax[2],
+    #     in.type = input$rBnormMeth,
+    #     in.robust = input$chBnormRobust,
+    #     in.by.cols = if(input$chBnormGroup %in% 'none') NULL else input$chBnormGroup
+    #   )
+    #   #cat(input$slNormRtMinMax, '\n')
+    #   loc.y.arg = 'y.norm'
+    # } else {
+    #   loc.y.arg = 'y'
+    # }
+    
+    
+    # Future: change such that a column with colouring status is chosen by the user
     # colour trajectories, if dataset contains mi.din column
     # with filtering status of trajectory
-    if(sum(names(loc.dt) %in% 'mid.in') > 0)
+    if (sum(names(loc.dt) %in% 'mid.in') > 0)
       loc.line.col.arg = 'mid.in'
     else
       loc.line.col.arg = NULL
@@ -438,18 +543,19 @@ shinyServer(function(input, output, session) {
     )
     
     
-    # This is required to avoid 
+    # This is required to avoid
     # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
     # When running on a server. Based on:
     # https://github.com/ropensci/plotly/issues/494
-    if (names(dev.cur()) != "null device") dev.off()
+    if (names(dev.cur()) != "null device")
+      dev.off()
     pdf(NULL)
     
     p.out.ly = plotly_build(p.out)
     return(p.out.ly)
   })
   
-
+  
   ####
   ## UI for box-plot
   
@@ -457,12 +563,12 @@ shinyServer(function(input, output, session) {
     cat(file = stderr(), 'UI varSelTpts\n')
     
     loc.v = getDataTpts()
-    if(!is.null(loc.v)) {
+    if (!is.null(loc.v)) {
       selectInput(
         'inSelTpts',
         'Select one or more timepoints:',
         loc.v,
-        width = '100%', 
+        width = '100%',
         selected = 0,
         multiple = TRUE
       )
@@ -471,16 +577,15 @@ shinyServer(function(input, output, session) {
   
   # Boxplot - display
   output$outPlotBox = renderPlot({
-    
     locBut = input$butPlotBox
     
     if (locBut == 0) {
-      cat(file=stderr(), 'plotBox: Go button not pressed\n')
+      cat(file = stderr(), 'plotBox: Go button not pressed\n')
       return(NULL)
     }
     
     plotBox()
-
+    
   }, height = 800)
   
   # Boxplot - download pdf
@@ -488,11 +593,17 @@ shinyServer(function(input, output, session) {
     filename = 'boxplot.pdf',
     
     content = function(file) {
-      cat(file = stderr(), input$inPlotBoxWidth, input$inPlotBoxHeight, "\n")
-      ggsave(file, limitsize = FALSE,
-             plotBox(), 
-             width  = input$inPlotBoxWidth,
-             height = input$inPlotBoxHeight)
+      cat(file = stderr(),
+          input$inPlotBoxWidth,
+          input$inPlotBoxHeight,
+          "\n")
+      ggsave(
+        file,
+        limitsize = FALSE,
+        plotBox(),
+        width  = input$inPlotBoxWidth,
+        height = input$inPlotBoxHeight
+      )
     }
   )
   
@@ -500,25 +611,29 @@ shinyServer(function(input, output, session) {
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
-
-  plotBox <- function(){
+  
+  plotBox <- function() {
     cat(file = stderr(), 'plotBox\n')
     
     loc.dt = data4boxPlot()
     
-    cat(file=stderr(), "plotBox: on to plot\n\n")
+    cat(file = stderr(), "plotBox: on to plot\n\n")
     if (is.null(loc.dt)) {
-      cat(file=stderr(), 'plotBox: dt is NULL\n')
+      cat(file = stderr(), 'plotBox: dt is NULL\n')
       return(NULL)
     }
     
-    cat(file=stderr(), 'plotBox:dt not NULL\n')
+    cat(file = stderr(), 'plotBox:dt not NULL\n')
+
+    
     
     ggplot(loc.dt, aes(x = as.factor(realtime), y = y)) +
-      geom_boxplot(aes(fill = group), 
-                   #position = position_dodge(width = 1), 
-                   notch = input$inPlotBoxNotches, 
-                   outlier.colour = ifelse(input$inPlotBoxOutliers, 'red', NA)) + 
+      geom_boxplot(
+        aes(fill = group),
+        #position = position_dodge(width = 1),
+        notch = input$inPlotBoxNotches,
+        outlier.colour = if(input$inPlotBoxOutliers) 'red' else NA
+      ) +
       scale_fill_discrete(name = '') +
       xlab('\nTime (min)') +
       ylab('') +
