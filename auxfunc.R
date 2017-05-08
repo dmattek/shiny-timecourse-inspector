@@ -1,4 +1,6 @@
 ## Custom plotting
+require(ggplot2)
+
 rhg_cols <- c(
   "#771C19",
   "#AA3929",
@@ -23,6 +25,33 @@ md_cols <- c(
   "#78C679",
   "#238443"
 )
+
+s.cl.linkage = c("ward.D",
+                 "ward.D2",
+                 "single",
+                 "complete",
+                 "average",
+                 "mcquitty",
+                 "centroid")
+
+s.cl.spar.linkage = c("average",
+                      "complete", 
+                      "single",
+                      "centroid")
+
+s.cl.diss = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
+s.cl.spar.diss = c("squared.distance","absolute.value")
+
+l.col.pal = list(
+  "White-Orange-Red" = 'OrRd',
+  "Yellow-Orange-Red" = 'YlOrRd',
+  "Reds" = "Reds",
+  "Oranges" = "Oranges",
+  "Greens" = "Greens",
+  "Blues" = "Blues",
+  "Spectral" = 'Spectral'
+)
+
 
 myGgplotTraj = function(dt.arg,
                         x.arg,
@@ -115,16 +144,16 @@ myGgplotTraj = function(dt.arg,
 userDataGen <- function() {  
   cat(file=stderr(), 'userDataGen: in\n')
   
-  locNtp = 13
+  locNtp = 40
   locNtracks = 5
   locNsites = 4
   locNwells = 2
   
   dt.nuc = data.table(Metadata_Site = rep(1:locNsites, each = locNtp * locNtracks),
                       Metadata_Well = rep(1:locNwells, each = locNtp * locNsites * locNtracks / locNwells),
-                      Metadata_Time = rep(1:locNtp, locNsites* locNtracks),
-                      meas_MeanIntensity_cyto = rnorm(locNtp * locNtracks * locNsites, .5, 0.1),
-                      meas_MeanIntensity_nuc  = rnorm(locNtp * locNtracks * locNsites, .5, 0.1),
+                      Metadata_RealTime = rep(1:locNtp, locNsites* locNtracks),
+                      objCyto_Intensity_MeanIntensity_imErkCor = rnorm(locNtp * locNtracks * locNsites, .5, 0.1),
+                      objNuc_Intensity_MeanIntensity_imErkCor  = rnorm(locNtp * locNtracks * locNsites, .5, 0.1),
                       TrackLabel = rep(1:(locNtracks*locNsites), each = locNtp))
   
   cat(colnames(dt.nuc))
@@ -190,3 +219,21 @@ myNorm = function(in.dt,
   loc.dt[, c('meas.md', 'meas.mad') := NULL]
   return(loc.dt)
 }
+
+
+myGgplotTheme = theme_bw(base_size = 18, base_family = "Helvetica") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line.x = element_line(color = "black", size = 0.25),
+    axis.line.y = element_line(color = "black", size = 0.25),
+    axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    strip.text.x = element_text(size = 14, face = "bold"),
+    strip.text.y = element_text(size = 14, face = "bold"),
+    strip.background = element_blank(),
+    legend.key = element_blank(),
+    legend.key.height = unit(1, "lines"),
+    legend.key.width = unit(2, "lines"),
+    legend.position = "right"
+  )

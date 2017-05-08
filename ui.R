@@ -50,11 +50,17 @@ shinyUI(fluidPage(
       uiOutput('varSelMeas2'),
       
       tags$hr(),
+      checkboxInput('chBtimeTrim', 'Trim x-axis', FALSE),
+      uiOutput('uiSlTimeTrim'),
+      tags$hr(),
       checkboxInput('chBnorm', 'Normalization', FALSE),
       uiOutput('uiChBnorm'),
       uiOutput('uiSlNorm'),
       uiOutput('uiChBnormRobust'),
-      uiOutput('uiChBnormGroup')
+      uiOutput('uiChBnormGroup'),
+      tags$hr(),
+      checkboxInput('chBoutliers', 'Remove outliers', FALSE),
+      uiOutput('uiSlOutliers')
     ),
     
     mainPanel(tabsetPanel(
@@ -101,7 +107,32 @@ shinyUI(fluidPage(
         uiOutput('varSelHighlight'),
         br(),
         actionButton('butPlotTraj', 'Plot!'),
-        uiOutput('uiPlotTraj')
+        uiOutput('uiPlotTraj'),
+        h4('Download plot'),
+        fluidRow(
+          column(
+            3,
+            numericInput(
+              'inPlotTrajDownWidth',
+              "Width",
+              10,
+              min = 1,
+              width = 100
+            )
+          ),
+          column(
+            3,
+            numericInput(
+              'inPlotTrajDownHeight',
+              "Height",
+              7,
+              min = 1,
+              width = 100
+            )
+          ),
+          column(6,
+                 downloadButton('downPlotTraj', 'PDF'))
+        )
       ),
       tabPanel("Box-plots",
                br(),
@@ -153,7 +184,475 @@ shinyUI(fluidPage(
                  column(6,
                         downloadButton('downPlotBox', 'PDF'))
                )
-               #uiOutput('uiPlotBox')
+      ),
+      
+
+      tabPanel(
+        'Hierarchical',
+        br(),
+        fluidRow(
+          column(
+            6,
+            selectInput(
+              "selectPlotHierLinkage",
+              label = ("Select linkage method:"),
+              choices = list(
+                "Ward" = 1,
+                "Ward D2" = 2,
+                "Single" = 3,
+                "Complete" = 4,
+                "Average" = 5,
+                "McQuitty" = 6,
+                "Centroid" = 7
+              ),
+              selected = 2
+            ),
+            selectInput(
+              "selectPlotHierDiss",
+              label = ("Select type of dissimilarity measure:"),
+              choices = list("Euclidean" = 1,
+                             "Maximum" = 2,
+                             "Manhattan" = 3,
+                             "Canberra" = 4,
+                             "Binary" = 5,
+                             "Minkowski" = 6),
+              selected = 1
+            )
+          ),
+          column(6,
+                 sliderInput(
+                   'inPlotHierNclust',
+                   '#dendrogram branches to colour',
+                   min = 1,
+                   max = 20,
+                   value = 1,
+                   step = 1,
+                   ticks = TRUE,
+                   round = TRUE
+                 ),
+                 checkboxInput('chBPlotHierClSel', 'Manually select clusters to display'),
+                 uiOutput('uiPlotHierClSel')
+          )
+        ),
+        
+        
+        br(),
+        #checkboxInput('inPlotHierSparInteractive', 'Interactive Plot?',  value = FALSE),
+        
+        tabsetPanel(
+          tabPanel('Heat-map',
+                   fluidRow(
+                     column(3,
+                            checkboxInput('selectPlotHierDend', 'Plot dendrogram and re-order samples', TRUE),
+                            selectInput(
+                              "selectPlotHierPalette",
+                              label = "Select colour palette:",
+                              choices = l.col.pal,
+                              selected = 'Spectral'
+                            ),
+                            checkboxInput('inPlotHierRevPalette', 'Reverse colour palette', TRUE),
+                            checkboxInput('selectPlotHierKey', 'Plot colour key', TRUE)
+                     ),
+                     column(3,
+                            sliderInput(
+                              'inPlotHierNAcolor',
+                              'Shade of grey for NA values (0 - black, 1 - white)',
+                              min = 0,
+                              max = 1,
+                              value = 0.8,
+                              step = .1,
+                              ticks = TRUE
+                            ),
+                            numericInput('inPlotHierHeatMapHeight', 
+                                         'Display plot height [px]', 
+                                         value = 600, 
+                                         min = 100,
+                                         step = 100)
+                     ),
+                     column(6,
+                            h4('Classic hierarchical clustering')
+                     )
+                   ),
+                   
+                   fluidRow(
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierMarginX',
+                         'Margin below x-axis',
+                         5,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierMarginY',
+                         'Margin right of y-axis',
+                         20,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierFontX',
+                         'Font size row labels',
+                         1,
+                         min = 0,
+                         width = 100,
+                         step = 0.1
+                       )
+                     ),
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierFontY',
+                         'Font size column labels',
+                         1,
+                         min = 0,
+                         width = 100,
+                         step = 0.1
+                       )
+                     )
+                   ),
+                   br(),
+                   
+                   
+                   h4('Download plot'),
+                   fluidRow(
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierWidth',
+                         "Width",
+                         7,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierHeight',
+                         "Height",
+                         6,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(4,
+                            downloadButton('downPlotHier', 'PDF'))
+                   ),
+                   actionButton('butPlotHierHeatMap', 'Plot!'),
+                   plotOutput('outPlotHier')
+          ),
+          # tabPanel('Heat-map int.',
+          #          helpText("Choose your settings 2")),
+          tabPanel('Time-courses',
+                   h4('Download plot'),
+                   fluidRow(
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierTrajWidth',
+                         "Width",
+                         7,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierTrajHeight',
+                         "Height",
+                         6,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(4,
+                            downloadButton('downPlotHierTraj', 'PDF'))
+                   ),
+                   actionButton('butPlotHierTraj', 'Plot!'),
+                   plotOutput('outPlotHierTraj')),
+          tabPanel('Cluster dist.',
+                   fluidRow(
+                     column(
+                       8,
+                       h4('Download plot'),
+                       numericInput(
+                         'inPlotHierClDistWidth',
+                         "Width",
+                         7,
+                         min = 1,
+                         width = 100
+                       ),
+                       numericInput(
+                         'inPlotHierClDistHeight',
+                         "Height",
+                         6,
+                         min = 1,
+                         width = 100
+                       ),
+                       downloadButton('downPlotHierClDist', 'PDF')
+                   )),
+                   actionButton('butPlotHierClDist', 'Plot!'),
+                   plotOutput('outPlotHierClDist'))
+        )
+      ),
+      
+      
+      tabPanel(
+        'Hier. Sparse',
+        br(),
+        fluidRow(
+          column(
+            6,
+            selectInput(
+              "selectPlotHierSparLinkage",
+              label = ("Select linkage method:"),
+              choices = list(
+                "Average" = 1,
+                "Complete" = 2,
+                "Single" = 3,
+                "Centroid" = 4
+              ),
+              selected = 1
+            ),
+            selectInput(
+              "selectPlotHierSparDiss",
+              label = ("Select type of dissimilarity measure:"),
+              choices = list("Squared Distance" = 1,
+                             "Absolute Value" = 2),
+              selected = 1
+            ),
+            sliderInput(
+              'inPlotHierSparNclust',
+              '#dendrogram branches to colour',
+              min = 1,
+              max = 30,
+              value = 1,
+              step = 1,
+              ticks = TRUE,
+              round = TRUE
+            )
+          ),
+          
+          column(
+            6,
+            checkboxInput('inHierSparAdv',
+                          'Advanced options',
+                          FALSE),
+            uiOutput(
+              'uiPlotHierSparNperms'
+            ),
+            uiOutput(
+              'uiPlotHierSparNiter'
+            ),
+            checkboxInput('chBPlotHierSparClSel', 'Manually select clusters to display'),
+            uiOutput('uiPlotHierSparClSel')
+          )
+        ),
+        
+        
+        br(),
+        #checkboxInput('inPlotHierSparInteractive', 'Interactive Plot?',  value = FALSE),
+        
+        tabsetPanel(
+          tabPanel('Heat-map',
+                   fluidRow(
+                     column(3,
+                            radioButtons(
+                              "selectPlotHierSparDend",
+                              label = 'Dendrogram',
+                              choices = list(
+                                'Plot dendrogram; order samples accordingly' = 1,
+                                'Don\'t plot dendrogram; retain original ordering' = 2
+                              ),
+                              selected = 1
+                            ),
+                            selectInput(
+                              "selectPlotHierSparPalette",
+                              label = "Select colour palette:",
+                              choices = l.col.pal,
+                              selected = 'Spectral'
+                            ),
+                            checkboxInput('inPlotHierSparRevPalette', 'Reverse colour palette', TRUE),
+                            checkboxInput('selectPlotHierSparKey', 'Plot colour key', TRUE)
+                     ),
+                     column(3,
+                            sliderInput(
+                              'inPlotHierSparNAcolor',
+                              'Shade of grey for NA values (0 - black, 1 - white)',
+                              min = 0,
+                              max = 1,
+                              value = 0.8,
+                              step = .1,
+                              ticks = TRUE
+                            )
+                     ),
+                     column(6,
+                            br(),
+                            h4(
+                              "Sparse hierarchical clustering using ",
+                              a("sparcl", href = "https://cran.r-project.org/web/packages/sparcl/")
+                            ),
+                            p(
+                              'Column labels in the heat-map are additionally labeld according to their \"importance\":'
+                            ),
+                            tags$ol(
+                              tags$li("Black - not taken into account"),
+                              tags$li("Blue with \"*\" - low importance (weight factor in (0, 0.1]"),
+                              tags$li("Green with \"**\" - medium importance (weight factor in (0.1, 0.5]"),
+                              tags$li("Red with \"***\" - high importance (weight factor in (0.5, 1.0]")
+                            )
+                     )
+                   ),
+                   
+                   fluidRow(
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierSparMarginX',
+                         'Margin below x-axis',
+                         5,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierSparMarginY',
+                         'Margin right of y-axis',
+                         20,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierSparFontX',
+                         'Font size row labels',
+                         1,
+                         min = 0,
+                         width = 100,
+                         step = 0.1
+                       )
+                     ),
+                     column(
+                       3,
+                       numericInput(
+                         'inPlotHierSparFontY',
+                         'Font size column labels',
+                         1,
+                         min = 0,
+                         width = 100,
+                         step = 0.1
+                       )
+                     )
+                   ),
+                   br(),
+                   
+                   
+                   h4('Download plot'),
+                   fluidRow(
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierSparWidth',
+                         "Width",
+                         7,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierSparHeight',
+                         "Height",
+                         6,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(4,
+                            downloadButton('downPlotHierSpar', 'PDF'))
+                   ),
+                   numericInput('inPlotHierSparHeatMapHeight', 
+                                'Display plot height [px]', 
+                                value = 600, 
+                                min = 100,
+                                step = 100),
+                   
+                   actionButton('butPlotHierSparHeatMap', 'Plot!'),
+                   plotOutput('outPlotHierSpar')
+          ),
+          # tabPanel('Heat-map int.',
+          #          helpText("Choose your settings 2")),
+          tabPanel('Time-courses',
+                   h4('Download plot'),
+                   fluidRow(
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierSparTrajWidth',
+                         "Width",
+                         7,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierSparTrajHeight',
+                         "Height",
+                         6,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(4,
+                            downloadButton('downPlotHierSparTraj', 'PDF'))
+                   ),
+                   actionButton('butPlotHierSparTraj', 'Plot!'),
+                   plotOutput('outPlotHierSparTraj')),
+          tabPanel('Cluster dist.',
+                   h4('Download plot'),
+                   fluidRow(
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierSparClDistWidth',
+                         "Width",
+                         7,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(
+                       4,
+                       numericInput(
+                         'inPlotHierSparClDistHeight',
+                         "Height",
+                         6,
+                         min = 1,
+                         width = 100
+                       )
+                     ),
+                     column(4,
+                            downloadButton('downPlotHierSparClDist', 'PDF'))
+                   ),
+                   actionButton('butPlotHierSparClDist', 'Plot!'),
+                   plotOutput('outPlotHierSparClDist'))
+        )
       )
     ))
   )
