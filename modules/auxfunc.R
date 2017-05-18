@@ -152,8 +152,8 @@ userDataGen <- function() {
   dt.nuc = data.table(Metadata_Site = rep(1:locNsites, each = locNtp * locNtracks),
                       Metadata_Well = rep(1:locNwells, each = locNtp * locNsites * locNtracks / locNwells),
                       Metadata_RealTime = rep(1:locNtp, locNsites* locNtracks),
-                      objCyto_Intensity_MeanIntensity_imErkCor = rnorm(locNtp * locNtracks * locNsites, .5, 0.1),
-                      objNuc_Intensity_MeanIntensity_imErkCor  = rnorm(locNtp * locNtracks * locNsites, .5, 0.1),
+                      objCyto_Intensity_MeanIntensity_imErkCor = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 1, 0.2)),
+                      objNuc_Intensity_MeanIntensity_imErkCor  = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.2)),
                       TrackLabel = rep(1:(locNtracks*locNsites), each = locNtp))
   
   cat(colnames(dt.nuc))

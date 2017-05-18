@@ -21,7 +21,6 @@ library(scales) # for percentages on y scale
 
 # increase file upload limit
 options(shiny.maxRequestSize = 30 * 1024 ^ 2)
-source('auxfunc.R')
 
 shinyServer(function(input, output, session) {
   useShinyjs()
@@ -287,7 +286,18 @@ shinyServer(function(input, output, session) {
         value = 99, 
         step = 0.1
       )
+      
+
     }
+  })
+  
+  output$uiTxtOutliers = renderUI({
+    if (input$chBoutliers) {
+      
+      p("Total tracks")
+      
+    }
+    
   })
   
   
@@ -522,6 +532,12 @@ shinyServer(function(input, output, session) {
       setnames(loc.out, 'y.norm', 'y')
     }
     
+    ##### MOD HERE
+    ## display number of filtered tracks in textUI: uiTxtOutliers
+    ## How? 
+    ## 1. through reactive values?
+    ## 2. through additional comumn to tag outliers?
+    
     # Remove outliers
     # 1. Scale all points (independently per track)
     # 2. Pick time points that exceed the bounds
@@ -592,12 +608,23 @@ shinyServer(function(input, output, session) {
   
   
   # get cell IDs with cluster assignments depending on dendrogram cut
-  getDataCl = function(in.dend, in.k) {
-    loc.dt.cl = data.table(id = getDataTrackObjLabUni_afterTrim(),
+  getDataCl = function(in.dend, in.k, in.ids) {
+    cat(file = stderr(), 'getDataCl \n')
+    cat(in.k, '\n')
+    loc.dt.cl = data.table(id = in.ids,
                            cl = cutree(as.dendrogram(in.dend), k = in.k))
   }
   
 
+  getDataHierClReact = reactive({
+    cat(file = stderr(), 'getDataHierClReact \n')
+    cat(input$inPlotHierNclust, '\n')
+    loc.dt.cl = data.table(id = getDataTrackObjLabUni_afterTrim(),
+                           cl = cutree(userFitDendHier(), k = input$inPlotHierNclust))
+    
+    loc.dt.cl = merge(loc.dt.cl, getDataCond(), by = 'id')
+  })
+  
   ####
   ## UI for trajectory plot
   
@@ -645,19 +672,7 @@ shinyServer(function(input, output, session) {
   })
   
   # Trajectory plot - download pdf
-  output$downPlotTraj <- downloadHandler(
-    filename = 'tcourses.pdf',
-    
-    content = function(file) {
-      ggsave(
-        file,
-        limitsize = FALSE,
-        plotTraj(),
-        width  = input$inPlotTrajDownWidth,
-        height = input$inPlotTrajDownHeight
-      )
-    }
-  )
+  callModule(downPlot, "downPlotTraj", 'tcourses.pdf', plotTraj, TRUE)
   
   plotTraj <- function() {
     cat(file = stderr(), 'plotTraj: in\n')
@@ -737,21 +752,8 @@ shinyServer(function(input, output, session) {
   }, height = 800)
   
   # Boxplot - download pdf
-  output$downPlotBox <- downloadHandler(
-    filename = 'boxplot.pdf',
-    
-    content = function(file) {
-      ggsave(
-        file,
-        limitsize = FALSE,
-        plotBox(),
-        width  = input$inPlotBoxWidth,
-        height = input$inPlotBoxHeight
-      )
-    }
-  )
-  
-  
+  callModule(downPlot, "downPlotBox", 'boxplot.pdf', plotBox, TRUE)
+
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
@@ -812,15 +814,6 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$uiPlotHierClDistClSel = renderUI({
-    if(input$chBPlotHierClDistSel) {
-      selectInput('inPlotHierClDistClSel', 'Select clusters to display', 
-                  choices = seq(1, input$inPlotHierNclust, 1),
-                  multiple = TRUE, 
-                  selected = 1)
-    }
-  })
-
   userFitDendHier <- reactive({
     dm.t = data4clust()
     if (is.null(dm.t)) {
@@ -869,11 +862,6 @@ shinyServer(function(input, output, session) {
       var.tmp.2 = "none"
     }
     
-    #cat(loc.dm, '\n')
-    #cat(var.tmp.1, '\n')
-    cat(var.tmp.2, '\n')
-    
-    
     loc.p = heatmap.2(
       loc.dm,
       Colv = "NA",
@@ -920,7 +908,7 @@ shinyServer(function(input, output, session) {
     cat(file = stderr(), 'plotHierTraj: dt not NULL\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(userFitDendHier(), isolate(input$inPlotHierNclust))
+    loc.dt.cl = getDataCl(userFitDendHier(), input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim())
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
     # display only selected clusters
@@ -950,6 +938,49 @@ shinyServer(function(input, output, session) {
   }
   
   
+  # download a list of cellIDs with cluster assihnments
+  output$downCellCl <- downloadHandler(
+    filename = function() {
+      paste0('clust_hierch_data_',
+             s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+             '_',
+             s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.csv')
+    },
+    
+    content = function(file) {
+      write.csv(x = getDataCl(userFitDendHier(), input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim()), file = file, row.names = FALSE)
+    }
+  )
+  
+  output$downCellClSpar <- downloadHandler(
+    filename = function() {
+      paste0('clust_hierchSpar_data_',
+             s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+             '_',
+             s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.csv')
+    },
+    
+    content = function(file) {
+      write.csv(x = getDataCl(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim()), file = file, row.names = FALSE)
+    }
+  )
+  
+  
+    # callModule(downCellCl, 'downDataHier', paste0('clust_hierch_data_',
+    #                                               s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+    #                                               '_',
+    #                                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.csv'),
+    #            getDataCl(userFitDendHier, input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim))
+    # 
+    # output$downloadDataClean <- downloadHandler(
+    #   filename = 'tCoursesSelected_clean.csv',
+    #   content = function(file) {
+    #     write.csv(data4trajPlot(), file, row.names = FALSE)
+    #   }
+    # )
+    
+    
+    
   # Barplot with distribution of clusters across conditions
   plotHierClDist = function() {
     cat(file = stderr(), 'plotClDist: in\n')
@@ -965,6 +996,7 @@ shinyServer(function(input, output, session) {
                            cl = cutree(as.dendrogram(loc.dend), k = input$inPlotHierNclust))
     
     
+    # get cellIDs with condition name
     loc.dt.gr = isolate(getDataCond())
     if (is.null(loc.dt.gr)) {
       cat(file = stderr(), 'plotClDist: loc.dt.gr is NULL\n')
@@ -1040,59 +1072,24 @@ shinyServer(function(input, output, session) {
   })
   
   
+  
   #  Hierarchical - Heat Map - download pdf
-  output$downPlotHier <- downloadHandler(
-    filename = function() {
-      paste0('clust_hierch_heatMap_',  s.cl.spar.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf')
-    },
-    
-    content = function(file) {
-      pdf(
-        file,
-        width  = input$inPlotHierWidth,
-        height = input$inPlotHierHeight
-      )
-      
-      plotHier()
-      dev.off()
-    }
-  )
-  
+  callModule(downPlot, "downPlotHier",       paste0('clust_hierch_heatMap_',
+                                                    s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                                                    '_',
+                                                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'), plotHier)
+
   # Hierarchical - Trajectories - download pdf
-  output$downPlotHierTraj <- downloadHandler(
-    filename = function() {
-      paste0('clust_hierch_tCourses_',  s.cl.spar.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf')
-    },
-    
-    content = function(file) {
-      ggsave(plot = plotHierTraj(),
-             filename = file,
-             width  = input$inPlotHierTrajWidth,
-             height = input$inPlotHierTrajHeight
-      )
-      
-      
-      #dev.off()
-    }
-  )
-  
+  callModule(downPlot, "downPlotHierTraj",       paste0('clust_hierch_tCourses_',
+                                                    s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                                                    '_',
+                                                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'), plotHierTraj, TRUE)
+
   # Hierarchical - Bar Plot - download pdf
-  output$downPlotHierClDist <- downloadHandler(
-    filename = function() {
-      paste0('clust_hierch_clDist_',  s.cl.spar.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf')
-    },
-    
-    content = function(file) {
-      ggsave(plot = plotHierClDist(),
-             filename = file,
-             width  = input$inPlotHierClDistWidth,
-             height = input$inPlotHierClDistHeight
-      )
-      
-      
-    }
-  )
-  
+  callModule(downPlot, "downPlotHierClDist",       paste0('clust_hierch_clDist_',
+                                                        s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                                                        '_',
+                                                        s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'), plotHierClDist, TRUE)
   
   ##### Sparse hierarchical clustering using sparcl
   
@@ -1270,7 +1267,7 @@ shinyServer(function(input, output, session) {
     cat(file = stderr(), 'plotHierSparTraj: dt not NULL\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(userFitDendHierSpar(), isolate(input$inPlotHierSparNclust))
+    loc.dt.cl = getDataCl(userFitDendHierSpar(), isolate(input$inPlotHierSparNclust), getDataTrackObjLabUni_afterTrim())
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
     # plot only selected clusters
@@ -1383,60 +1380,24 @@ shinyServer(function(input, output, session) {
   
   
   # Sparse Hierarchical - Heat Map - download pdf
-  output$downPlotHierSpar <- downloadHandler(
-    filename = function() {
-      paste0('clust_hierchSparse_heatMap_',  s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf')
-    },
-    
-    content = function(file) {
-      pdf(
-        file,
-        width  = input$inPlotHierSparWidth,
-        height = input$inPlotHierSparHeight
-      )
-      
-      plotHierSpar()
-      dev.off()
-    }
-  )
+  callModule(downPlot, "downPlotHierSparHM",       paste0('clust_hierchSparse_heatMap_',
+                                                    s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                                                    '_',
+                                                    s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSpar)
   
   # Sparse Hierarchical - Trajectories - download pdf
-  output$downPlotHierSparTraj <- downloadHandler(
-    filename = function() {
-      paste0('clust_hierchSparse_tCourses_',  s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf')
-    },
-    
-    content = function(file) {
-      ggsave(plot = plotHierSparTraj(),
-        filename = file,
-        width  = input$inPlotHierSparTrajWidth,
-        height = input$inPlotHierSparTrajHeight
-      )
-      
-      
-      #dev.off()
-    }
-  )
+  callModule(downPlot, "downPlotHierSparTraj",       paste0('clust_hierchSparse_tCourses_',
+                                                        s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                                                        '_',
+                                                        s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSparTraj, TRUE)
   
-  # Sparse Hierarchical - Trajectories - download pdf
-  output$downPlotHierSparClDist <- downloadHandler(
-    filename = function() {
-      paste0('clust_hierchSparse_clDist_',  s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf')
-    },
-    
-    content = function(file) {
-      ggsave(plot = plotHierSparClDist(),
-        filename = file,
-        width  = input$inPlotHierSparClDistWidth,
-        height = input$inPlotHierSparClDistHeight
-      )
-      
-      
-      #dev.off()
-    }
-  )
+  # Sparse Hierarchical - Bar Plot - download pdf
+  callModule(downPlot, "downPlotHierSparClDist",       paste0('clust_hierchSparse_clDist_',
+                                                          s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                                                          '_',
+                                                          s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSparClDist, TRUE)
   
-  
+
   # Sparse Hierarchical clustering (sparcl) interactive version
   output$plotHierSparInt <- renderD3heatmap({
     dm.t = data4clust()
