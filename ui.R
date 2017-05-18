@@ -60,7 +60,9 @@ shinyUI(fluidPage(
       uiOutput('uiChBnormGroup'),
       tags$hr(),
       checkboxInput('chBoutliers', 'Remove outliers', FALSE),
-      uiOutput('uiSlOutliers')
+      uiOutput('uiSlOutliers'),
+      uiOutput("uiTxtOutliers"),
+      downloadButton('downloadDataClean', 'Download mod\'d data')
     ),
     
     mainPanel(tabsetPanel(
@@ -108,32 +110,9 @@ shinyUI(fluidPage(
         br(),
         actionButton('butPlotTraj', 'Plot!'),
         uiOutput('uiPlotTraj'),
-        h4('Download plot'),
-        fluidRow(
-          column(
-            3,
-            numericInput(
-              'inPlotTrajDownWidth',
-              "Width",
-              10,
-              min = 1,
-              width = 100
-            )
-          ),
-          column(
-            3,
-            numericInput(
-              'inPlotTrajDownHeight',
-              "Height",
-              7,
-              min = 1,
-              width = 100
-            )
-          ),
-          column(6,
-                 downloadButton('downPlotTraj', 'PDF'))
-        )
+        downPlotUI('downPlotTraj', "Download PDF")
       ),
+      
       tabPanel("Box-plots",
                br(),
                fluidRow(
@@ -159,31 +138,7 @@ shinyUI(fluidPage(
                
                actionButton('butPlotBox', 'Plot!'),
                plotOutput('outPlotBox', height = 800),
-               h4('Download plot'),
-               fluidRow(
-                 column(
-                   3,
-                   numericInput(
-                     'inPlotBoxWidth',
-                     "Width",
-                     10,
-                     min = 1,
-                     width = 100
-                   )
-                 ),
-                 column(
-                   3,
-                   numericInput(
-                     'inPlotBoxHeight',
-                     "Height",
-                     7,
-                     min = 1,
-                     width = 100
-                   )
-                 ),
-                 column(6,
-                        downloadButton('downPlotBox', 'PDF'))
-               )
+               downPlotUI('downPlotBox', "Download PDF")
       ),
       
 
@@ -231,7 +186,9 @@ shinyUI(fluidPage(
                    round = TRUE
                  ),
                  checkboxInput('chBPlotHierClSel', 'Manually select clusters to display'),
-                 uiOutput('uiPlotHierClSel')
+                 uiOutput('uiPlotHierClSel'),
+                 #downCellClUI('downDataHier', "Download Data")
+                 downloadButton('downCellCl', 'Download CSV with cell IDs and cluster no.')
           )
         ),
         
@@ -320,86 +277,18 @@ shinyUI(fluidPage(
                    ),
                    br(),
                    
-                   
-                   h4('Download plot'),
-                   fluidRow(
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierWidth',
-                         "Width",
-                         7,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierHeight',
-                         "Height",
-                         6,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(4,
-                            downloadButton('downPlotHier', 'PDF'))
-                   ),
+                   downPlotUI('downPlotHier', "Download PDF"),
                    actionButton('butPlotHierHeatMap', 'Plot!'),
                    plotOutput('outPlotHier')
           ),
           # tabPanel('Heat-map int.',
           #          helpText("Choose your settings 2")),
           tabPanel('Time-courses',
-                   h4('Download plot'),
-                   fluidRow(
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierTrajWidth',
-                         "Width",
-                         7,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierTrajHeight',
-                         "Height",
-                         6,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(4,
-                            downloadButton('downPlotHierTraj', 'PDF'))
-                   ),
+                   downPlotUI('downPlotHierTraj', "Download PDF"),
                    actionButton('butPlotHierTraj', 'Plot!'),
                    plotOutput('outPlotHierTraj')),
           tabPanel('Cluster dist.',
-                   fluidRow(
-                     column(
-                       8,
-                       h4('Download plot'),
-                       numericInput(
-                         'inPlotHierClDistWidth',
-                         "Width",
-                         7,
-                         min = 1,
-                         width = 100
-                       ),
-                       numericInput(
-                         'inPlotHierClDistHeight',
-                         "Height",
-                         6,
-                         min = 1,
-                         width = 100
-                       ),
-                       downloadButton('downPlotHierClDist', 'PDF')
-                   )),
+                   downPlotUI('downPlotHierClDist', "Download PDF"),
                    actionButton('butPlotHierClDist', 'Plot!'),
                    plotOutput('outPlotHierClDist'))
         )
@@ -454,7 +343,8 @@ shinyUI(fluidPage(
               'uiPlotHierSparNiter'
             ),
             checkboxInput('chBPlotHierSparClSel', 'Manually select clusters to display'),
-            uiOutput('uiPlotHierSparClSel')
+            uiOutput('uiPlotHierSparClSel'),
+            downloadButton('downCellClSpar', 'Download CSV with cell IDs and cluster no.')
           )
         ),
         
@@ -560,31 +450,8 @@ shinyUI(fluidPage(
                    br(),
                    
                    
-                   h4('Download plot'),
-                   fluidRow(
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierSparWidth',
-                         "Width",
-                         7,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierSparHeight',
-                         "Height",
-                         6,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(4,
-                            downloadButton('downPlotHierSpar', 'PDF'))
-                   ),
+                   downPlotUI('downPlotHierSparHM', "Download PDF"),
+
                    numericInput('inPlotHierSparHeatMapHeight', 
                                 'Display plot height [px]', 
                                 value = 600, 
@@ -597,59 +464,11 @@ shinyUI(fluidPage(
           # tabPanel('Heat-map int.',
           #          helpText("Choose your settings 2")),
           tabPanel('Time-courses',
-                   h4('Download plot'),
-                   fluidRow(
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierSparTrajWidth',
-                         "Width",
-                         7,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierSparTrajHeight',
-                         "Height",
-                         6,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(4,
-                            downloadButton('downPlotHierSparTraj', 'PDF'))
-                   ),
+                   downPlotUI('downPlotHierSparTraj', "Download PDF"),
                    actionButton('butPlotHierSparTraj', 'Plot!'),
                    plotOutput('outPlotHierSparTraj')),
           tabPanel('Cluster dist.',
-                   h4('Download plot'),
-                   fluidRow(
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierSparClDistWidth',
-                         "Width",
-                         7,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       4,
-                       numericInput(
-                         'inPlotHierSparClDistHeight',
-                         "Height",
-                         6,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(4,
-                            downloadButton('downPlotHierSparClDist', 'PDF'))
-                   ),
+                   downPlotUI('downPlotHierSparClDist', "Download PDF"),
                    actionButton('butPlotHierSparClDist', 'Plot!'),
                    plotOutput('outPlotHierSparClDist'))
         )
