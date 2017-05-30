@@ -142,12 +142,17 @@ shinyUI(fluidPage(
       ),
       
 
+      # scatter plot
+      tabPanel(
+        'Scatter',
+        tabScatterPlotUI('tabScatter')
+      ),
+      
       tabPanel(
         'Hierarchical',
         br(),
         fluidRow(
-          column(
-            6,
+          column(4,
             selectInput(
               "selectPlotHierLinkage",
               label = ("Select linkage method:"),
@@ -174,7 +179,7 @@ shinyUI(fluidPage(
               selected = 1
             )
           ),
-          column(6,
+          column(4,
                  sliderInput(
                    'inPlotHierNclust',
                    '#dendrogram branches to colour',
@@ -191,8 +196,6 @@ shinyUI(fluidPage(
                  downloadButton('downCellCl', 'Download CSV with cell IDs and cluster no.')
           )
         ),
-        
-        
         br(),
         #checkboxInput('inPlotHierSparInteractive', 'Interactive Plot?',  value = FALSE),
         

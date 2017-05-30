@@ -803,6 +803,9 @@ shinyServer(function(input, output, session) {
   }
   
   
+  ###### Scatter plot
+  callModule(tabScatterPlot, 'tabScatter', data4trajPlot)
+  
   ##### Hierarchical clustering
   
   output$uiPlotHierClSel = renderUI({
@@ -972,12 +975,12 @@ shinyServer(function(input, output, session) {
     #                                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.csv'),
     #            getDataCl(userFitDendHier, input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim))
     # 
-    # output$downloadDataClean <- downloadHandler(
-    #   filename = 'tCoursesSelected_clean.csv',
-    #   content = function(file) {
-    #     write.csv(data4trajPlot(), file, row.names = FALSE)
-    #   }
-    # )
+    output$downloadDataClean <- downloadHandler(
+      filename = 'tCoursesSelected_clean.csv',
+      content = function(file) {
+        write.csv(data4trajPlot(), file, row.names = FALSE)
+      }
+    )
     
     
     

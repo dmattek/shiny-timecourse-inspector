@@ -220,6 +220,105 @@ myNorm = function(in.dt,
   return(loc.dt)
 }
 
+# Plots a scatter plot with marginal histograms
+# Points are connected by a line (grouping by cellID)
+#
+# Assumes an input of data.table with
+# x, y - columns with x and y coordinates
+# id - a unique point identifier (here corresponds to cellID)
+# mid - a (0,1) column by which points are coloured (here corresponds to whether cells are within bounds)
+
+myGgplotScat = function(dt.arg,
+                        band.arg = NULL,
+                        facet.arg = NULL,
+                        facet.ncol.arg = 2,
+                        xlab.arg = NULL,
+                        ylab.arg = NULL,
+                        plotlab.arg = NULL,
+                        alpha.arg = 1,
+                        group.col.arg = NULL) {
+  p.tmp = ggplot(dt.arg, aes(x = x, y = y))
+  
+  if (is.null(group.col.arg)) {
+    p.tmp = p.tmp +
+      geom_point(alpha = alpha.arg, aes(group = id))
+  } else {
+    p.tmp = p.tmp +
+      geom_point(aes(colour = as.factor(get(group.col.arg)), group = id), alpha = alpha.arg) +
+      geom_path(aes(colour = as.factor(get(group.col.arg)), group = id), alpha = alpha.arg) +
+      scale_color_manual(name = group.col.arg, values =c("FALSE" = rhg_cols[7], "TRUE" = rhg_cols[3], "SELECTED" = 'green'))
+  }
+  
+  if (is.null(band.arg))
+    p.tmp = p.tmp +
+      stat_smooth(
+        method = function(formula, data, weights = weight)
+          rlm(formula, data, weights = weight, method = 'MM'),
+        fullrange = FALSE,
+        level = 0.95,
+        colour = 'blue'
+      )
+  else {
+    p.tmp = p.tmp +
+      geom_abline(slope = band.arg$a, intercept = band.arg$b) +
+      geom_abline(
+        slope = band.arg$a,
+        intercept =  band.arg$b + abs(band.arg$b)*band.arg$width,
+        linetype = 'dashed'
+      ) +
+      geom_abline(
+        slope = band.arg$a,
+        intercept = band.arg$b - abs(band.arg$b)*band.arg$width,
+        linetype = 'dashed'
+      )
+  }
+  
+  if (!is.null(facet.arg)) {
+    p.tmp = p.tmp +
+      facet_wrap(as.formula(paste("~", facet.arg)),
+                 ncol = facet.ncol.arg)
+    
+  }
+  
+  
+  if (!is.null(xlab.arg))
+    p.tmp = p.tmp +
+      xlab(paste0(xlab.arg, "\n"))
+  
+  if (!is.null(ylab.arg))
+    p.tmp = p.tmp +
+      ylab(paste0("\n", ylab.arg))
+  
+  if (!is.null(plotlab.arg))
+    p.tmp = p.tmp +
+      ggtitle(paste0(plotlab.arg, "\n"))
+  
+  
+  
+  p.tmp = p.tmp +
+    theme_bw(base_size = 18, base_family = "Helvetica") +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      axis.line.x = element_line(color = "black", size = 0.25),
+      axis.line.y = element_line(color = "black", size = 0.25),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      strip.text.x = element_text(size = 14, face = "bold"),
+      strip.text.y = element_text(size = 14, face = "bold"),
+      strip.background = element_blank(),
+      legend.key = element_blank(),
+      legend.key.height = unit(1, "lines"),
+      legend.key.width = unit(2, "lines"),
+      legend.position = "none"
+    )
+  
+  # Marginal distributions don;t work with plotly...
+  # if (is.null(facet.arg))
+  #   ggExtra::ggMarginal(p.scat, type = "histogram",  bins = 100)
+  # else
+  return(p.tmp)
+}
 
 myGgplotTheme = theme_bw(base_size = 18, base_family = "Helvetica") +
   theme(
