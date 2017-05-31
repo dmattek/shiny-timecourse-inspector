@@ -25,12 +25,15 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
     
     fluidRow(
       column(
-        6,
-        uiOutput(ns('varSelTptX')),
-        uiOutput(ns('varSelTptY'))
+        4,
+        uiOutput(ns('uiSelTptX')),
+        uiOutput(ns('uiSelTptY')),
+        checkboxInput(ns('chBfoldChange'), 'Y-axis displays fold change between the two t-points'),
+        numericInput(ns('inNeighTpts'), '#t-pts left & right', value = 0, step = 1, min = 0),
+        radioButtons(ns('rBstats'), 'Operation:', list('Mean' = 1, 'Min' = 2, 'Max' = 3))
       ),
       column(
-        6,
+        4,
         numericInput(
           ns('inPlotHeight'),
           'Display plot height',
@@ -74,8 +77,8 @@ getDataTpts <- reactive({
     return(unique(loc.dt$realtime))
 })
 
-output$varSelTptX = renderUI({
-  cat(file = stderr(), 'UI varSelTptX\n')
+output$uiSelTptX = renderUI({
+  cat(file = stderr(), 'UI uiSelTptX\n')
   
   ns <- session$ns
   
@@ -92,8 +95,8 @@ output$varSelTptX = renderUI({
   }
 })
 
-output$varSelTptY = renderUI({
-  cat(file = stderr(), 'UI varSelTptY\n')
+output$uiSelTptY = renderUI({
+  cat(file = stderr(), 'UI uiSelTptY\n')
   
   ns <- session$ns
   
@@ -117,17 +120,49 @@ data4scatterPlot <- reactive({
   if(is.null(loc.dt.in))
     return(NULL)
   
-  loc.dt = data.table(x = loc.dt.in[realtime == input$inSelTptX, y],  
-                      y = loc.dt.in[realtime == input$inSelTptY, y],
-                      group = loc.dt.in[realtime == input$inSelTptX, group])
+  loc.tpts.x = input$inSelTptX
+  loc.tpts.y = input$inSelTptY
   
+  # if neigbbouring points selected
+  if (input$inNeighTpts > 0) {
+    loc.dt.in.tpts = unique(loc.dt.in$realtime)
+    
+    loc.tpts.x.id = seq(which(loc.dt.in.tpts == loc.tpts.x) - input$inNeighTpts, which(loc.dt.in.tpts == loc.tpts.x) + input$inNeighTpts, 1)
+    loc.tpts.y.id = seq(which(loc.dt.in.tpts == loc.tpts.y) - input$inNeighTpts, which(loc.dt.in.tpts == loc.tpts.y) + input$inNeighTpts, 1)
+    
+    loc.tpts.x.id = loc.tpts.x.id[loc.tpts.x.id > 0]
+    loc.tpts.y.id = loc.tpts.y.id[loc.tpts.y.id > 0]
+    
+    loc.tpts.x = loc.dt.in.tpts[loc.tpts.x.id]
+    loc.tpts.y = loc.dt.in.tpts[loc.tpts.y.id]
+    
+    #cat(loc.tpts.x.id, '\n')
+    #cat(loc.tpts.y.id, '\n')
+
+  } 
+
+  #cat(loc.tpts.x, '\n')
+  #cat(loc.tpts.y, '\n')
   
-  loc.dt.x = loc.dt.in[realtime == input$inSelTptX]
-  loc.dt.y = loc.dt.in[realtime == input$inSelTptY]
+  if (input$rBstats == 1) {
+    loc.dt.x = loc.dt.in[realtime %in% loc.tpts.x, .(y.aggr = mean(y)), by = .(group, id)]
+    loc.dt.y = loc.dt.in[realtime %in% loc.tpts.y, .(y.aggr = mean(y)), by = .(group, id)]
+  } else if (input$rBstats == 2) {
+    loc.dt.x = loc.dt.in[realtime %in% loc.tpts.x, .(y.aggr = min(y)), by = .(group, id)]
+    loc.dt.y = loc.dt.in[realtime %in% loc.tpts.y, .(y.aggr = min(y)), by = .(group, id)]
+  } else {
+    loc.dt.x = loc.dt.in[realtime %in% loc.tpts.x, .(y.aggr = max(y)), by = .(group, id)]
+    loc.dt.y = loc.dt.in[realtime %in% loc.tpts.y, .(y.aggr = max(y)), by = .(group, id)]
+  }
+
   loc.dt = merge(loc.dt.x, loc.dt.y, by = 'id')
   
-  setnames(loc.dt, c('group.x', 'y.x', 'y.y'), c('group', 'x', 'y'))
+  loc.dt[, group.y := NULL]
+  setnames(loc.dt, c('group.x', 'y.aggr.x', 'y.aggr.y'), c('group', 'x', 'y'))
 
+  if (input$chBfoldChange) {
+    loc.dt[ , y := y / x]
+  }
   return(loc.dt)
   
 })
@@ -197,6 +232,12 @@ output$outPlotScatterInt <- renderPlotly({
   # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
   # When running on a server. Based on:
   # https://github.com/ropensci/plotly/issues/494
+  
+  if (locBut == 0) {
+    cat(file=stderr(), 'plotScatterInt Go button not pressed\n')
+    return(NULL)
+  }
+  
   if (names(dev.cur()) != "null device") dev.off()
   pdf(NULL)
 
