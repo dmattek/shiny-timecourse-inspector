@@ -1459,4 +1459,7 @@ shinyServer(function(input, output, session) {
       labCol = loc.colnames
     )
   })
+
+  callModule(clustBay, 'TabClustBay', data4clust)
+  
 })

@@ -145,14 +145,23 @@ userDataGen <- function() {
   cat(file=stderr(), 'userDataGen: in\n')
   
   locNtp = 40
-  locNtracks = 5
+  locNtracks = 100
   locNsites = 4
-  locNwells = 2
+  locNwells = 1
+  
+  x.rand.1 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, 2, 0.5), rnorm(locNtp * locNtracks * locNsites * 0.5, 2, 0.5))
+  x.rand.2 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, 0, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 0, 0.1))
+  x.rand.3 = rep(rnorm(locNtracks, 2, 0.5), 1, each = locNtp)
+  x.rand.4 = rep(rnorm(locNtracks, 1, 0.1), 1, each = locNtp)
+  
+  x.arg = rep(seq(0, locNtp-1) / locNtp * 4 * pi, locNtracks * locNsites)
   
   dt.nuc = data.table(Metadata_Site = rep(1:locNsites, each = locNtp * locNtracks),
                       Metadata_Well = rep(1:locNwells, each = locNtp * locNsites * locNtracks / locNwells),
-                      Metadata_RealTime = rep(1:locNtp, locNsites* locNtracks),
-                      objCyto_Intensity_MeanIntensity_imErkCor = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 1, 0.2)),
+                      Metadata_RealTime = x.arg,
+#                      objCyto_Intensity_MeanIntensity_imErkCor = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 1, 0.2)),
+#                      objNuc_Intensity_MeanIntensity_imErkCor  = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.2)),
+                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.3 + ifelse(x.arg < 4, 0, 1) / x.rand.3,
                       objNuc_Intensity_MeanIntensity_imErkCor  = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.2)),
                       TrackLabel = rep(1:(locNtracks*locNsites), each = locNtp))
   

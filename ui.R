@@ -475,7 +475,12 @@ shinyUI(fluidPage(
                    actionButton('butPlotHierSparClDist', 'Plot!'),
                    plotOutput('outPlotHierSparClDist'))
         )
-      )
+      ),
+      
+      tabPanel(
+        'Bayesian Cl.',
+        clustBayUI('TabClustBay'))
+      
     ))
   )
 ))

@@ -1,4 +1,4 @@
-# RShiny module for performing hierarchical clustering
+# RShiny module for the scatter plot
 # Use:
 # in ui.R
 # tabPanel(
@@ -28,7 +28,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         4,
         uiOutput(ns('uiSelTptX')),
         uiOutput(ns('uiSelTptY')),
-        checkboxInput(ns('chBfoldChange'), 'Y-axis displays fold change between the two t-points'),
+        checkboxInput(ns('chBfoldChange'), 'Y-axis displays difference between two t-points'),
         numericInput(ns('inNeighTpts'), '#t-pts left & right', value = 0, step = 1, min = 0),
         radioButtons(ns('rBstats'), 'Operation:', list('Mean' = 1, 'Min' = 2, 'Max' = 3))
       ),
@@ -161,7 +161,7 @@ data4scatterPlot <- reactive({
   setnames(loc.dt, c('group.x', 'y.aggr.x', 'y.aggr.y'), c('group', 'x', 'y'))
 
   if (input$chBfoldChange) {
-    loc.dt[ , y := y / x]
+    loc.dt[ , y := y - x]
   }
   return(loc.dt)
   
@@ -233,6 +233,7 @@ output$outPlotScatterInt <- renderPlotly({
   # When running on a server. Based on:
   # https://github.com/ropensci/plotly/issues/494
   
+  locBut = input$butGoScatter
   if (locBut == 0) {
     cat(file=stderr(), 'plotScatterInt Go button not pressed\n')
     return(NULL)
