@@ -113,32 +113,9 @@ shinyUI(fluidPage(
         downPlotUI('downPlotTraj', "Download PDF")
       ),
       
-      tabPanel("Box-plots",
-               br(),
-               fluidRow(
-                 column(
-                   6,
-                   checkboxInput('inPlotBoxNotches', 'Box plot notches?', FALSE),
-                   checkboxInput('inPlotBoxOutliers', 'Box plot outliers?', TRUE)
-                 ),
-                 column(
-                   6,
-                   selectInput('selPlotBoxLegendPos', 
-                               label = 'Select legend position',
-                               choices = list(
-                                 "Top" = 'top',
-                                 "Right" = 'right',
-                                 "Bottom" = 'bottom'
-                               ),
-                               selected = 'top')
-                 )
-               ),
-               
-               uiOutput('varSelTpts'),
-               
-               actionButton('butPlotBox', 'Plot!'),
-               plotOutput('outPlotBox', height = 800),
-               downPlotUI('downPlotBox', "Download PDF")
+      tabPanel(
+        "Box-plots",
+        tabBoxPlotUI('tabBoxPlot')
       ),
       
 
@@ -475,11 +452,11 @@ shinyUI(fluidPage(
                    actionButton('butPlotHierSparClDist', 'Plot!'),
                    plotOutput('outPlotHierSparClDist'))
         )
-      ),
-      
-      tabPanel(
-        'Bayesian Cl.',
-        clustBayUI('TabClustBay'))
+      )
+      # 
+      # tabPanel(
+      #   'Bayesian Cl.',
+      #   clustBayUI('TabClustBay'))
       
     ))
   )

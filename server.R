@@ -20,7 +20,7 @@ library(sparcl) # sparse hierarchical and k-means
 library(scales) # for percentages on y scale
 
 # increase file upload limit
-options(shiny.maxRequestSize = 30 * 1024 ^ 2)
+options(shiny.maxRequestSize = 80 * 1024 ^ 2)
 
 shinyServer(function(input, output, session) {
   useShinyjs()
@@ -377,9 +377,18 @@ shinyServer(function(input, output, session) {
     if (is.null(loc.dt))
       return(NULL)
     
-    loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
-                                           sprintf("%04d", get(input$inSelTrackLabel)),
-                                           sep = "_")]
+    loc.types = lapply(loc.dt, class)
+    if(loc.types[[input$inSelTrackLabel]] == 'numeric')
+    {
+      loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
+                                             sprintf("%04d", get(input$inSelTrackLabel)),
+                                             sep = "_")]
+    } else {
+      loc.dt[, trackObjectsLabelUni := paste(sprintf("%03s", get(input$inSelSite)),
+                                             sprintf("%s", get(input$inSelTrackLabel)),
+                                             sep = "_")]
+    }
+    
     
     return(loc.dt)
   })
@@ -559,18 +568,6 @@ shinyServer(function(input, output, session) {
     return(loc.out)
   })
   
-  # prepare data for plotting boxplots
-  # uses the same dt as for trajectory plotting
-  # returns dt with these columns:
-  data4boxPlot <- reactive({
-    cat(file = stderr(), 'data4boxPlot\n')
-    
-    loc.dt = data4trajPlot()
-    if (is.null(loc.dt))
-      return(NULL)
-    
-    loc.out = loc.dt[realtime %in% input$inSelTpts]
-  })
   
   
   # prepare data for clustering
@@ -718,89 +715,9 @@ shinyServer(function(input, output, session) {
   }
   
   
+  ###### Box-plot
+  callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlot)
   
-  ####
-  ## UI for box-plot
-  
-  output$varSelTpts = renderUI({
-    cat(file = stderr(), 'UI varSelTpts\n')
-    
-    loc.v = getDataTpts()
-    if (!is.null(loc.v)) {
-      selectInput(
-        'inSelTpts',
-        'Select one or more timepoints:',
-        loc.v,
-        width = '100%',
-        selected = 0,
-        multiple = TRUE
-      )
-    }
-  })
-  
-  # Boxplot - display
-  output$outPlotBox = renderPlot({
-    locBut = input$butPlotBox
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotBox: Go button not pressed\n')
-      return(NULL)
-    }
-    
-    plotBox()
-    
-  }, height = 800)
-  
-  # Boxplot - download pdf
-  callModule(downPlot, "downPlotBox", 'boxplot.pdf', plotBox, TRUE)
-
-  # Function instead of reactive as per:
-  # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
-  # This function is used to plot and to downoad a pdf
-  
-  plotBox <- function() {
-    cat(file = stderr(), 'plotBox\n')
-    
-    loc.dt = data4boxPlot()
-    
-    cat(file = stderr(), "plotBox: on to plot\n\n")
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotBox: dt is NULL\n')
-      return(NULL)
-    }
-    
-    cat(file = stderr(), 'plotBox:dt not NULL\n')
-
-    
-    
-    ggplot(loc.dt, aes(x = as.factor(realtime), y = y)) +
-      geom_boxplot(
-        aes(fill = group),
-        #position = position_dodge(width = 1),
-        notch = input$inPlotBoxNotches,
-        outlier.colour = if(input$inPlotBoxOutliers) 'red' else NA
-      ) +
-      scale_fill_discrete(name = '') +
-      xlab('\nTime (min)') +
-      ylab('') +
-      theme_bw(base_size = 18, base_family = "Helvetica") +
-      theme(
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(),
-        axis.line.x = element_line(color = "black", size = 0.25),
-        axis.line.y = element_line(color = "black", size = 0.25),
-        axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        strip.text.x = element_text(size = 14, face = "bold"),
-        strip.text.y = element_text(size = 14, face = "bold"),
-        strip.background = element_blank(),
-        legend.key = element_blank(),
-        legend.key.height = unit(1, "lines"),
-        legend.key.width = unit(2, "lines"),
-        legend.position = input$selPlotBoxLegendPos
-      )
-  }
   
   
   ###### Scatter plot

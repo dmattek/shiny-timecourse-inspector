@@ -12,6 +12,7 @@
 
 require(plotly) # interactive plot
 require(robust)
+require(MASS)
 
 # UI
 tabScatterPlotUI <- function(id, label = "Comparing t-points") {
