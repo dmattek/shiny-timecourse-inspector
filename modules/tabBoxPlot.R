@@ -113,7 +113,7 @@ tabBoxPlot = function(input, output, session, in.data) {
     ns <- session$ns
     
     if(input$inPlotType == 'dot')
-      sliderInput(ns('inPlotDotNbins'), 'Dot-plot binsize:', min = 0.01, max = 1, value = .1)
+      sliderInput(ns('inPlotDotNbins'), 'Dot-plot bin size (10^x):', min = -4, max = 4, value = 0, step = 0.1)
   })
   
   
@@ -228,7 +228,7 @@ tabBoxPlot = function(input, output, session, in.data) {
       )
     
     if(input$inPlotType == 'dot')
-      p.out = p.out + geom_dotplot(aes(fill = group), binaxis = "y", stackdir = "center", position = "dodge", binwidth = input$inPlotDotNbins, method = 'histodot')
+      p.out = p.out + geom_dotplot(aes(fill = group), binaxis = "y", stackdir = "center", position = "dodge", binwidth = 10^(input$inPlotDotNbins), method = 'histodot')
     
     if(input$inPlotType == 'viol')
       p.out = p.out + geom_violin(aes(fill = group))
