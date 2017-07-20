@@ -4,21 +4,25 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
   tagList(
+    h4(
+      "Box-/dot-/violin plot at selected time points"
+    ),
+    br(),
+    
     uiOutput(ns('varSelTpts')),
     
-    DT::dataTableOutput(ns('outTabStats')),
-    downloadButton(ns('downloadData4BoxPlot'), 'Download single-cell data'),
+    checkboxInput(ns('chbTabStats'), 'Show stats', FALSE),
+    uiOutput(ns('uiTabStats')),
+    uiOutput(ns('uiDownSingleCellData')),
     
+    br(),
     fluidRow(
       column(
         6,
         radioButtons(ns('inPlotType'), 'Plot type:', list('Box-plot' = 'box', 
                                                           'Dot-plot' = 'dot', 
                                                           'Violin-plot' = 'viol',
-                                                          'Line-plot' = 'line')),
-        uiOutput(ns('uiPlotBoxNotches')),
-        uiOutput(ns('uiPlotBoxOutliers')),
-        uiOutput(ns('uiPlotDotNbins'))
+                                                          'Line-plot' = 'line'))
       ),
       column(
         6,
@@ -31,7 +35,10 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
             "Bottom" = 'bottom'
           ),
           selected = 'top'
-        )
+        ),
+        uiOutput(ns('uiPlotBoxNotches')),
+        uiOutput(ns('uiPlotBoxOutliers')),
+        uiOutput(ns('uiPlotDotNbins'))
       )
     ),
 
@@ -88,6 +95,24 @@ tabBoxPlot = function(input, output, session, in.data) {
       )
     }
   })
+
+  output$uiTabStats = renderUI({
+    cat(file = stderr(), 'UI uiTabStats\n')
+    ns <- session$ns
+    
+    if(input$chbTabStats) {
+      DT::dataTableOutput(ns('outTabStats'))
+    }
+  })
+  
+  output$uiDownSingleCellData = renderUI({
+    cat(file = stderr(), 'UI uiDownSingleCellData\n')
+    ns <- session$ns
+    
+    if(input$chbTabStats) {
+      downloadButton(ns('downloadData4BoxPlot'), 'Download single-cell data')
+    }
+  })
   
   output$uiPlotBoxNotches = renderUI({
     cat(file = stderr(), 'UI uiPlotBoxNotches\n')
@@ -124,9 +149,15 @@ tabBoxPlot = function(input, output, session, in.data) {
     if (is.null(loc.dt))
       return(NULL)
     
-    loc.dt.aggr = loc.dt[, sapply(.SD, function(x) list('Mean' = mean(x), 'CV' = sd(x)/mean(x), 'Median' = median(x), 'rCV (IQR)' = IQR(x)/median(x), 'rCV (MAD)'= mad(x)/median(x))), .SDcols = c('y'), by = .(realtime, group)]
-    setnames(loc.dt.aggr, c('Time point', 'Group', 'Mean', 'CV', 'Median', 'rCV IQR', 'rCV MAD'))
-    print(loc.dt.aggr)
+    loc.dt.aggr = loc.dt[, sapply(.SD, function(x) list('N' = .N, 
+                                                        'Mean' = mean(x), 
+                                                        'CV' = sd(x)/mean(x), 
+                                                        'Median' = median(x), 
+                                                        'rCV (IQR)' = IQR(x)/median(x), 
+                                                        'rCV (MAD)'= mad(x)/median(x))), .SDcols = c('y'), by = .(realtime, group)]
+    
+    setnames(loc.dt.aggr, c('Time point', 'Group','N', 'Mean', 'CV', 'Median', 'rCV IQR', 'rCV MAD'))
+    #print(loc.dt.aggr)
     return(loc.dt.aggr)
   })
   
@@ -176,7 +207,7 @@ tabBoxPlot = function(input, output, session, in.data) {
                                                         filename = 'hitStats'),
                                                    list(extend='pdf',
                                                         filename= 'hitStats')),
-                                    text = 'Download')))) %>% formatRound(3:7, 3)
+                                    text = 'Download')))) %>% formatRound(4:8, 3)
   })
   
   # Boxplot - display
