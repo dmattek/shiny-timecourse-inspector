@@ -93,7 +93,7 @@ shinyUI(fluidPage(
           ),
           column(
             4,
-            sliderInput('sliPlotTrajSkip', 'Plot every n-th point:', min = 1, max = 10, value = 5, step = 1)
+            sliderInput('sliPlotTrajSkip', 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1)
           ),
           column(
             4,
