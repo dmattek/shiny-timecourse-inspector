@@ -67,11 +67,17 @@ myGgplotTraj = function(dt.arg,
                         tfreq.arg = 1,
                         ylim.arg = NULL,
                         stim.bar.height.arg = 0.1,
-                        stim.bar.width.arg = 0.5) {
+                        stim.bar.width.arg = 0.5,
+                        aux.label1 = NULL,
+                        aux.label2 = NULL) {
+  
+  # aux.label12 are required for plotting XY positions in the tooltip of the interactive (plotly) graph
   p.tmp = ggplot(dt.arg,
                  aes_string(x = x.arg,
                             y = y.arg,
-                            group = group.arg))
+                            group = group.arg,
+                            label  = aux.label1,
+                            label2 = aux.label2))
   
   if (is.null(line.col.arg)) {
     p.tmp = p.tmp +

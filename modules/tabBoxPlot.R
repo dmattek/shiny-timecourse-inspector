@@ -18,14 +18,16 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
     br(),
     fluidRow(
       column(
-        6,
+        4,
         radioButtons(ns('inPlotType'), 'Plot type:', list('Box-plot' = 'box', 
                                                           'Dot-plot' = 'dot', 
                                                           'Violin-plot' = 'viol',
-                                                          'Line-plot' = 'line'))
+                                                          'Line-plot' = 'line')),
+        checkboxInput(ns('chBPlotBoxInt'), 'Interactive Plot?'),
+        actionButton(ns('butPlotBox'), 'Plot!')
       ),
       column(
-        6,
+        4,
         selectInput(
           ns('selPlotBoxLegendPos'),
           label = 'Select legend position',
@@ -39,11 +41,29 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
         uiOutput(ns('uiPlotBoxNotches')),
         uiOutput(ns('uiPlotBoxOutliers')),
         uiOutput(ns('uiPlotDotNbins'))
+      ),
+      column(
+        4,
+        numericInput(
+          ns('inPlotBoxWidth'),
+          'Width [%]:',
+          value = 100,
+          min = 10,
+          width = '100px',
+          step = 10
+        ),
+        numericInput(
+          ns('inPlotBoxHeight'),
+          'Height [px]:',
+          value = 800,
+          min = 100,
+          width = '100px',
+          step = 50
+        )
       )
     ),
-
-    actionButton(ns('butPlotBox'), 'Plot!'),
-    plotOutput(ns('outPlotBox'), height = 800),
+    
+    uiOutput(ns('uiPlotBox')),
     downPlotUI(ns('downPlotBox'), "Download PDF")
   )
   
@@ -221,7 +241,41 @@ tabBoxPlot = function(input, output, session, in.data) {
     
     plotBox()
     
-  }, height = 800)
+  })
+  
+
+  output$outPlotBoxInt = renderPlotly({
+    locBut = input$butPlotBox
+    
+    if (locBut == 0) {
+      cat(file = stderr(), 'plotBox: Go button not pressed\n')
+      return(NULL)
+    }
+    
+    # This is required to avoid 
+    # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
+    # When running on a server. Based on:
+    # https://github.com/ropensci/plotly/issues/494
+    if (names(dev.cur()) != "null device") dev.off()
+    pdf(NULL)
+    
+    return( ggplotly(plotBox())  %>% layout(boxmode = 'group', width = '100%', height = '100%'))
+    
+  })
+  
+  
+  output$uiPlotBox <- renderUI({
+    ns <- session$ns
+    
+    if (input$chBPlotBoxInt)
+      plotlyOutput(ns("outPlotBoxInt"), 
+                   width = paste0(input$inPlotBoxWidth, '%'),
+                   height = paste0(input$inPlotBoxHeight, 'px'))
+    else
+      plotOutput(ns('outPlotBox'),
+                 width = paste0(input$inPlotBoxWidth, '%'),
+                 height = paste0(input$inPlotBoxHeight, 'px'))
+  })
   
   # Boxplot - download pdf
   callModule(downPlot, "downPlotBox", 'boxplot.pdf', plotBox, TRUE)
@@ -245,7 +299,7 @@ tabBoxPlot = function(input, output, session, in.data) {
     
     
     
-    p.out = ggplot(loc.dt, aes(x = as.factor(realtime), y = y))
+    p.out = ggplot(loc.dt, aes(x = as.factor(realtime), y = y)) 
     
     if (input$inPlotType == 'box')
       p.out = p.out + geom_boxplot(

@@ -30,6 +30,7 @@ shinyUI(fluidPage(
       actionButton('inDataGen1', 'Generate artificial dataset'),
 
       tags$hr(),
+      checkboxInput('chBtrackUni', 'Track Label unique across entire dataset', FALSE),
       uiOutput('varSelSite'),
       uiOutput('varSelTrackLabel'),
       uiOutput('varSelGroup'),
@@ -68,6 +69,13 @@ shinyUI(fluidPage(
     mainPanel(tabsetPanel(
       tabPanel(
         "Time courses",
+        h4(
+          "Plot time series"
+        ),
+  
+        br(),
+        checkboxInput('chBhighlightTraj', 'Highlight trajectories?', FALSE),
+        uiOutput('varSelHighlight'),
         br(),
         fluidRow(
           column(
@@ -79,18 +87,13 @@ shinyUI(fluidPage(
               min = 1,
               width = '100px',
               step = 1
-            )
+            ),
+            checkboxInput('chBplotTrajInt', 'Interactive Plot?'),
+            actionButton('butPlotTraj', 'Plot!')
           ),
           column(
             4,
-            numericInput(
-              'inPlotTrajHeight',
-              'Height [px]:',
-              value = 800,
-              min = 100,
-              width = '100px',
-              step = 50
-            )
+            sliderInput('sliPlotTrajSkip', 'Plot every n-th point:', min = 1, max = 10, value = 5, step = 1)
           ),
           column(
             4,
@@ -102,13 +105,17 @@ shinyUI(fluidPage(
               max = 100,
               width = '100px',
               step = 10
+            ),
+            numericInput(
+              'inPlotTrajHeight',
+              'Height [px]:',
+              value = 800,
+              min = 100,
+              width = '100px',
+              step = 50
             )
           )
         ),
-        checkboxInput('chBhighlightTraj', 'Highlight trajectories?', FALSE),
-        uiOutput('varSelHighlight'),
-        br(),
-        actionButton('butPlotTraj', 'Plot!'),
         uiOutput('uiPlotTraj'),
         downPlotUI('downPlotTraj', "Download PDF")
       ),

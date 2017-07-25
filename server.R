@@ -135,17 +135,20 @@ shinyServer(function(input, output, session) {
   
   output$varSelSite = renderUI({
     cat(file = stderr(), 'UI varSelSite\n')
-    locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'ite'][1] # index 1 at the end in case more matches; select 1st
     
-    cat(locColSel, '\n')
-    selectInput(
-      'inSelSite',
-      'Select FOV (e.g. Metadata_Site or Metadata_Series):',
-      locCols,
-      width = '100%',
-      selected = locColSel
-    )
+    if (!input$chBtrackUni) {
+      locCols = getDataNucCols()
+      locColSel = locCols[locCols %like% 'ite'][1] # index 1 at the end in case more matches; select 1st
+      
+      cat(locColSel, '\n')
+      selectInput(
+        'inSelSite',
+        'Select FOV (e.g. Metadata_Site or Metadata_Series):',
+        locCols,
+        width = '100%',
+        selected = locColSel
+      )
+    }
   })
   
   
@@ -377,16 +380,28 @@ shinyServer(function(input, output, session) {
     if (is.null(loc.dt))
       return(NULL)
     
-    loc.types = lapply(loc.dt, class)
-    if(loc.types[[input$inSelTrackLabel]] == 'numeric')
-    {
-      loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
-                                             sprintf("%04d", get(input$inSelTrackLabel)),
-                                             sep = "_")]
+    if (!input$chBtrackUni) {
+      loc.types = lapply(loc.dt, class)
+      if(loc.types[[input$inSelTrackLabel]] %in% c('numeric', 'integer') & loc.types[[input$inSelSite]] %in% c('numeric', 'integer'))
+      {
+        loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
+                                               sprintf("%04d", get(input$inSelTrackLabel)),
+                                               sep = "_")]
+      } else if(loc.types[[input$inSelTrackLabel]] %in% c('numeric', 'integer')) {
+        loc.dt[, trackObjectsLabelUni := paste(sprintf("%s", get(input$inSelSite)),
+                                               sprintf("%04d", get(input$inSelTrackLabel)),
+                                               sep = "_")]
+      } else if(loc.types[[input$inSelSite]] %in% c('numeric', 'integer')) {
+        loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
+                                               sprintf("%s", get(input$inSelTrackLabel)),
+                                               sep = "_")]
+      } else {
+        loc.dt[, trackObjectsLabelUni := paste(sprintf("%s", get(input$inSelSite)),
+                                               sprintf("%s", get(input$inSelTrackLabel)),
+                                               sep = "_")]
+      }
     } else {
-      loc.dt[, trackObjectsLabelUni := paste(sprintf("%03s", get(input$inSelSite)),
-                                             sprintf("%s", get(input$inSelTrackLabel)),
-                                             sep = "_")]
+      loc.dt[, trackObjectsLabelUni := get(input$inSelTrackLabel)]
     }
     
     
@@ -482,16 +497,39 @@ shinyServer(function(input, output, session) {
     loc.tracks.highlight = input$inSelHighlight
     locBut = input$chBhighlightTraj
     
+    
+    # Find column names with position
+    loc.s.pos.x = names(loc.dt)[names(loc.dt) %like% 'Location.*X']
+    loc.s.pos.y = names(loc.dt)[names(loc.dt) %like% 'Location.*Y']
+    
+    if (length(loc.s.pos.x) == 1 & length(loc.s.pos.y) == 1)
+      locPos = TRUE
+    else
+      locPos = FALSE
+    
     # if dataset contains column mid.in with trajectory filtering status,
     # then, include it in plotting
     if (sum(names(loc.dt) %in% 'mid.in') > 0) {
+      if (locPos) # position columns present
       loc.out = loc.dt[, .(
         y = eval(parse(text = loc.s.y)),
         id = trackObjectsLabelUni,
         group = eval(parse(text = loc.s.gr)),
         realtime = eval(parse(text = loc.s.rt)),
+        pos.x = get(loc.s.pos.x),
+        pos.y = get(loc.s.pos.y),
         mid.in = mid.in
-      )]
+      )] else
+        loc.out = loc.dt[, .(
+          y = eval(parse(text = loc.s.y)),
+          id = trackObjectsLabelUni,
+          group = eval(parse(text = loc.s.gr)),
+          realtime = eval(parse(text = loc.s.rt)),
+          mid.in = mid.in
+        )]
+      
+      
+      
       
       # add 3rd level with status of track selection
       # to a column with trajectory filtering status
@@ -500,18 +538,30 @@ shinyServer(function(input, output, session) {
       }
       
     } else {
+      if (locPos) # position columns present
       loc.out = loc.dt[, .(
         y = eval(parse(text = loc.s.y)),
         id = trackObjectsLabelUni,
         group = eval(parse(text = loc.s.gr)),
-        realtime = eval(parse(text = loc.s.rt))
-      )]
+        realtime = eval(parse(text = loc.s.rt)),
+        pos.x = get(loc.s.pos.x),
+        pos.y = get(loc.s.pos.y)
+      )] else
+        loc.out = loc.dt[, .(
+          y = eval(parse(text = loc.s.y)),
+          id = trackObjectsLabelUni,
+          group = eval(parse(text = loc.s.gr)),
+          realtime = eval(parse(text = loc.s.rt))
+        )]
+      
       
       # add a column with status of track selection
       if (locBut) {
         loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
       }
     }
+    
+    # add XY location if present in the dataset
     
     # remove NAs
     loc.out = loc.out[complete.cases(loc.out)]
@@ -645,14 +695,30 @@ shinyServer(function(input, output, session) {
   })
   
   output$uiPlotTraj = renderUI({
-    plotlyOutput(
-      "plotTrajPlotly",
-      width = paste0(input$inPlotTrajWidth, '%'),
-      height = paste0(input$inPlotTrajHeight, 'px')
-    )
+    if (input$chBplotTrajInt)
+      plotlyOutput(
+        "outPlotTrajInt",
+        width = paste0(input$inPlotTrajWidth, '%'),
+        height = paste0(input$inPlotTrajHeight, 'px')
+      ) else
+        plotOutput(
+          "outPlotTraj",
+          width = paste0(input$inPlotTrajWidth, '%'),
+          height = paste0(input$inPlotTrajHeight, 'px')
+        )
   })
   
-  output$plotTrajPlotly <- renderPlotly({
+  output$outPlotTraj <- renderPlot({
+
+    loc.p = plotTraj()
+    if(is.null(loc.p))
+      return(NULL)
+    
+    return(loc.p)
+  })
+
+  
+  output$outPlotTrajInt <- renderPlotly({
     # This is required to avoid
     # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
     # When running on a server. Based on:
@@ -667,6 +733,8 @@ shinyServer(function(input, output, session) {
     
     return(plotly_build(loc.p))
   })
+  
+  
   
   # Trajectory plot - download pdf
   callModule(downPlot, "downPlotTraj", 'tcourses.pdf', plotTraj, TRUE)
@@ -699,6 +767,15 @@ shinyServer(function(input, output, session) {
       loc.line.col.arg = 'mid.in'
     else
       loc.line.col.arg = NULL
+
+    # select every other point for plotting
+    loc.dt = loc.dt[, .SD[seq(1, .N, input$sliPlotTrajSkip)], by = id]
+    
+    # check if columns with XY positions are present
+    if (sum(names(loc.dt) %like% 'pos') == 2)
+      locPos = TRUE
+    else
+      locPos = FALSE
     
     p.out = myGgplotTraj(
       dt.arg = loc.dt,
@@ -708,7 +785,9 @@ shinyServer(function(input, output, session) {
       facet.arg = 'group',
       facet.ncol.arg = input$inPlotTrajFacetNcol,
       xlab.arg = 'Time (min)',
-      line.col.arg = loc.line.col.arg
+      line.col.arg = loc.line.col.arg,
+      aux.label1 = if (locPos) 'pos.x' else NULL,
+      aux.label2 = if (locPos) 'pos.y' else NULL
     )
     
     return(p.out)
@@ -858,7 +937,7 @@ shinyServer(function(input, output, session) {
   }
   
   
-  # download a list of cellIDs with cluster assihnments
+  # download a list of cellIDs with cluster assignments
   output$downCellCl <- downloadHandler(
     filename = function() {
       paste0('clust_hierch_data_',
@@ -892,6 +971,7 @@ shinyServer(function(input, output, session) {
     #                                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.csv'),
     #            getDataCl(userFitDendHier, input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim))
     # 
+  
     output$downloadDataClean <- downloadHandler(
       filename = 'tCoursesSelected_clean.csv',
       content = function(file) {

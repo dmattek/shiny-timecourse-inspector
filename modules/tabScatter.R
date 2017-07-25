@@ -29,7 +29,10 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         4,
         uiOutput(ns('uiSelTptX')),
         uiOutput(ns('uiSelTptY')),
-        checkboxInput(ns('chBfoldChange'), 'Y-axis displays difference between two t-points'),
+        checkboxInput(ns('chBfoldChange'), 'Y-axis displays difference between two t-points')
+      ),
+      column(
+        4, 
         numericInput(ns('inNeighTpts'), '#t-pts left & right', value = 0, step = 1, min = 0),
         radioButtons(ns('rBstats'), 'Operation:', list('Mean' = 1, 'Min' = 2, 'Max' = 3))
       ),
@@ -37,7 +40,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         4,
         numericInput(
           ns('inPlotHeight'),
-          'Display plot height',
+          'Display plot height [px]',
           value = 1000,
           min = 100,
           step = 100
@@ -53,10 +56,10 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
     ),
     
     br(),
-    actionButton(ns('butGoScatter'), 'Plot!'),
     checkboxInput(ns('plotInt'), 
                   'Interactive Plot?',
                   value = FALSE),
+    actionButton(ns('butGoScatter'), 'Plot!'),
     uiOutput(ns("plotInt_ui")),
     downPlotUI(ns('downPlotScatter'), "Download PDF")
   )
