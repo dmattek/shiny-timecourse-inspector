@@ -271,13 +271,13 @@ shinyUI(fluidPage(
           # tabPanel('Heat-map int.',
           #          helpText("Choose your settings 2")),
           tabPanel('Time-courses',
-                   downPlotUI('downPlotHierTraj', "Download PDF"),
                    actionButton('butPlotHierTraj', 'Plot!'),
-                   plotOutput('outPlotHierTraj')),
+                   plotOutput('outPlotHierTraj' , height = '800px', width = 'auto'),
+                   downPlotUI('downPlotHierTraj', "Download PDF")),
           tabPanel('Cluster dist.',
-                   downPlotUI('downPlotHierClDist', "Download PDF"),
                    actionButton('butPlotHierClDist', 'Plot!'),
-                   plotOutput('outPlotHierClDist'))
+                   plotOutput('outPlotHierClDist', height = '800px', width = 'auto'),
+                   downPlotUI('downPlotHierClDist', "Download PDF"))
         )
       ),
       
@@ -451,13 +451,13 @@ shinyUI(fluidPage(
           # tabPanel('Heat-map int.',
           #          helpText("Choose your settings 2")),
           tabPanel('Time-courses',
-                   downPlotUI('downPlotHierSparTraj', "Download PDF"),
                    actionButton('butPlotHierSparTraj', 'Plot!'),
-                   plotOutput('outPlotHierSparTraj')),
+                   plotOutput('outPlotHierSparTraj', height = '800px', width = 'auto'),
+                   downPlotUI('downPlotHierSparTraj', "Download PDF")),
           tabPanel('Cluster dist.',
-                   downPlotUI('downPlotHierSparClDist', "Download PDF"),
                    actionButton('butPlotHierSparClDist', 'Plot!'),
-                   plotOutput('outPlotHierSparClDist'))
+                   plotOutput('outPlotHierSparClDist', height = '800px', width = 'auto'),
+                   downPlotUI('downPlotHierSparClDist', "Download PDF"))
         )
       )
       # 

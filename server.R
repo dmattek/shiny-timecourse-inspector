@@ -499,8 +499,8 @@ shinyServer(function(input, output, session) {
     
     
     # Find column names with position
-    loc.s.pos.x = names(loc.dt)[names(loc.dt) %like% 'Location.*X']
-    loc.s.pos.y = names(loc.dt)[names(loc.dt) %like% 'Location.*Y']
+    loc.s.pos.x = names(loc.dt)[names(loc.dt) %like% c('.*ocation.*X') | names(loc.dt) %like% c('.*os.x')]
+    loc.s.pos.y = names(loc.dt)[names(loc.dt) %like% c('.*ocation.*Y') | names(loc.dt) %like% c('.*os.y')]
     
     if (length(loc.s.pos.x) == 1 & length(loc.s.pos.y) == 1)
       locPos = TRUE
