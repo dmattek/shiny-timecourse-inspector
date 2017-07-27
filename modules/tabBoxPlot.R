@@ -19,10 +19,10 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
     fluidRow(
       column(
         4,
-        radioButtons(ns('inPlotType'), 'Plot type:', list('Box-plot' = 'box', 
-                                                          'Dot-plot' = 'dot', 
-                                                          'Violin-plot' = 'viol',
-                                                          'Line-plot' = 'line')),
+        checkboxGroupInput(ns('inPlotType'), 'Plot type:', list('Dot-plot' = 'dot', 
+                                                                'Violin-plot' = 'viol',
+                                                                'Box-plot' = 'box', 
+                                                                'Line-plot' = 'line'), selected = 'box'),
         checkboxInput(ns('chBPlotBoxInt'), 'Interactive Plot?'),
         actionButton(ns('butPlotBox'), 'Plot!')
       ),
@@ -40,6 +40,7 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
         ),
         uiOutput(ns('uiPlotBoxNotches')),
         uiOutput(ns('uiPlotBoxOutliers')),
+        uiOutput(ns('uiPlotBoxAlpha')),
         uiOutput(ns('uiPlotDotNbins'))
       ),
       column(
@@ -139,8 +140,8 @@ tabBoxPlot = function(input, output, session, in.data) {
     
     ns <- session$ns
     
-    if(input$inPlotType == 'box')
-             checkboxInput(ns('inPlotBoxNotches'), 'Box plot notches?', FALSE)
+    if('box' %in% input$inPlotType)
+       checkboxInput(ns('inPlotBoxNotches'), 'Box plot notches?', FALSE)
   })
   
   output$uiPlotBoxOutliers = renderUI({
@@ -148,8 +149,17 @@ tabBoxPlot = function(input, output, session, in.data) {
     
     ns <- session$ns
     
-    if(input$inPlotType == 'box')
+    if('box' %in% input$inPlotType)
       checkboxInput(ns('inPlotBoxOutliers'), 'Box plot outliers?', FALSE)
+  })
+  
+  output$uiPlotBoxAlpha = renderUI({
+    cat(file = stderr(), 'UI uiPlotBoxAlpha\n')
+    
+    ns <- session$ns
+    
+    if('box' %in% input$inPlotType)
+      sliderInput(ns('inPlotBoxAlpha'), 'Box plot transparency:', min = 0, max = 1, value = 1, step = 0.1)
   })
   
   output$uiPlotDotNbins = renderUI({
@@ -157,8 +167,8 @@ tabBoxPlot = function(input, output, session, in.data) {
     
     ns <- session$ns
     
-    if(input$inPlotType == 'dot')
-      sliderInput(ns('inPlotDotNbins'), 'Dot-plot bin size (10^x):', min = -4, max = 4, value = 0, step = 0.1)
+    if('dot' %in% input$inPlotType)
+      sliderInput(ns('inPlotDotNbins'), 'Dot-plot bin size (10^x):', min = -4, max = 4, value = -1.5, step = 0.1)
   })
   
   
@@ -298,28 +308,34 @@ tabBoxPlot = function(input, output, session, in.data) {
     cat(file = stderr(), 'plotBox:dt not NULL\n')
     
     
-    
+    loc.par.dodge <- position_dodge(width = 0.4)
     p.out = ggplot(loc.dt, aes(x = as.factor(realtime), y = y)) 
     
-    if (input$inPlotType == 'box')
+    if('dot' %in% input$inPlotType)
+      p.out = p.out + geom_dotplot(aes(fill = group), binaxis = "y", stackdir = "center", position = loc.par.dodge, binwidth = 10^(input$inPlotDotNbins), method = 'histodot')
+    
+    if('viol' %in% input$inPlotType)
+      p.out = p.out + geom_violin(aes(fill = group),
+                                  position = loc.par.dodge,
+                                  width = 0.2)
+
+    if('line' %in% input$inPlotType)
+      p.out = p.out + 
+      geom_path(aes(color = group, group = id)) +
+      facet_wrap(~ group)
+    
+    if ('box' %in% input$inPlotType)
       p.out = p.out + geom_boxplot(
-        aes(fill = group),
-        #position = position_dodge(width = 1),
-        notch = input$inPlotBoxNotches,
+        aes(fill = group), 
+        position = loc.par.dodge,
+        width = 0.2,
+        notch = input$inPlotBoxNotches, 
+        alpha = input$inPlotBoxAlpha,
         outlier.colour = if (input$inPlotBoxOutliers)
           'red'
         else
           NA
-      )
-    
-    if(input$inPlotType == 'dot')
-      p.out = p.out + geom_dotplot(aes(fill = group), binaxis = "y", stackdir = "center", position = "dodge", binwidth = 10^(input$inPlotDotNbins), method = 'histodot')
-    
-    if(input$inPlotType == 'viol')
-      p.out = p.out + geom_violin(aes(fill = group))
-    
-    if(input$inPlotType == 'line')
-      p.out = p.out + geom_path(aes(color = group, group = id))
+      ) 
     
     p.out = p.out +
       scale_fill_discrete(name = '') +

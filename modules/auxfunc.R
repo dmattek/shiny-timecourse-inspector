@@ -69,7 +69,12 @@ myGgplotTraj = function(dt.arg,
                         stim.bar.height.arg = 0.1,
                         stim.bar.width.arg = 0.5,
                         aux.label1 = NULL,
-                        aux.label2 = NULL) {
+                        aux.label2 = NULL,
+                        stat.arg = c('', 'mean', 'CI', 'SE')) {
+  
+  # match arguments for stat plotting
+  loc.stat = match.arg(stat.arg, several.ok = TRUE)
+
   
   # aux.label12 are required for plotting XY positions in the tooltip of the interactive (plotly) graph
   p.tmp = ggplot(dt.arg,
@@ -93,16 +98,43 @@ myGgplotTraj = function(dt.arg,
                          values =c("FALSE" = rhg_cols[7], "TRUE" = rhg_cols[3], "SELECTED" = 'green', "NOT SEL" = rhg_cols[7]))
   }
   
-  p.tmp = p.tmp + 
+  if ('mean' %in% loc.stat)
+    p.tmp = p.tmp + 
     stat_summary(
       aes_string(y = y.arg, group = 1),
       fun.y = mean,
-      colour = 'blue',
+      colour = 'red',
       linetype = 'solid',
       size = 1,
       geom = "line",
       group = 1
-    ) +
+    )
+
+  if ('CI' %in% loc.stat)
+    p.tmp = p.tmp + 
+    stat_summary(
+      aes_string(y = y.arg, group = 1),
+      fun.data = mean_cl_normal,
+      colour = 'red',
+      alpha = 0.5,
+      geom = "ribbon",
+      group = 1
+    )
+  
+  if ('SE' %in% loc.stat)
+    p.tmp = p.tmp + 
+    stat_summary(
+      aes_string(y = y.arg, group = 1),
+      fun.data = mean_se,
+      colour = 'red',
+      alpha = 0.5,
+      geom = "ribbon",
+      group = 1
+    )
+  
+  
+  
+  p.tmp = p.tmp + 
     facet_wrap(as.formula(paste("~", facet.arg)),
                ncol = facet.ncol.arg,
                scales = "free_x")

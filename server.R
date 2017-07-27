@@ -787,7 +787,8 @@ shinyServer(function(input, output, session) {
       xlab.arg = 'Time (min)',
       line.col.arg = loc.line.col.arg,
       aux.label1 = if (locPos) 'pos.x' else NULL,
-      aux.label2 = if (locPos) 'pos.y' else NULL
+      aux.label2 = if (locPos) 'pos.y' else NULL,
+      stat.arg = input$chBPlotTrajStat
     )
     
     return(p.out)
