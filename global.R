@@ -1,6 +1,8 @@
 source('modules/auxfunc.R')
 source('modules/downPlot.R')
 source('modules/downCellIDsCls.R')
+source('modules/trajPlot.R')
+source('modules/clDistPlot.R')
 source('modules/tabScatter.R')
 source('modules/tabBoxPlot.R')
 source('modules/tabClBay.R')

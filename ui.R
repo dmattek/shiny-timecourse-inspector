@@ -77,49 +77,9 @@ shinyUI(fluidPage(
         checkboxInput('chBhighlightTraj', 'Highlight trajectories?', FALSE),
         uiOutput('varSelHighlight'),
         br(),
-        fluidRow(
-          column(
-            4,
-            numericInput(
-              'inPlotTrajFacetNcol',
-              '#Columns:',
-              value = 4,
-              min = 1,
-              width = '100px',
-              step = 1
-            ),
-            checkboxInput('chBplotTrajInt', 'Interactive Plot?'),
-            actionButton('butPlotTraj', 'Plot!')
-          ),
-          column(
-            4,
-            sliderInput('sliPlotTrajSkip', 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1),
-            checkboxGroupInput('chBPlotTrajStat', 'Stats:', list('Mean' = 'mean', '95% conf. interv.' = 'CI', 'Std. error' = 'SE'))
-          ),
-          column(
-            4,
-            numericInput(
-              'inPlotTrajWidth',
-              'Width [%]:',
-              value = 100,
-              min = 10,
-              max = 100,
-              width = '100px',
-              step = 10
-            ),
-            numericInput(
-              'inPlotTrajHeight',
-              'Height [px]:',
-              value = 800,
-              min = 100,
-              width = '100px',
-              step = 50
-            )
-          )
+        modTrajPlotUI('modTrajPlot')
         ),
-        uiOutput('uiPlotTraj'),
-        downPlotUI('downPlotTraj', "Download PDF")
-      ),
+      
       
       tabPanel(
         "Box-plots",
@@ -272,13 +232,11 @@ shinyUI(fluidPage(
           # tabPanel('Heat-map int.',
           #          helpText("Choose your settings 2")),
           tabPanel('Time-courses',
-                   actionButton('butPlotHierTraj', 'Plot!'),
-                   plotOutput('outPlotHierTraj' , height = '800px', width = 'auto'),
-                   downPlotUI('downPlotHierTraj', "Download PDF")),
+                   modTrajPlotUI('modPlotHierTraj')),
+          
           tabPanel('Cluster dist.',
-                   actionButton('butPlotHierClDist', 'Plot!'),
-                   plotOutput('outPlotHierClDist', height = '800px', width = 'auto'),
-                   downPlotUI('downPlotHierClDist', "Download PDF"))
+                   modClDistPlotUI('hierClDistPlot', 'xxx'))
+          
         )
       ),
       
@@ -452,13 +410,9 @@ shinyUI(fluidPage(
           # tabPanel('Heat-map int.',
           #          helpText("Choose your settings 2")),
           tabPanel('Time-courses',
-                   actionButton('butPlotHierSparTraj', 'Plot!'),
-                   plotOutput('outPlotHierSparTraj', height = '800px', width = 'auto'),
-                   downPlotUI('downPlotHierSparTraj', "Download PDF")),
+                   modTrajPlotUI('modPlotHierSparTraj')),
           tabPanel('Cluster dist.',
-                   actionButton('butPlotHierSparClDist', 'Plot!'),
-                   plotOutput('outPlotHierSparClDist', height = '800px', width = 'auto'),
-                   downPlotUI('downPlotHierSparClDist', "Download PDF"))
+                   modClDistPlotUI('hierClSparDistPlot'))
         )
       )
       # 

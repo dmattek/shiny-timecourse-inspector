@@ -116,7 +116,7 @@ myGgplotTraj = function(dt.arg,
       aes_string(y = y.arg, group = 1),
       fun.data = mean_cl_normal,
       colour = 'red',
-      alpha = 0.5,
+      alpha = 0.25,
       geom = "ribbon",
       group = 1
     )
@@ -127,7 +127,7 @@ myGgplotTraj = function(dt.arg,
       aes_string(y = y.arg, group = 1),
       fun.data = mean_se,
       colour = 'red',
-      alpha = 0.5,
+      alpha = 0.25,
       geom = "ribbon",
       group = 1
     )
@@ -187,20 +187,23 @@ userDataGen <- function() {
   locNsites = 4
   locNwells = 1
   
-  x.rand.1 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, 2, 0.5), rnorm(locNtp * locNtracks * locNsites * 0.5, 2, 0.5))
-  x.rand.2 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, 0, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 0, 0.1))
-  x.rand.3 = rep(rnorm(locNtracks, 2, 0.5), 1, each = locNtp)
-  x.rand.4 = rep(rnorm(locNtracks, 1, 0.1), 1, each = locNtp)
+  x.rand.1 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 1, 0.2))
+  x.rand.2 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, 0.25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 0.5, 0.2))
+#  x.rand.3 = rep(rnorm(locNtracks, 2, 0.5), 1, each = locNtp)
+#  x.rand.4 = rep(rnorm(locNtracks, 1, 0.1), 1, each = locNtp)
   
-  x.arg = rep(seq(0, locNtp-1) / locNtp * 4 * pi, locNtracks * locNsites)
+#  x.arg = rep(seq(0, locNtp-1) / locNtp * 4 * pi, locNtracks * locNsites)
+  x.arg = rep(seq(1, locNtp), locNtracks * locNsites)
   
   dt.nuc = data.table(Metadata_Site = rep(1:locNsites, each = locNtp * locNtracks),
                       Metadata_Well = rep(1:locNwells, each = locNtp * locNsites * locNtracks / locNwells),
                       Metadata_RealTime = x.arg,
-#                      objCyto_Intensity_MeanIntensity_imErkCor = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 1, 0.2)),
+                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.1,
+                      objNuc_Intensity_MeanIntensity_imErkCor  = x.rand.2,
+                      objNuc_Location_X = runif(locNtp * locNtracks * locNsites, min = 0, max = 1),
+                      objNuc_Location_Y = runif(locNtp * locNtracks * locNsites, min = 0, max = 1),
+#                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.3 + ifelse(x.arg < 4, 0, 1) / x.rand.3,
 #                      objNuc_Intensity_MeanIntensity_imErkCor  = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.2)),
-                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.3 + ifelse(x.arg < 4, 0, 1) / x.rand.3,
-                      objNuc_Intensity_MeanIntensity_imErkCor  = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.2)),
                       TrackLabel = rep(1:(locNtracks*locNsites), each = locNtp))
   
   cat(colnames(dt.nuc))

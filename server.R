@@ -268,8 +268,8 @@ shinyServer(function(input, output, session) {
     
     if (input$chBnorm) {
       radioButtons('chBnormGroup',
-                  label = 'Normalisation grouping',
-                  choices = list('Entire dataset' = 'none', 'Per facet' = 'group', 'Per trajectory (Korean way)' = 'id'))
+                   label = 'Normalisation grouping',
+                   choices = list('Entire dataset' = 'none', 'Per facet' = 'group', 'Per trajectory (Korean way)' = 'id'))
     }
   })
   
@@ -280,7 +280,7 @@ shinyServer(function(input, output, session) {
     cat(file = stderr(), 'UI uiSlOutliers\n')
     
     if (input$chBoutliers) {
-
+      
       sliderInput(
         'slOutliersPerc',
         label = 'Percentage of middle data',
@@ -290,7 +290,7 @@ shinyServer(function(input, output, session) {
         step = 0.1
       )
       
-
+      
     }
   })
   
@@ -431,7 +431,7 @@ shinyServer(function(input, output, session) {
     else
       return(unique(loc.dt$id))
   })
-
+  
   # return all unique time points (real time)
   # This will be used to display in UI for box-plot
   # These timepoints are from the original dt and aren't affected by trimming of x-axis
@@ -511,61 +511,61 @@ shinyServer(function(input, output, session) {
     # then, include it in plotting
     if (sum(names(loc.dt) %in% 'mid.in') > 0) {
       if (locPos) # position columns present
-      loc.out = loc.dt[, .(
-        y = eval(parse(text = loc.s.y)),
-        id = trackObjectsLabelUni,
-        group = eval(parse(text = loc.s.gr)),
-        realtime = eval(parse(text = loc.s.rt)),
-        pos.x = get(loc.s.pos.x),
-        pos.y = get(loc.s.pos.y),
-        mid.in = mid.in
-      )] else
         loc.out = loc.dt[, .(
           y = eval(parse(text = loc.s.y)),
           id = trackObjectsLabelUni,
           group = eval(parse(text = loc.s.gr)),
           realtime = eval(parse(text = loc.s.rt)),
+          pos.x = get(loc.s.pos.x),
+          pos.y = get(loc.s.pos.y),
           mid.in = mid.in
-        )]
-      
-      
-      
-      
-      # add 3rd level with status of track selection
-      # to a column with trajectory filtering status
-      if (locBut) {
-        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', mid.in)]
-      }
-      
+        )] else
+          loc.out = loc.dt[, .(
+            y = eval(parse(text = loc.s.y)),
+            id = trackObjectsLabelUni,
+            group = eval(parse(text = loc.s.gr)),
+            realtime = eval(parse(text = loc.s.rt)),
+            mid.in = mid.in
+          )]
+        
+        
+        
+        
+        # add 3rd level with status of track selection
+        # to a column with trajectory filtering status
+        if (locBut) {
+          loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', mid.in)]
+        }
+        
     } else {
       if (locPos) # position columns present
-      loc.out = loc.dt[, .(
-        y = eval(parse(text = loc.s.y)),
-        id = trackObjectsLabelUni,
-        group = eval(parse(text = loc.s.gr)),
-        realtime = eval(parse(text = loc.s.rt)),
-        pos.x = get(loc.s.pos.x),
-        pos.y = get(loc.s.pos.y)
-      )] else
         loc.out = loc.dt[, .(
           y = eval(parse(text = loc.s.y)),
           id = trackObjectsLabelUni,
           group = eval(parse(text = loc.s.gr)),
-          realtime = eval(parse(text = loc.s.rt))
-        )]
-      
-      
-      # add a column with status of track selection
-      if (locBut) {
-        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
-      }
+          realtime = eval(parse(text = loc.s.rt)),
+          pos.x = get(loc.s.pos.x),
+          pos.y = get(loc.s.pos.y)
+        )] else
+          loc.out = loc.dt[, .(
+            y = eval(parse(text = loc.s.y)),
+            id = trackObjectsLabelUni,
+            group = eval(parse(text = loc.s.gr)),
+            realtime = eval(parse(text = loc.s.rt))
+          )]
+        
+        
+        # add a column with status of track selection
+        if (locBut) {
+          loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
+        }
     }
     
     # add XY location if present in the dataset
     
     # remove NAs
     loc.out = loc.out[complete.cases(loc.out)]
-
+    
     # Trim x-axis (time)
     if(input$chBtimeTrim) {
       loc.out = loc.out[realtime >= input$slTimeTrim[[1]] & realtime <= input$slTimeTrim[[2]] ]
@@ -614,7 +614,7 @@ shinyServer(function(input, output, session) {
     }
     
     cat('Ncells trim = ', length(unique(loc.out$id)), '\n')
-
+    
     return(loc.out)
   })
   
@@ -634,43 +634,20 @@ shinyServer(function(input, output, session) {
     loc.out = dcast(loc.dt, id ~ realtime, value.var = 'y')
     loc.rownames = loc.out$id
     
-
+    
     loc.out = as.matrix(loc.out[, -1])
     rownames(loc.out) = loc.rownames
     return(loc.out)
-  })
-  
-  # prepare data for plotting timecourses facetted per cluster
-  # uses the same dt as for trajectory plotting
-  # returns dt with these columns:
-  data4hierSparTrajPlot <- reactive({
-    cat(file = stderr(), 'data4hierSparTrajPlot\n')
-    
-    loc.dt = data4trajPlot()
-    if (is.null(loc.dt))
-      return(NULL)
-    
-    loc.out = loc.dt[realtime %in% input$inSelTpts]
-  })
+  }) 
   
   
   # get cell IDs with cluster assignments depending on dendrogram cut
   getDataCl = function(in.dend, in.k, in.ids) {
     cat(file = stderr(), 'getDataCl \n')
-    cat(in.k, '\n')
+    
     loc.dt.cl = data.table(id = in.ids,
                            cl = cutree(as.dendrogram(in.dend), k = in.k))
   }
-  
-
-  getDataHierClReact = reactive({
-    cat(file = stderr(), 'getDataHierClReact \n')
-    cat(input$inPlotHierNclust, '\n')
-    loc.dt.cl = data.table(id = getDataTrackObjLabUni_afterTrim(),
-                           cl = cutree(userFitDendHier(), k = input$inPlotHierNclust))
-    
-    loc.dt.cl = merge(loc.dt.cl, getDataCond(), by = 'id')
-  })
   
   ####
   ## UI for trajectory plot
@@ -694,106 +671,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$uiPlotTraj = renderUI({
-    if (input$chBplotTrajInt)
-      plotlyOutput(
-        "outPlotTrajInt",
-        width = paste0(input$inPlotTrajWidth, '%'),
-        height = paste0(input$inPlotTrajHeight, 'px')
-      ) else
-        plotOutput(
-          "outPlotTraj",
-          width = paste0(input$inPlotTrajWidth, '%'),
-          height = paste0(input$inPlotTrajHeight, 'px')
-        )
-  })
-  
-  output$outPlotTraj <- renderPlot({
-
-    loc.p = plotTraj()
-    if(is.null(loc.p))
-      return(NULL)
-    
-    return(loc.p)
-  })
-
-  
-  output$outPlotTrajInt <- renderPlotly({
-    # This is required to avoid
-    # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
-    # When running on a server. Based on:
-    # https://github.com/ropensci/plotly/issues/494
-    if (names(dev.cur()) != "null device")
-      dev.off()
-    pdf(NULL)
-    
-    loc.p = plotTraj()
-    if(is.null(loc.p))
-      return(NULL)
-    
-    return(plotly_build(loc.p))
-  })
-  
-  
-  
-  # Trajectory plot - download pdf
-  callModule(downPlot, "downPlotTraj", 'tcourses.pdf', plotTraj, TRUE)
-  
-  plotTraj <- function() {
-    cat(file = stderr(), 'plotTraj: in\n')
-    locBut = input$butPlotTraj
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotTraj: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    loc.dt = isolate(data4trajPlot())
-    
-    cat("plotTraj: on to plot\n\n")
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotTraj: dt is NULL\n')
-      return(NULL)
-    }
-    
-    cat(file = stderr(), 'plotTraj: dt not NULL\n')
-    
-
-    # Future: change such that a column with colouring status is chosen by the user
-    # colour trajectories, if dataset contains mi.din column
-    # with filtering status of trajectory
-    if (sum(names(loc.dt) %in% 'mid.in') > 0)
-      loc.line.col.arg = 'mid.in'
-    else
-      loc.line.col.arg = NULL
-
-    # select every other point for plotting
-    loc.dt = loc.dt[, .SD[seq(1, .N, input$sliPlotTrajSkip)], by = id]
-    
-    # check if columns with XY positions are present
-    if (sum(names(loc.dt) %like% 'pos') == 2)
-      locPos = TRUE
-    else
-      locPos = FALSE
-    
-    p.out = myGgplotTraj(
-      dt.arg = loc.dt,
-      x.arg = 'realtime',
-      y.arg = 'y',
-      group.arg = "id",
-      facet.arg = 'group',
-      facet.ncol.arg = input$inPlotTrajFacetNcol,
-      xlab.arg = 'Time (min)',
-      line.col.arg = loc.line.col.arg,
-      aux.label1 = if (locPos) 'pos.x' else NULL,
-      aux.label2 = if (locPos) 'pos.y' else NULL,
-      stat.arg = input$chBPlotTrajStat
-    )
-    
-    return(p.out)
-  }
-  
+  callModule(modTrajPlot, 'modTrajPlot', data4trajPlot)
   
   ###### Box-plot
   callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlot)
@@ -877,9 +755,9 @@ shinyServer(function(input, output, session) {
       density.info = "density",
       RowSideColors = col_labels,
       colRow = col_labels,
-#      sepcolor = grey(input$inPlotHierGridColor),
-#      colsep = 1:ncol(loc.dm),
-#      rowsep = 1:nrow(loc.dm),
+      #      sepcolor = grey(input$inPlotHierGridColor),
+      #      colsep = 1:ncol(loc.dm),
+      #      rowsep = 1:nrow(loc.dm),
       cexRow = input$inPlotHierFontX,
       cexCol = input$inPlotHierFontY,
       main = paste(
@@ -894,49 +772,36 @@ shinyServer(function(input, output, session) {
   }
   
   
-  plotHierTraj <- function(){
-    cat(file = stderr(), 'plotHierTraj: in\n')
+  # prepare data for plotting trajectories per cluster
+  # outputs dt as data4trajPlot but with an additional column 'cl' that holds cluster numbers
+  # additionally some clusters are omitted according to manual selection
+  data4trajPlotCl <- reactive({
+    cat(file = stderr(), 'data4trajPlotCl: in\n')
     
-    loc.dt = isolate(data4trajPlot())
+    loc.dt = data4trajPlot()
     
-    cat("plotHierTraj: on to plot\n\n")
     if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotHierTraj: dt is NULL\n')
+      cat(file = stderr(), 'data4trajPlotCl: dt is NULL\n')
       return(NULL)
     }
     
-    cat(file = stderr(), 'plotHierTraj: dt not NULL\n')
+    cat(file = stderr(), 'data4trajPlotCl: dt not NULL\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
     loc.dt.cl = getDataCl(userFitDendHier(), input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim())
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
     # display only selected clusters
-    if(isolate(input$chBPlotHierClSel))
-      loc.dt = loc.dt[cl %in% isolate(input$inPlotHierClSel)]
+    if(input$chBPlotHierClSel)
+      loc.dt = loc.dt[cl %in% input$inPlotHierClSel]
     
-    # Future: change such that a column with colouring status is chosen by the user
-    # colour trajectories, if dataset contains mi.din column
-    # with filtering status of trajectory
-    if (sum(names(loc.dt) %in% 'mid.in') > 0)
-      loc.line.col.arg = 'mid.in'
-    else
-      loc.line.col.arg = NULL
-    
-    p.out = myGgplotTraj(
-      dt.arg = loc.dt,
-      x.arg = 'realtime',
-      y.arg = 'y',
-      group.arg = "id",
-      facet.arg = 'cl',
-      facet.ncol.arg = input$inPlotTrajFacetNcol,
-      xlab.arg = 'Time (min)',
-      line.col.arg = loc.line.col.arg
-    )
-    
-    return(p.out)
-  }
+    return(loc.dt)    
+  })
   
+  callModule(modTrajPlot, 'modPlotHierTraj', data4trajPlotCl, 'cl',  paste0('clust_hierch_tCourses_',
+                                                                            s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                                                                            '_',
+                                                                            s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
   
   # download a list of cellIDs with cluster assignments
   output$downCellCl <- downloadHandler(
@@ -966,28 +831,27 @@ shinyServer(function(input, output, session) {
   )
   
   
-    # callModule(downCellCl, 'downDataHier', paste0('clust_hierch_data_',
-    #                                               s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-    #                                               '_',
-    #                                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.csv'),
-    #            getDataCl(userFitDendHier, input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim))
-    # 
+  # callModule(downCellCl, 'downDataHier', paste0('clust_hierch_data_',
+  #                                               s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+  #                                               '_',
+  #                                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.csv'),
+  #            getDataCl(userFitDendHier, input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim))
+  # 
   
-    output$downloadDataClean <- downloadHandler(
-      filename = 'tCoursesSelected_clean.csv',
-      content = function(file) {
-        write.csv(data4trajPlot(), file, row.names = FALSE)
-      }
-    )
-    
-    
-    
-  # Barplot with distribution of clusters across conditions
-  plotHierClDist = function() {
-    cat(file = stderr(), 'plotClDist: in\n')
+  output$downloadDataClean <- downloadHandler(
+    filename = 'tCoursesSelected_clean.csv',
+    content = function(file) {
+      write.csv(data4trajPlot(), file, row.names = FALSE)
+    }
+  )
+  
+  
+  # prepare data for barplot with distribution of items per condition  
+  data4clDistPlot <- reactive({
+    cat(file = stderr(), 'data4clDistPlot: in\n')
     
     # get cell IDs with cluster assignments depending on dendrogram cut
-    loc.dend <- isolate(userFitDendHier())
+    loc.dend <- userFitDendHier()
     if (is.null(loc.dend)) {
       cat(file = stderr(), 'plotClDist: loc.dend is NULL\n')
       return(NULL)
@@ -998,7 +862,7 @@ shinyServer(function(input, output, session) {
     
     
     # get cellIDs with condition name
-    loc.dt.gr = isolate(getDataCond())
+    loc.dt.gr = getDataCond()
     if (is.null(loc.dt.gr)) {
       cat(file = stderr(), 'plotClDist: loc.dt.gr is NULL\n')
       return(NULL)
@@ -1007,31 +871,19 @@ shinyServer(function(input, output, session) {
     loc.dt = merge(loc.dt.cl, loc.dt.gr, by = 'id')
     
     # display only selected clusters
-    if(isolate(input$chBPlotHierClSel))
-      loc.dt = loc.dt[cl %in% isolate(input$inPlotHierClSel)]
+    if(input$chBPlotHierClSel)
+      loc.dt = loc.dt[cl %in% input$inPlotHierClSel]
     
     loc.dt.aggr = loc.dt[, .(nCells = .N), by = .(group, cl)]
     
+    return(loc.dt.aggr)
     
-    p.out = ggplot(loc.dt.aggr, aes(x = group, y = nCells)) +
-      geom_bar(aes(fill = as.factor(cl)), stat = 'identity', position = 'fill') +
-      scale_y_continuous(labels = percent) +
-      ylab("percentage of cells\n") +  
-      xlab("") +  
-      scale_fill_discrete(name = "Cluster no.") +
-      myGgplotTheme
-    
-    return(p.out)
-    
-  }
+  })
   
+
   #  Hierarchical - display heatmap
   getPlotHierHeatMapHeight <- function() {
     return (input$inPlotHierHeatMapHeight)
-  }
-  
-  getPlotHierTrajHeight <- function() {
-    return (input$inPlotHierTrajHeight)
   }
   
   output$outPlotHier <- renderPlot({
@@ -1046,33 +898,6 @@ shinyServer(function(input, output, session) {
     plotHier()
   }, height = getPlotHierHeatMapHeight)
   
-  #  Hierarchical - display timecourses plot
-  output$outPlotHierTraj <- renderPlot({
-    locBut = input$butPlotHierTraj
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotHierTraj: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    plotHierTraj()
-  })
-  
-  #  Hierarchical - display bar plot
-  output$outPlotHierClDist <- renderPlot({
-    locBut = input$butPlotHierClDist
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotClDist: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    plotHierClDist()
-  })
-  
-  
   
   #  Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHier",       paste0('clust_hierch_heatMap_',
@@ -1080,17 +905,12 @@ shinyServer(function(input, output, session) {
                                                     '_',
                                                     s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'), plotHier)
 
-  # Hierarchical - Trajectories - download pdf
-  callModule(downPlot, "downPlotHierTraj",       paste0('clust_hierch_tCourses_',
-                                                    s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-                                                    '_',
-                                                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'), plotHierTraj, TRUE)
-
-  # Hierarchical - Bar Plot - download pdf
-  callModule(downPlot, "downPlotHierClDist",       paste0('clust_hierch_clDist_',
-                                                        s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-                                                        '_',
-                                                        s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'), plotHierClDist, TRUE)
+  callModule(modClDistPlot, 'hierClDistPlot', data4clDistPlot,
+             paste0('clust_hierch_clDist_',
+                    s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                    '_',
+                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
+  
   
   ##### Sparse hierarchical clustering using sparcl
   
@@ -1131,7 +951,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-
+  
   getPlotHierSparHeatMapHeight <- function() {
     return (input$inPlotHierSparHeatMapHeight)
   }
@@ -1242,9 +1062,9 @@ shinyServer(function(input, output, session) {
       colRow = col_labels,
       colCol = loc.colcol,
       labCol = loc.colnames,
-#      sepcolor = grey(input$inPlotHierSparGridColor),
-#      colsep = 1:ncol(dm.t),
-#      rowsep = 1:nrow(dm.t),
+      #      sepcolor = grey(input$inPlotHierSparGridColor),
+      #      colsep = 1:ncol(dm.t),
+      #      rowsep = 1:nrow(dm.t),
       cexRow = input$inPlotHierSparFontX,
       cexCol = input$inPlotHierSparFontY,
       main = paste("Linkage method: ", s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)])
@@ -1253,93 +1073,81 @@ shinyServer(function(input, output, session) {
     return(loc.p)
   }
   
-  
-  plotHierSparTraj <- function(){
-    cat(file = stderr(), 'plotHierSparTraj: in\n')
-
-    loc.dt = isolate(data4trajPlot())
+  # prepare data for plotting trajectories per cluster
+  # outputs dt as data4trajPlot but with an additional column 'cl' that holds cluster numbers
+  # additionally some clusters are omitted according to manual selection
+  data4trajPlotClSpar <- reactive({
+    cat(file = stderr(), 'data4trajPlotClSpar: in\n')
     
-    cat("plotHierSparTraj: on to plot\n\n")
+    loc.dt = data4trajPlot()
+    
     if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotHierSparTraj: dt is NULL\n')
+      cat(file = stderr(), 'data4trajPlotClSpar: dt is NULL\n')
       return(NULL)
     }
     
-    cat(file = stderr(), 'plotHierSparTraj: dt not NULL\n')
+    cat(file = stderr(), 'data4trajPlotClSpar: dt not NULL\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(userFitDendHierSpar(), isolate(input$inPlotHierSparNclust), getDataTrackObjLabUni_afterTrim())
+    loc.dt.cl = getDataCl(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
-    # plot only selected clusters
-    if(isolate(input$chBPlotHierSparClSel))
-      loc.dt = loc.dt[cl %in% isolate(input$inPlotHierSparClSel)]
+    # display only selected clusters
+    if(input$chBPlotHierSparClSel)
+      loc.dt = loc.dt[cl %in% input$inPlotHierSparClSel]
     
-    
-    # Future: change such that a column with colouring status is chosen by the user
-    # colour trajectories, if dataset contains mi.din column
-    # with filtering status of trajectory
-    if (sum(names(loc.dt) %in% 'mid.in') > 0)
-      loc.line.col.arg = 'mid.in'
-    else
-      loc.line.col.arg = NULL
-    
-    p.out = myGgplotTraj(
-      dt.arg = loc.dt,
-      x.arg = 'realtime',
-      y.arg = 'y',
-      group.arg = "id",
-      facet.arg = 'cl',
-      facet.ncol.arg = input$inPlotTrajFacetNcol,
-      xlab.arg = 'Time (min)',
-      line.col.arg = loc.line.col.arg
-    )
-    
-    return(p.out)
-  }
+    return(loc.dt)    
+  })
+  
+  callModule(modTrajPlot, 'modPlotHierSparTraj', data4trajPlotClSpar, 'cl', paste0('clust_hierchSparse_tCourses_',
+                                                                                   s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                                                                                   '_',
+                                                                                   s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
+
   
   
-  # Barplot with distribution of clusters across conditions
-  plotHierSparClDist = function() {
-    cat(file = stderr(), 'plotHierSparClDist: in\n')
+  # prepare data for barplot with distribution of items per condition  
+  data4clSparDistPlot <- reactive({
+    cat(file = stderr(), 'data4clSparDistPlot: in\n')
     
     # get cell IDs with cluster assignments depending on dendrogram cut
-    sparsehc <- isolate(userFitHierSpar())
-    if (is.null(sparsehc)) {
-      cat(file = stderr(), 'plotHierSparClDist: sparsehc is NULL\n')
+    loc.dend <- userFitHierSpar()
+    if (is.null(loc.dend)) {
+      cat(file = stderr(), 'plotClSparDist: loc.dend is NULL\n')
       return(NULL)
     }
     
     loc.dt.cl = data.table(id = getDataTrackObjLabUni_afterTrim(),
-                           cl = cutree(as.dendrogram(sparsehc$hc), k = input$inPlotHierSparNclust))
+                           cl = cutree(as.dendrogram(loc.dend$hc), k = input$inPlotHierSparNclust))
     
     
-    loc.dt.gr = isolate(getDataCond())
+    # get cellIDs with condition name
+    loc.dt.gr = getDataCond()
     if (is.null(loc.dt.gr)) {
-      cat(file = stderr(), 'plotHierSparClDist: loc.dt.gr is NULL\n')
+      cat(file = stderr(), 'plotClSparDist: loc.dt.gr is NULL\n')
       return(NULL)
     }
     
     loc.dt = merge(loc.dt.cl, loc.dt.gr, by = 'id')
     
-    # plot only selected clusters
-    if(isolate(input$chBPlotHierSparClSel))
-      loc.dt = loc.dt[cl %in% isolate(input$inPlotHierSparClSel)]
+    # display only selected clusters
+    if(input$chBPlotHierSparClSel)
+      loc.dt = loc.dt[cl %in% input$inPlotHierSparClSel]
     
     loc.dt.aggr = loc.dt[, .(nCells = .N), by = .(group, cl)]
     
-    p.out = ggplot(loc.dt.aggr, aes(x = group, y = nCells)) +
-      geom_bar(aes(fill = as.factor(cl)), stat = 'identity', position = 'fill') +
-      scale_y_continuous(labels = percent) +
-      ylab("percentage of cells\n") +  
-      xlab("") +  
-      scale_fill_discrete(name = "Cluster no.") +
-      myGgplotTheme
+    return(loc.dt.aggr)
     
-    return(p.out)
-    
-  }
+  })
+  
+  callModule(modClDistPlot, 'hierClSparDistPlot', data4clSparDistPlot,
+             paste0('clust_hierchSparse_clDist_',
+                    s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                    '_',
+                    s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
+  
 
+  
   # Sparse Hierarchical - display heatmap
   output$outPlotHierSpar <- renderPlot({
     locBut = input$butPlotHierSparHeatMap
@@ -1353,50 +1161,11 @@ shinyServer(function(input, output, session) {
     plotHierSpar()
   }, height = getPlotHierSparHeatMapHeight)
   
-  # Sparse Hierarchical - display timecourses plot
-  output$outPlotHierSparTraj <- renderPlot({
-    locBut = input$butPlotHierSparTraj
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotHierSparTraj: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    plotHierSparTraj()
-  })
-  
-  # Sparse Hierarchical - display timecourses plot
-  output$outPlotHierSparClDist <- renderPlot({
-    locBut = input$butPlotHierSparClDist
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotHierSparClDist: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    plotHierSparClDist()
-  })
-  
-  
   # Sparse Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHierSparHM",       paste0('clust_hierchSparse_heatMap_',
-                                                    s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
-                                                    '_',
-                                                    s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSpar)
-  
-  # Sparse Hierarchical - Trajectories - download pdf
-  callModule(downPlot, "downPlotHierSparTraj",       paste0('clust_hierchSparse_tCourses_',
-                                                        s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
-                                                        '_',
-                                                        s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSparTraj, TRUE)
-  
-  # Sparse Hierarchical - Bar Plot - download pdf
-  callModule(downPlot, "downPlotHierSparClDist",       paste0('clust_hierchSparse_clDist_',
                                                           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
                                                           '_',
-                                                          s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSparClDist, TRUE)
+                                                          s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSpar)
   
 
   # Sparse Hierarchical clustering (sparcl) interactive version
@@ -1457,7 +1226,7 @@ shinyServer(function(input, output, session) {
       labCol = loc.colnames
     )
   })
-
-  callModule(clustBay, 'TabClustBay', data4clust)
+  
+  #callModule(clustBay, 'TabClustBay', data4clust)
   
 })
