@@ -80,7 +80,6 @@ shinyServer(function(input, output, session) {
     locCols = getDataNucCols()
     locColSel = locCols[locCols %like% 'rack'][1] # index 1 at the end in case more matches; select 1st
     
-    cat(locColSel, '\n')
     selectInput(
       'inSelTrackLabel',
       'Select Track Label (e.g. objNuc_Track_ObjectsLabel):',
@@ -140,7 +139,6 @@ shinyServer(function(input, output, session) {
       locCols = getDataNucCols()
       locColSel = locCols[locCols %like% 'ite'][1] # index 1 at the end in case more matches; select 1st
       
-      cat(locColSel, '\n')
       selectInput(
         'inSelSite',
         'Select FOV (e.g. Metadata_Site or Metadata_Series):',
@@ -161,7 +159,7 @@ shinyServer(function(input, output, session) {
     if (!is.null(locCols)) {
       locColSel = locCols[locCols %like% 'objCyto_Intensity_MeanIntensity_imErkCor.*' |
                             locCols %like% 'Ratio'][1] # index 1 at the end in case more matches; select 1st
-      #    cat(locColSel, '\n')
+
       selectInput(
         'inSelMeas1',
         'Select 1st measurement:',
@@ -180,7 +178,7 @@ shinyServer(function(input, output, session) {
     if (!is.null(locCols) &&
         !(input$inSelMath %in% c('', '1 / '))) {
       locColSel = locCols[locCols %like% 'objNuc_Intensity_MeanIntensity_imErkCor.*'][1] # index 1 at the end in case more matches; select 1st
-      #    cat(locColSel, '\n')
+
       selectInput(
         'inSelMeas2',
         'Select 2nd measurement',

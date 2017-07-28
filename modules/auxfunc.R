@@ -206,7 +206,6 @@ userDataGen <- function() {
 #                      objNuc_Intensity_MeanIntensity_imErkCor  = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.2)),
                       TrackLabel = rep(1:(locNtracks*locNsites), each = locNtp))
   
-  cat(colnames(dt.nuc))
   return(dt.nuc)
 }
 
