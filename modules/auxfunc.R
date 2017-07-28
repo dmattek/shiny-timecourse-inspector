@@ -385,3 +385,66 @@ myGgplotTheme = theme_bw(base_size = 18, base_family = "Helvetica") +
     legend.key.width = unit(2, "lines"),
     legend.position = "right"
   )
+
+
+myPlotHeatmap <- function(data.arg,
+                          dend.arg,
+                          palette.arg,
+                          palette.rev.arg = TRUE,
+                          dend.show.arg = TRUE,
+                          key.show.arg = TRUE,
+                          margin.x.arg = 5,
+                          margin.y.arg = 20,
+                          nacol.arg = 0.5,
+                          colCol.arg = NULL,
+                          labCol.arg = NULL,
+                          font.row.arg = 1,
+                          font.col.arg = 1,
+                          title.arg = 'Clustering') {
+  
+  if (palette.rev.arg)
+    my_palette <-
+    rev(colorRampPalette(brewer.pal(9, palette.arg))(n = 99))
+  else
+    my_palette <-
+    colorRampPalette(brewer.pal(9, palette.arg))(n = 99)
+  
+  
+  col_labels <- get_leaves_branches_col(dend.arg)
+  col_labels <- col_labels[order(order.dendrogram(dend.arg))]
+  
+  if (dend.show.arg) {
+    assign("var.tmp.1", dend.arg)
+    var.tmp.2 = "row"
+  } else {
+    assign("var.tmp.1", FALSE)
+    var.tmp.2 = "none"
+  }
+  
+  loc.p = heatmap.2(
+    data.arg,
+    Colv = "NA",
+    Rowv = var.tmp.1,
+    srtCol = 90,
+    dendrogram = var.tmp.2,
+    trace = "none",
+    key = key.show.arg,
+    margins = c(margin.x.arg, margin.y.arg),
+    col = my_palette,
+    na.col = grey(nacol.arg),
+    denscol = "black",
+    density.info = "density",
+    RowSideColors = col_labels,
+    colRow = col_labels,
+    colCol = colCol.arg,
+    labCol = labCol.arg,
+    #      sepcolor = grey(input$inPlotHierGridColor),
+    #      colsep = 1:ncol(loc.dm),
+    #      rowsep = 1:nrow(loc.dm),
+    cexRow = font.row.arg,
+    cexCol = font.col.arg,
+    main = title.arg
+  )
+  
+  return(loc.p)
+}

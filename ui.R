@@ -246,7 +246,7 @@ shinyUI(fluidPage(
         br(),
         fluidRow(
           column(
-            6,
+            4,
             selectInput(
               "selectPlotHierSparLinkage",
               label = ("Select linkage method:"),
@@ -264,21 +264,28 @@ shinyUI(fluidPage(
               choices = list("Squared Distance" = 1,
                              "Absolute Value" = 2),
               selected = 1
-            ),
-            sliderInput(
-              'inPlotHierSparNclust',
-              '#dendrogram branches to colour',
-              min = 1,
-              max = 30,
-              value = 1,
-              step = 1,
-              ticks = TRUE,
-              round = TRUE
             )
           ),
           
           column(
-            6,
+            4,
+            sliderInput(
+              'inPlotHierSparNclust',
+              '#dendrogram branches to colour',
+              min = 1,
+              max = 20,
+              value = 1,
+              step = 1,
+              ticks = TRUE,
+              round = TRUE
+            ),
+            checkboxInput('chBPlotHierSparClSel', 'Manually select clusters to display'),
+            uiOutput('uiPlotHierSparClSel'),
+            downloadButton('downCellClSpar', 'Download CSV with cell IDs and cluster no.')
+          ),
+          
+          column(
+            4,
             checkboxInput('inHierSparAdv',
                           'Advanced options',
                           FALSE),
@@ -287,10 +294,7 @@ shinyUI(fluidPage(
             ),
             uiOutput(
               'uiPlotHierSparNiter'
-            ),
-            checkboxInput('chBPlotHierSparClSel', 'Manually select clusters to display'),
-            uiOutput('uiPlotHierSparClSel'),
-            downloadButton('downCellClSpar', 'Download CSV with cell IDs and cluster no.')
+            )
           )
         ),
         
@@ -302,15 +306,7 @@ shinyUI(fluidPage(
           tabPanel('Heat-map',
                    fluidRow(
                      column(3,
-                            radioButtons(
-                              "selectPlotHierSparDend",
-                              label = 'Dendrogram',
-                              choices = list(
-                                'Plot dendrogram; order samples accordingly' = 1,
-                                'Don\'t plot dendrogram; retain original ordering' = 2
-                              ),
-                              selected = 1
-                            ),
+                            checkboxInput('selectPlotHierSparDend', 'Plot dendrogram and re-order samples', TRUE),
                             selectInput(
                               "selectPlotHierSparPalette",
                               label = "Select colour palette:",
@@ -329,7 +325,12 @@ shinyUI(fluidPage(
                               value = 0.8,
                               step = .1,
                               ticks = TRUE
-                            )
+                            ),
+                            numericInput('inPlotHierSparHeatMapHeight', 
+                                         'Display plot height [px]', 
+                                         value = 600, 
+                                         min = 100,
+                                         step = 100)
                      ),
                      column(6,
                             br(),
@@ -398,12 +399,6 @@ shinyUI(fluidPage(
                    
                    downPlotUI('downPlotHierSparHM', "Download PDF"),
 
-                   numericInput('inPlotHierSparHeatMapHeight', 
-                                'Display plot height [px]', 
-                                value = 600, 
-                                min = 100,
-                                step = 100),
-                   
                    actionButton('butPlotHierSparHeatMap', 'Plot!'),
                    plotOutput('outPlotHierSpar')
           ),

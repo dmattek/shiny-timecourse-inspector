@@ -719,52 +719,23 @@ shinyServer(function(input, output, session) {
     if (is.null(loc.dend))
       return(NULL)
     
-    if (input$inPlotHierRevPalette)
-      my_palette <-
-      rev(colorRampPalette(brewer.pal(9, input$selectPlotHierPalette))(n = 99))
-    else
-      my_palette <-
-      colorRampPalette(brewer.pal(9, input$selectPlotHierPalette))(n = 99)
-    
-    
-    col_labels <- get_leaves_branches_col(loc.dend)
-    col_labels <- col_labels[order(order.dendrogram(loc.dend))]
-    
-    if (input$selectPlotHierDend) {
-      assign("var.tmp.1", loc.dend)
-      var.tmp.2 = "row"
-    } else {
-      assign("var.tmp.1", FALSE)
-      var.tmp.2 = "none"
-    }
-    
-    loc.p = heatmap.2(
-      loc.dm,
-      Colv = "NA",
-      Rowv = var.tmp.1,
-      srtCol = 90,
-      dendrogram = var.tmp.2,
-      trace = "none",
-      key = input$selectPlotHierKey,
-      margins = c(input$inPlotHierMarginX, input$inPlotHierMarginY),
-      col = my_palette,
-      na.col = grey(input$inPlotHierNAcolor),
-      denscol = "black",
-      density.info = "density",
-      RowSideColors = col_labels,
-      colRow = col_labels,
-      #      sepcolor = grey(input$inPlotHierGridColor),
-      #      colsep = 1:ncol(loc.dm),
-      #      rowsep = 1:nrow(loc.dm),
-      cexRow = input$inPlotHierFontX,
-      cexCol = input$inPlotHierFontY,
-      main = paste(
-        "Distance measure: ",
-        s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-        "\nLinkage method: ",
-        s.cl.linkage[as.numeric(input$selectPlotHierLinkage)]
-      )
-    )
+    loc.p = myPlotHeatmap(loc.dm,
+                  loc.dend, 
+                  palette.arg = input$selectPlotHierPalette, 
+                  palette.rev.arg = input$inPlotHierRevPalette, 
+                  dend.show.arg = input$selectPlotHierDend, 
+                  key.show.arg = input$selectPlotHierKey, 
+                  margin.x.arg = input$inPlotHierMarginX, 
+                  margin.y.arg = input$inPlotHierMarginY, 
+                  nacol.arg = input$inPlotHierNAcolor, 
+                  font.row.arg = input$inPlotHierFontX, 
+                  font.col.arg = input$inPlotHierFontY, 
+                  title.arg = paste(
+                    "Distance measure: ",
+                    s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                    "\nLinkage method: ",
+                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)]
+                  ))
     
     return(loc.p)
   }
@@ -892,7 +863,7 @@ shinyServer(function(input, output, session) {
       
       return(NULL)
     }
-    
+
     plotHier()
   }, height = getPlotHierHeatMapHeight)
   
@@ -997,39 +968,22 @@ shinyServer(function(input, output, session) {
   # This function is used to plot and to downoad a pdf
   plotHierSpar <- function() {
     
-    dm.t = data4clust()
-    if (is.null(dm.t)) {
+    loc.dm = data4clust()
+    if (is.null(loc.dm)) {
       return()
     }
     
     sparsehc <- userFitHierSpar()
     
-    dend <- as.dendrogram(sparsehc$hc)
-    dend <- color_branches(dend, k = input$inPlotHierSparNclust)
-    
-    if (input$inPlotHierSparRevPalette)
-      my_palette <-
-      rev(colorRampPalette(brewer.pal(9, input$selectPlotHierSparPalette))(n = 99))
-    else
-      my_palette <-
-      colorRampPalette(brewer.pal(9, input$selectPlotHierSparPalette))(n = 99)
-    
-    
-    col_labels <- get_leaves_branches_col(dend)
-    col_labels <- col_labels[order(order.dendrogram(dend))]
-    
-    if (input$selectPlotHierSparDend == 1)
-      assign("var.tmp", dend)
-    else
-      assign("var.tmp", FALSE)
-    
+    loc.dend <- as.dendrogram(sparsehc$hc)
+    loc.dend <- color_branches(loc.dend, k = input$inPlotHierSparNclust)
     
     loc.colnames = paste0(ifelse(sparsehc$ws == 0, "",
                                  ifelse(
                                    sparsehc$ws <= 0.1,
                                    "* ",
                                    ifelse(sparsehc$ws <= 0.5, "** ", "*** ")
-                                 )),  colnames(dm.t))
+                                 )),  colnames(loc.dm))
     
     loc.colcol   = ifelse(sparsehc$ws == 0,
                           "black",
@@ -1039,34 +993,25 @@ shinyServer(function(input, output, session) {
                             ifelse(sparsehc$ws <= 0.5, "green", "red")
                           ))
     
-    
-    loc.p = heatmap.2(
-      dm.t,
-      Colv = "NA",
-      Rowv = var.tmp,
-      srtCol = 90,
-      dendrogram = ifelse(input$selectPlotHierSparDend == 1, "row", 'none'),
-      trace = "none",
-      key = input$selectPlotHierSparKey,
-      margins = c(
-        input$inPlotHierSparMarginX,
-        input$inPlotHierSparMarginY
-      ),
-      col = my_palette,
-      na.col = grey(input$inPlotHierSparNAcolor),
-      denscol = "black",
-      density.info = "density",
-      RowSideColors = col_labels,
-      colRow = col_labels,
-      colCol = loc.colcol,
-      labCol = loc.colnames,
-      #      sepcolor = grey(input$inPlotHierSparGridColor),
-      #      colsep = 1:ncol(dm.t),
-      #      rowsep = 1:nrow(dm.t),
-      cexRow = input$inPlotHierSparFontX,
-      cexCol = input$inPlotHierSparFontY,
-      main = paste("Linkage method: ", s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)])
-    )
+    loc.p = myPlotHeatmap(loc.dm,
+                  loc.dend, 
+                  palette.arg = input$selectPlotHierSparPalette, 
+                  palette.rev.arg = input$inPlotHierSparRevPalette, 
+                  dend.show.arg = input$selectPlotHierSparDend, 
+                  key.show.arg = input$selectPlotHierSparKey, 
+                  margin.x.arg = input$inPlotHierSparMarginX, 
+                  margin.y.arg = input$inPlotHierSparMarginY, 
+                  nacol.arg = input$inPlotHierSparNAcolor, 
+                  colCol.arg = loc.colcol,
+                  labCol.arg = loc.colnames,
+                  font.row.arg = input$inPlotHierSparFontX, 
+                  font.col.arg = input$inPlotHierSparFontY, 
+                  title.arg = paste(
+                    "Distance measure: ",
+                    s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                    "\nLinkage method: ",
+                    s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)]
+                  ))
     
     return(loc.p)
   }

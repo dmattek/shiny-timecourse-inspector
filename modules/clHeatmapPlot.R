@@ -1,10 +1,10 @@
-modClDistPlotUI =  function(id, label = "Plot Fractions WIthin Clusters") {
+modHeatmapPlotUI =  function(id, label = "Plot Heatmap") {
   ns <- NS(id)
   
 }
 
 
-modClDistPlot = function(input, output, session, in.data, in.facet = 'group') {
+modHeatmapPlot = function(input, output, session, in.data) {
   
   ns <- session$ns
   
