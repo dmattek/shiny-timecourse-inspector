@@ -58,9 +58,16 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
           height = input$inPlotHeight
         )
       } else {
-        pdf(file,
-            width  = input$inPlotWidth,
-            height = input$inPlotHeight)
+        if (in.fname %like% 'pdf') {
+          pdf(file,
+              width  = input$inPlotWidth,
+              height = input$inPlotHeight)
+        } else {
+          png(file,
+              width  = input$inPlotWidth,
+              height = input$inPlotHeight, units = 'in', res = 300)
+        }
+        
         
         in.plot()
         dev.off()

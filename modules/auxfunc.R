@@ -1,5 +1,8 @@
 ## Custom plotting
 require(ggplot2)
+require(RColorBrewer)
+require(gplots) # for heatmap.2
+require(grid) # for modifying grob
 
 rhg_cols <- c(
   "#771C19",
@@ -53,22 +56,23 @@ l.col.pal = list(
 )
 
 
-myGgplotTraj = function(dt.arg,
-                        x.arg,
-                        y.arg,
-                        group.arg,
-                        facet.arg,
-                        facet.ncol.arg = 2,
-                        line.col.arg = NULL,
-                        xlab.arg = NULL,
-                        ylab.arg = NULL,
-                        plotlab.arg = NULL,
-                        dt.stim.arg = NULL,
+myGgplotTraj = function(dt.arg, # data table
+                        x.arg,  # string with column name for x-axis
+                        y.arg, # string with column name for y-axis
+                        group.arg, # string with column name for grouping time series (typicaly cell ID)
+                        facet.arg, # string with column name for facetting
+                        facet.ncol.arg = 2, # default number of facet columns
+                        facet.color.arg = NULL, # vector with list of colours for adding colours to facet names (currently a horizontal line on top of the facet is drawn)
+                        line.col.arg = NULL, # string with column name for colouring time series (typically when individual time series are selected in UI)
+                        xlab.arg = NULL, # string with x-axis label
+                        ylab.arg = NULL, # string with y-axis label
+                        plotlab.arg = NULL, # string with plot label
+                        dt.stim.arg = NULL, # plotting additional dataset; typically to indicate stimulations (not fully implemented yet, not tested!)
                         tfreq.arg = 1,
                         ylim.arg = NULL,
                         stim.bar.height.arg = 0.1,
                         stim.bar.width.arg = 0.5,
-                        aux.label1 = NULL,
+                        aux.label1 = NULL, # 1st point label; used for interactive plotting; displayed in the tooltip; typically used to display values of column holding x & y coordinates
                         aux.label2 = NULL,
                         stat.arg = c('', 'mean', 'CI', 'SE')) {
   
@@ -96,6 +100,21 @@ myGgplotTraj = function(dt.arg,
                               size = 0.5) +
       scale_color_manual(name = '', 
                          values =c("FALSE" = rhg_cols[7], "TRUE" = rhg_cols[3], "SELECTED" = 'green', "NOT SEL" = rhg_cols[7]))
+  }
+
+  # this is temporary solution for adding colour according to cluster number
+  # use only when plotting traj from clustering!
+  # a horizontal line is added at the top of data
+  if (!is.null(facet.color.arg)) {
+
+    loc.y.max = max(dt.arg[, c(y.arg), with = FALSE])
+    loc.dt.cl = data.table(xx = 1:length(facet.color.arg), yy = loc.y.max)
+    setnames(loc.dt.cl, 'xx', facet.arg)
+    
+    p.tmp = p.tmp +
+      geom_hline(data = loc.dt.cl, colour = facet.color.arg, yintercept = loc.y.max, size = 4) +
+      scale_colour_manual(values = facet.color.arg,
+                          name = '')
   }
   
   if ('mean' %in% loc.stat)
@@ -175,7 +194,10 @@ myGgplotTraj = function(dt.arg,
       legend.position = "top"
     )
   
-  p.tmp
+  
+
+  
+  return(p.tmp)
 }
 
 

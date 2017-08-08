@@ -51,7 +51,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
 }
 
 
-modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.fname = 'tCourses.pdf') {
+modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.facet.color = NULL, in.fname = 'tCourses.pdf') {
   
   ns <- session$ns
   
@@ -145,6 +145,7 @@ modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.f
       group.arg = "id",
       facet.arg = in.facet,
       facet.ncol.arg = input$inPlotTrajFacetNcol,
+      facet.color.arg = if (is.null(in.facet.color)) NULL else in.facet.color()$cl.col,
       xlab.arg = 'Time (min)',
       line.col.arg = loc.line.col.arg,
       aux.label1 = if (locPos) 'pos.x' else NULL,

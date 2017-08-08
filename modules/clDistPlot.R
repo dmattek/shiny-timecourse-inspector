@@ -9,7 +9,13 @@ modClDistPlotUI =  function(id, label = "Plot Fractions WIthin Clusters") {
 }
 
 
-modClDistPlot = function(input, output, session, in.data, in.fname = 'clDist.pdf') {
+
+# Params:
+# in.data - data prepared with data4clDistPlot f-n
+# in.cols - table with 1st column as cluster number, 2nd column colour assignments
+#           prepared with getClColHier
+# in.fname - file name for plot download
+modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fname = 'clDist.pdf') {
   
   ns <- session$ns
  
@@ -24,18 +30,26 @@ modClDistPlot = function(input, output, session, in.data, in.fname = 'clDist.pdf
     }
     
     p.out = ggplot(loc.dt, aes(x = group, y = nCells)) +
-      geom_bar(aes(fill = as.factor(cl)), stat = 'identity', position = 'fill') +
+      geom_bar(aes(fill = as.factor(cl)), stat = 'identity', position = 'fill')
+    
+    if(is.null(in.cols))
+      p.out = p.out + scale_fill_discrete(name = "Cluster no.")
+    else
+      p.out = p.out + scale_fill_manual(name = "Cluster no.", 
+                                        values = in.cols()$cl.col)
+    
+    
+    p.out = p.out + 
       scale_y_continuous(labels = percent) +
       ylab("percentage of cells\n") +  
       xlab("") +  
-      scale_fill_discrete(name = "Cluster no.") +
       myGgplotTheme
     
     return(p.out)
     
   }
   
-  #  Hierarchical - display bar plot
+  #  display bar plot
   output$outPlotClDist <- renderPlot({
     locBut = input$butPlotClDist
     
@@ -48,7 +62,7 @@ modClDistPlot = function(input, output, session, in.data, in.fname = 'clDist.pdf
     plotClDist()
   })
   
-  # Hierarchical - Bar Plot - download pdf
+  # bar Plot - download pdf
   callModule(downPlot, "downPlotClDist", in.fname, plotClDist, TRUE)
   
 }

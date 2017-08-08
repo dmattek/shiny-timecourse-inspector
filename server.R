@@ -15,6 +15,7 @@ library(gplots) # for heatmap.2
 library(plotly)
 library(d3heatmap) # for interactive heatmap
 library(dendextend) # for color_branches
+library(colorspace) # for palettes (ised to colour dendrogram)
 library(RColorBrewer)
 library(sparcl) # sparse hierarchical and k-means
 library(scales) # for percentages on y scale
@@ -690,10 +691,14 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # perform hierarchical clustering and return dendrogram coloured according to cutree
+  # branch coloring performed using dendextend package
   userFitDendHier <- reactive({
+    cat(file = stderr(), 'userFitDendHier \n')
+
     dm.t = data4clust()
     if (is.null(dm.t)) {
-      return()
+      return(NULL)
     }
     
     cl.dist = dist(dm.t, method = s.cl.diss[as.numeric(input$selectPlotHierDiss)])
@@ -701,12 +706,40 @@ shinyServer(function(input, output, session) {
     cl.lev = rev(row.names(dm.t))
     
     dend <- as.dendrogram(cl.hc)
-    dend <- color_branches(dend, k = input$inPlotHierNclust)
+    dend <- color_branches(dend, 
+                           col = rainbow_hcl, # make sure that n here equals max in the input$inPlotHierNclust slider
+                           k = input$inPlotHierNclust)
     
     return(dend)
   })
   
-  # Function instead of reactive as per:
+  # prepares a table with cluster numbers in 1st column and colour assignments in 2nd column
+  # the number of rows is determined by dendrogram cut
+  getClCol <- function(in.dend, in.k) {
+    
+    loc.col_labels <- get_leaves_branches_col(in.dend)
+    loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
+    
+    return(unique(
+      data.table(cl.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
+                 cl.col = loc.col_labels)))
+  }
+  
+  # returns table prepared with f-n getClCol
+  # for hierarchical clustering
+  getClColHier <- reactive({
+    cat(file = stderr(), 'getClColHier \n')
+    
+    loc.dend = userFitDendHier()
+    if (is.null(loc.dend))
+      return(NULL)
+    
+    return(getClCol(loc.dend, input$inPlotHierNclust))
+  })
+  
+
+  
+    # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
   plotHier <- function() {
@@ -767,7 +800,11 @@ shinyServer(function(input, output, session) {
     return(loc.dt)    
   })
   
-  callModule(modTrajPlot, 'modPlotHierTraj', data4trajPlotCl, 'cl',  paste0('clust_hierch_tCourses_',
+  callModule(modTrajPlot, 'modPlotHierTraj', 
+             in.data = data4trajPlotCl, 
+             in.facet = 'cl',  
+             in.facet.color = getClColHier,
+             in.fname = paste0('clust_hierch_tCourses_',
                                                                             s.cl.diss[as.numeric(input$selectPlotHierDiss)],
                                                                             '_',
                                                                             s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
@@ -872,10 +909,12 @@ shinyServer(function(input, output, session) {
   callModule(downPlot, "downPlotHier",       paste0('clust_hierch_heatMap_',
                                                     s.cl.diss[as.numeric(input$selectPlotHierDiss)],
                                                     '_',
-                                                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'), plotHier)
+                                                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.png'), plotHier)
 
-  callModule(modClDistPlot, 'hierClDistPlot', data4clDistPlot,
-             paste0('clust_hierch_clDist_',
+  callModule(modClDistPlot, 'hierClDistPlot', 
+             in.data = data4clDistPlot,
+             in.cols = getClColHier,
+             in.fname = paste0('clust_hierch_clDist_',
                     s.cl.diss[as.numeric(input$selectPlotHierDiss)],
                     '_',
                     s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
@@ -958,10 +997,25 @@ shinyServer(function(input, output, session) {
     }
     
     dend <- as.dendrogram(sparsehc$hc)
-    dend <- color_branches(dend, k = input$inPlotHierSparNclust)
+    dend <- color_branches(dend, 
+                           col = rainbow_hcl,
+                           k = input$inPlotHierSparNclust)
     
     return(dend)
   })
+
+  # returns table prepared with f-n getClCol
+  # for sparse hierarchical clustering
+  getClColHierSpar <- reactive({
+    cat(file = stderr(), 'getClColHierSpar \n')
+    
+    loc.dend = userFitDendHierSpar()
+    if (is.null(loc.dend))
+      return(NULL)
+    
+    return(getClCol(loc.dend, input$inPlotHierNclust))
+  })
+  
   
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
@@ -974,10 +1028,8 @@ shinyServer(function(input, output, session) {
     }
     
     sparsehc <- userFitHierSpar()
-    
-    loc.dend <- as.dendrogram(sparsehc$hc)
-    loc.dend <- color_branches(loc.dend, k = input$inPlotHierSparNclust)
-    
+    loc.dend <- userFitDendHierSpar()
+
     loc.colnames = paste0(ifelse(sparsehc$ws == 0, "",
                                  ifelse(
                                    sparsehc$ws <= 0.1,
@@ -1042,7 +1094,11 @@ shinyServer(function(input, output, session) {
     return(loc.dt)    
   })
   
-  callModule(modTrajPlot, 'modPlotHierSparTraj', data4trajPlotClSpar, 'cl', paste0('clust_hierchSparse_tCourses_',
+  callModule(modTrajPlot, 'modPlotHierSparTraj', 
+             in.data = data4trajPlotClSpar, 
+             in.facet = 'cl', 
+             in.facet.color = getClColHierSpar,
+             paste0('clust_hierchSparse_tCourses_',
                                                                                    s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
                                                                                    '_',
                                                                                    s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
@@ -1083,8 +1139,10 @@ shinyServer(function(input, output, session) {
     
   })
   
-  callModule(modClDistPlot, 'hierClSparDistPlot', data4clSparDistPlot,
-             paste0('clust_hierchSparse_clDist_',
+  callModule(modClDistPlot, 'hierClSparDistPlot', 
+             in.data = data4clSparDistPlot,
+             in.cols = getClColHierSpar,
+             in.fname = paste0('clust_hierchSparse_clDist_',
                     s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
                     '_',
                     s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
