@@ -40,6 +40,8 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
         ),
         uiOutput(ns('uiPlotBoxNotches')),
         uiOutput(ns('uiPlotBoxOutliers')),
+        uiOutput(ns('uiPlotBoxDodge')),
+        #uiOutput(ns('uiPlotBoxWidth')),
         uiOutput(ns('uiPlotBoxAlpha')),
         uiOutput(ns('uiPlotDotNbins'))
       ),
@@ -153,13 +155,31 @@ tabBoxPlot = function(input, output, session, in.data) {
       checkboxInput(ns('inPlotBoxOutliers'), 'Box plot outliers?', FALSE)
   })
   
+  output$uiPlotBoxDodge = renderUI({
+    cat(file = stderr(), 'UI uiPlotBoxDodge\n')
+    
+    ns <- session$ns
+    
+    if(!( input$inPlotType %in% 'line' ))
+      sliderInput(ns('inPlotBoxDodge'), 'Dodge series:', min = 0, max = 1, value = .4, step = 0.05)
+  })
+
+  output$uiPlotBoxWidth = renderUI({
+    cat(file = stderr(), 'UI uiPlotBoxWidth\n')
+    
+    ns <- session$ns
+    
+    if('box' %in% input$inPlotType)
+      sliderInput(ns('inPlotBoxWidth'), 'Box plot width:', min = 0, max = 1, value = .2, step = 0.1)
+  })
+  
   output$uiPlotBoxAlpha = renderUI({
     cat(file = stderr(), 'UI uiPlotBoxAlpha\n')
     
     ns <- session$ns
     
     if('box' %in% input$inPlotType)
-      sliderInput(ns('inPlotBoxAlpha'), 'Box plot transparency:', min = 0, max = 1, value = 1, step = 0.1)
+      sliderInput(ns('inPlotBoxAlpha'), 'Box plot transparency:', min = 0, max = 1, value = 1, step = 0.05)
   })
   
   output$uiPlotDotNbins = renderUI({
@@ -308,11 +328,16 @@ tabBoxPlot = function(input, output, session, in.data) {
     cat(file = stderr(), 'plotBox:dt not NULL\n')
     
     
-    loc.par.dodge <- position_dodge(width = 0.4)
+    loc.par.dodge <- position_dodge(width = input$inPlotBoxDodge)
     p.out = ggplot(loc.dt, aes(x = as.factor(realtime), y = y)) 
     
     if('dot' %in% input$inPlotType)
-      p.out = p.out + geom_dotplot(aes(fill = group), binaxis = "y", stackdir = "center", position = loc.par.dodge, binwidth = 10^(input$inPlotDotNbins), method = 'histodot')
+      p.out = p.out + geom_dotplot(aes(fill = group), 
+                                   binaxis = "y", 
+                                   stackdir = "center", 
+                                   position = loc.par.dodge, 
+                                   binwidth = 10^(input$inPlotDotNbins), 
+                                   method = 'histodot')
     
     if('viol' %in% input$inPlotType)
       p.out = p.out + geom_violin(aes(fill = group),
@@ -328,7 +353,7 @@ tabBoxPlot = function(input, output, session, in.data) {
       p.out = p.out + geom_boxplot(
         aes(fill = group), 
         position = loc.par.dodge,
-        width = 0.2,
+        #width = 0.2, #input$inPlotBoxWidth,
         notch = input$inPlotBoxNotches, 
         alpha = input$inPlotBoxAlpha,
         outlier.colour = if (input$inPlotBoxOutliers)

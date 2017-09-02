@@ -285,7 +285,7 @@ shinyServer(function(input, output, session) {
         label = 'Percentage of middle data',
         min = 90,
         max = 100,
-        value = 99, 
+        value = 99.5, 
         step = 0.1
       )
       
@@ -1166,7 +1166,7 @@ shinyServer(function(input, output, session) {
   callModule(downPlot, "downPlotHierSparHM",       paste0('clust_hierchSparse_heatMap_',
                                                           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
                                                           '_',
-                                                          s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'), plotHierSpar)
+                                                          s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.png'), plotHierSpar)
   
 
   # Sparse Hierarchical clustering (sparcl) interactive version
