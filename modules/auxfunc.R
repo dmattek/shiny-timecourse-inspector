@@ -42,7 +42,7 @@ s.cl.spar.linkage = c("average",
                       "single",
                       "centroid")
 
-s.cl.diss = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
+s.cl.diss = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "DTW")
 s.cl.spar.diss = c("squared.distance","absolute.value")
 
 l.col.pal = list(
@@ -55,6 +55,65 @@ l.col.pal = list(
   "Spectral" = 'Spectral'
 )
 
+# Creates a popup with help text
+# From: https://gist.github.com/jcheng5/5913297
+helpPopup <- function(title, content,
+                      placement=c('right', 'top', 'left', 'bottom'),
+                      trigger=c('click', 'hover', 'focus', 'manual')) {
+  tagList(
+    singleton(
+      tags$head(
+        tags$script("$(function() { $(\"[data-toggle='popover']\").popover(); })")
+      )
+    ),
+    tags$a(
+      href = "#", class = "btn btn-mini", `data-toggle` = "popover",
+      title = title, `data-content` = content, `data-animation` = TRUE,
+      `data-placement` = match.arg(placement, several.ok=TRUE)[1],
+      `data-trigger` = match.arg(trigger, several.ok=TRUE)[1],
+      #tags$i(class="icon-question-sign")
+      # changed based on http://stackoverflow.com/questions/30436013/info-bubble-text-in-a-shiny-interface
+      icon("question")
+    )
+  )
+}
+
+help.text = c(
+  'Accepts CSV file with a column of cell IDs for removal. 
+                   IDs should correspond to those used for plotting. 
+  Say, the main data file contains columns Metadata_Site and TrackLabel. 
+  These two columns should be then selected in UI to form a unique cell ID, e.g. 001_0001 where former part corresponds to Metadata_Site and the latter to TrackLabel.',
+  'Plotting and data processing requires a unique cell ID across entire dataset. A typical dataset from CellProfiler assigns unique cell ID (TrackLabel) within each field of view (Metadata_Site).
+                   Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, check this box and select a single column only.'
+)
+
+
+#####
+## Function for clustering 
+
+# get cell IDs with cluster assignments depending on dendrogram cut
+getDataCl = function(in.dend, in.k, in.ids) {
+  cat(file = stderr(), 'getDataCl \n')
+  
+  loc.dt.cl = data.table(id = in.ids,
+                         cl = cutree(as.dendrogram(in.dend), k = in.k))
+}
+
+# prepares a table with cluster numbers in 1st column and colour assignments in 2nd column
+# the number of rows is determined by dendrogram cut
+getClCol <- function(in.dend, in.k) {
+  
+  loc.col_labels <- get_leaves_branches_col(in.dend)
+  loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
+  
+  return(unique(
+    data.table(cl.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
+               cl.col = loc.col_labels)))
+}
+
+
+#####
+## Common plotting functions
 
 myGgplotTraj = function(dt.arg, # data table
                         x.arg,  # string with column name for x-axis

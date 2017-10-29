@@ -28,11 +28,30 @@ shinyUI(fluidPage(
       actionButton("inButLoadNuc", "Load Data"),
       actionButton("butReset", "Reset file input"),
       actionButton('inDataGen1', 'Generate artificial dataset'),
-
+      
+      tags$hr(),
+      checkboxInput('chBtrajRem', 'Upload IDs to remove'),
+      helpPopup(
+        title = 'Remove time series',
+        content = help.text[1],
+        placement = 'right',
+        trigger = 'hover'
+      ),
+      
+      uiOutput('uiFileLoadTrajRem'),
+      uiOutput('uiButLoadTrajRem'),
+      
       tags$hr(),
       checkboxInput('chBtrackUni', 'Track Label unique across entire dataset', FALSE),
+      helpPopup(
+        title = 'Create unique cell ID',
+        content = help.text[2],
+        placement = 'right',
+        trigger = 'hover'
+      ),
       uiOutput('varSelSite'),
       uiOutput('varSelTrackLabel'),
+      tags$hr(),
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
       uiOutput('varSelMeas1'),
@@ -72,21 +91,26 @@ shinyUI(fluidPage(
         h4(
           "Plot time series"
         ),
-  
+        
         br(),
         checkboxInput('chBhighlightTraj', 'Highlight trajectories?', FALSE),
         uiOutput('varSelHighlight'),
         br(),
         modTrajPlotUI('modTrajPlot')
-        ),
+      ),
       
+      
+      tabPanel(
+        "AUI",
+        modAUCplotUI('tabAUC')
+      ),
       
       tabPanel(
         "Box-plots",
         tabBoxPlotUI('tabBoxPlot')
       ),
       
-
+      
       # scatter plot
       tabPanel(
         'Scatter',
@@ -95,326 +119,13 @@ shinyUI(fluidPage(
       
       tabPanel(
         'Hierarchical',
-        br(),
-        fluidRow(
-          column(4,
-            selectInput(
-              "selectPlotHierLinkage",
-              label = ("Select linkage method:"),
-              choices = list(
-                "Ward" = 1,
-                "Ward D2" = 2,
-                "Single" = 3,
-                "Complete" = 4,
-                "Average" = 5,
-                "McQuitty" = 6,
-                "Centroid" = 7
-              ),
-              selected = 2
-            ),
-            selectInput(
-              "selectPlotHierDiss",
-              label = ("Select type of dissimilarity measure:"),
-              choices = list("Euclidean" = 1,
-                             "Maximum" = 2,
-                             "Manhattan" = 3,
-                             "Canberra" = 4,
-                             "Binary" = 5,
-                             "Minkowski" = 6),
-              selected = 1
-            )
-          ),
-          column(4,
-                 sliderInput(
-                   'inPlotHierNclust',
-                   '#dendrogram branches to colour',
-                   min = 1,
-                   max = 20,
-                   value = 1,
-                   step = 1,
-                   ticks = TRUE,
-                   round = TRUE
-                 ),
-                 checkboxInput('chBPlotHierClSel', 'Manually select clusters to display'),
-                 uiOutput('uiPlotHierClSel'),
-                 #downCellClUI('downDataHier', "Download Data")
-                 downloadButton('downCellCl', 'Download CSV with cell IDs and cluster no.')
-          )
-        ),
-        br(),
-        #checkboxInput('inPlotHierSparInteractive', 'Interactive Plot?',  value = FALSE),
-        
-        tabsetPanel(
-          tabPanel('Heat-map',
-                   fluidRow(
-                     column(3,
-                            checkboxInput('selectPlotHierDend', 'Plot dendrogram and re-order samples', TRUE),
-                            selectInput(
-                              "selectPlotHierPalette",
-                              label = "Select colour palette:",
-                              choices = l.col.pal,
-                              selected = 'Spectral'
-                            ),
-                            checkboxInput('inPlotHierRevPalette', 'Reverse colour palette', TRUE),
-                            checkboxInput('selectPlotHierKey', 'Plot colour key', TRUE)
-                     ),
-                     column(3,
-                            sliderInput(
-                              'inPlotHierNAcolor',
-                              'Shade of grey for NA values (0 - black, 1 - white)',
-                              min = 0,
-                              max = 1,
-                              value = 0.8,
-                              step = .1,
-                              ticks = TRUE
-                            ),
-                            numericInput('inPlotHierHeatMapHeight', 
-                                         'Display plot height [px]', 
-                                         value = 600, 
-                                         min = 100,
-                                         step = 100)
-                     ),
-                     column(6,
-                            h4('Classic hierarchical clustering')
-                     )
-                   ),
-                   
-                   fluidRow(
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierMarginX',
-                         'Margin below x-axis',
-                         5,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierMarginY',
-                         'Margin right of y-axis',
-                         20,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierFontX',
-                         'Font size row labels',
-                         1,
-                         min = 0,
-                         width = 100,
-                         step = 0.1
-                       )
-                     ),
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierFontY',
-                         'Font size column labels',
-                         1,
-                         min = 0,
-                         width = 100,
-                         step = 0.1
-                       )
-                     )
-                   ),
-                   br(),
-                   
-                   downPlotUI('downPlotHier', "Download PDF"),
-                   actionButton('butPlotHierHeatMap', 'Plot!'),
-                   plotOutput('outPlotHier')
-          ),
-          # tabPanel('Heat-map int.',
-          #          helpText("Choose your settings 2")),
-          tabPanel('Time-courses',
-                   modTrajPlotUI('modPlotHierTraj')),
-          
-          tabPanel('Cluster dist.',
-                   modClDistPlotUI('hierClDistPlot', 'xxx'))
-          
-        )
+        clustHierUI('tabClHier')
       ),
       
-      
       tabPanel(
-        'Hier. Sparse',
-        br(),
-        fluidRow(
-          column(
-            4,
-            selectInput(
-              "selectPlotHierSparLinkage",
-              label = ("Select linkage method:"),
-              choices = list(
-                "Average" = 1,
-                "Complete" = 2,
-                "Single" = 3,
-                "Centroid" = 4
-              ),
-              selected = 1
-            ),
-            selectInput(
-              "selectPlotHierSparDiss",
-              label = ("Select type of dissimilarity measure:"),
-              choices = list("Squared Distance" = 1,
-                             "Absolute Value" = 2),
-              selected = 1
-            )
-          ),
-          
-          column(
-            4,
-            sliderInput(
-              'inPlotHierSparNclust',
-              '#dendrogram branches to colour',
-              min = 1,
-              max = 20,
-              value = 1,
-              step = 1,
-              ticks = TRUE,
-              round = TRUE
-            ),
-            checkboxInput('chBPlotHierSparClSel', 'Manually select clusters to display'),
-            uiOutput('uiPlotHierSparClSel'),
-            downloadButton('downCellClSpar', 'Download CSV with cell IDs and cluster no.')
-          ),
-          
-          column(
-            4,
-            checkboxInput('inHierSparAdv',
-                          'Advanced options',
-                          FALSE),
-            uiOutput(
-              'uiPlotHierSparNperms'
-            ),
-            uiOutput(
-              'uiPlotHierSparNiter'
-            )
-          )
-        ),
-        
-        
-        br(),
-        #checkboxInput('inPlotHierSparInteractive', 'Interactive Plot?',  value = FALSE),
-        
-        tabsetPanel(
-          tabPanel('Heat-map',
-                   fluidRow(
-                     column(3,
-                            checkboxInput('selectPlotHierSparDend', 'Plot dendrogram and re-order samples', TRUE),
-                            selectInput(
-                              "selectPlotHierSparPalette",
-                              label = "Select colour palette:",
-                              choices = l.col.pal,
-                              selected = 'Spectral'
-                            ),
-                            checkboxInput('inPlotHierSparRevPalette', 'Reverse colour palette', TRUE),
-                            checkboxInput('selectPlotHierSparKey', 'Plot colour key', TRUE)
-                     ),
-                     column(3,
-                            sliderInput(
-                              'inPlotHierSparNAcolor',
-                              'Shade of grey for NA values (0 - black, 1 - white)',
-                              min = 0,
-                              max = 1,
-                              value = 0.8,
-                              step = .1,
-                              ticks = TRUE
-                            ),
-                            numericInput('inPlotHierSparHeatMapHeight', 
-                                         'Display plot height [px]', 
-                                         value = 600, 
-                                         min = 100,
-                                         step = 100)
-                     ),
-                     column(6,
-                            br(),
-                            h4(
-                              "Sparse hierarchical clustering using ",
-                              a("sparcl", href = "https://cran.r-project.org/web/packages/sparcl/")
-                            ),
-                            p(
-                              'Column labels in the heat-map are additionally labeld according to their \"importance\":'
-                            ),
-                            tags$ol(
-                              tags$li("Black - not taken into account"),
-                              tags$li("Blue with \"*\" - low importance (weight factor in (0, 0.1]"),
-                              tags$li("Green with \"**\" - medium importance (weight factor in (0.1, 0.5]"),
-                              tags$li("Red with \"***\" - high importance (weight factor in (0.5, 1.0]")
-                            )
-                     )
-                   ),
-                   
-                   fluidRow(
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierSparMarginX',
-                         'Margin below x-axis',
-                         5,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierSparMarginY',
-                         'Margin right of y-axis',
-                         20,
-                         min = 1,
-                         width = 100
-                       )
-                     ),
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierSparFontX',
-                         'Font size row labels',
-                         1,
-                         min = 0,
-                         width = 100,
-                         step = 0.1
-                       )
-                     ),
-                     column(
-                       3,
-                       numericInput(
-                         'inPlotHierSparFontY',
-                         'Font size column labels',
-                         1,
-                         min = 0,
-                         width = 100,
-                         step = 0.1
-                       )
-                     )
-                   ),
-                   br(),
-                   
-                   
-                   downPlotUI('downPlotHierSparHM', "Download PDF"),
-
-                   actionButton('butPlotHierSparHeatMap', 'Plot!'),
-                   plotOutput('outPlotHierSpar')
-          ),
-          # tabPanel('Heat-map int.',
-          #          helpText("Choose your settings 2")),
-          tabPanel('Time-courses',
-                   modTrajPlotUI('modPlotHierSparTraj')),
-          tabPanel('Cluster dist.',
-                   modClDistPlotUI('hierClSparDistPlot'))
-        )
+        'Hierarchical Sparse',
+        clustHierSparUI('tabClHierSpar')
       )
-      # 
-      # tabPanel(
-      #   'Bayesian Cl.',
-      #   clustBayUI('TabClustBay'))
-      
     ))
   )
 ))
