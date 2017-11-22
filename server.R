@@ -147,26 +147,29 @@ shinyServer(function(input, output, session) {
   # In Coralie's case it's a combination of 3 columns called Stimulation_...
   output$varSelGroup = renderUI({
     cat(file = stderr(), 'UI varSelGroup\n')
-    locCols = getDataNucCols()
     
-    if (!is.null(locCols)) {
-      locColSel = locCols[locCols %like% 'ite']
-      if (length(locColSel) == 0)
-        locColSel = locCols[locCols %like% 'eries'][1] # index 1 at the end in case more matches; select 1st
-      else if (length(locColSel) > 1) {
-        locColSel = locColSel[1]
+    if (input$chBgroup) {
+      
+      locCols = getDataNucCols()
+      
+      if (!is.null(locCols)) {
+        locColSel = locCols[locCols %like% 'ite']
+        if (length(locColSel) == 0)
+          locColSel = locCols[locCols %like% 'eries'][1] # index 1 at the end in case more matches; select 1st
+        else if (length(locColSel) > 1) {
+          locColSel = locColSel[1]
+        }
+        #    cat('UI varSelGroup::locColSel ', locColSel, '\n')
+        selectInput(
+          'inSelGroup',
+          'Select one or more facet groupings (e.g. Site, Well, Channel):',
+          locCols,
+          width = '100%',
+          selected = locColSel,
+          multiple = TRUE
+        )
       }
-      #    cat('UI varSelGroup::locColSel ', locColSel, '\n')
-      selectInput(
-        'inSelGroup',
-        'Select one or more facet groupings (e.g. Site, Well, Channel):',
-        locCols,
-        width = '100%',
-        selected = locColSel,
-        multiple = TRUE
-      )
     }
-    
   })
   
   output$varSelSite = renderUI({
@@ -445,7 +448,9 @@ shinyServer(function(input, output, session) {
       cat(file = stderr(), 'dataMod: trajRem not NULL\n')
       
       loc.dt.rem = dataLoadTrajRem()
-      loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem$id)]
+      
+      
+      loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem[[1]])]
     }
     
     return(loc.dt)
@@ -506,11 +511,20 @@ shinyServer(function(input, output, session) {
     # create expression for parsing
     # creates a merged column based on other columns from input
     # used for grouping of plot facets
-    if(length(input$inSelGroup) == 0)
-      return(NULL)
-    loc.s.gr = sprintf("paste(%s, sep=';')",
-                       paste(input$inSelGroup, sep = '', collapse = ','))
+    if (input$chBgroup) {
+      if(length(input$inSelGroup) == 0)
+        return(NULL)
+      
+      loc.s.gr = sprintf("paste(%s, sep=';')",
+                         paste(input$inSelGroup, sep = '', collapse = ','))
+    } else {
+      # if no grouping required, fill 'group' column with 0
+      # because all the plotting relies on the presence of the group column
+      loc.s.gr = "paste('0')"
+    }
     
+
+    # column name with time
     loc.s.rt = input$inSelTime
     
     # Assign tracks selected for highlighting in UI
@@ -548,9 +562,6 @@ shinyServer(function(input, output, session) {
             mid.in = mid.in
           )]
         
-        
-        
-        
         # add 3rd level with status of track selection
         # to a column with trajectory filtering status
         if (locBut) {
@@ -581,15 +592,48 @@ shinyServer(function(input, output, session) {
         }
     }
     
-    # add XY location if present in the dataset
+    ## Interpolate NA's and data points not included
+    # dt with a full span of realtime for every group and cell id (here it's already unique across entire dataset) combination
+    loc.dt.IdRt =  CJ(id = loc.out[['id']], 
+                      realtime = loc.out[['realtime']], 
+                      unique = TRUE, sorted = TRUE )
+
+    # dt with all cell id's and their associated group names
+    loc.dt.GrId = loc.out[, .(group = first(group)), by = id]
     
-    # remove NAs 
-    # (doesn't make sense to remove here anyway; 
-    # NA's are already removed in tCourseSelected.csv
-    # Such datapoints are missing, therefore they require interpolation.
-    # If a row of long-format dt is removed, an NA appears after casting anyway if that grid point is missing)
-    # Remove NAs in data4clust()
-    loc.out = loc.out[complete.cases(loc.out)]
+    # merge the 2 above to have all id~rt combinations with associated group names
+    loc.dt.GrIdRt = merge(loc.dt.IdRt, loc.dt.GrId, by = 'id')
+    
+    # join with the original to expand it and create NA's for non-existing group-id-rt combinations
+    loc.out = merge(loc.dt.GrIdRt, loc.out, all.x = TRUE, by = c('group', 'id', 'realtime'))
+    
+    # x-check: print all rows with NA's
+    print('Rows with NAs:')
+    print(loc.out[rowSums(is.na(loc.out)) > 0, ])
+    
+    # Merge will create NA's where a realtime is missing.
+    # Also, NA's may be already present in the dataset'.
+    # Interpolate (linear) them with na.interpolate
+    if(locPos) {
+      s.cols = c('y', 'pos.x', 'pos.y')
+      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
+    }
+    else {
+      s.cols = c('y')
+      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
+    }
+    
+
+    # !!! Current issue with interpolation:
+    # The column mid.in is not taken into account.
+    # If a trajectory is selected in the UI,
+    # the mid.in column is added (if it doesn't already exist in the dataset),
+    # and for the interpolated point, it will still be NA. Not really an issue.
+    #
+    # Also, think about the current option of having mid.in column in the uploaded dataset.
+    # Keep it? Expand it?
+    # Create a UI filed for selecting the column with mid.in data.
+    # What to do with that column during interpolation (see above)
     
     # Trim x-axis (time)
     if(input$chBtimeTrim) {

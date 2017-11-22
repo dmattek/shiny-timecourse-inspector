@@ -75,7 +75,9 @@ tabBoxPlot = function(input, output, session, in.data, in.fname = 'boxplotTP.pdf
       out.dt = loc.dt[realtime %in% input$inSelTpts]
       loc.dt.aux = loc.dt[realtime %in% c(as.numeric(input$inSelTpts) - input$slFoldChTp)]
       loc.y.prev = loc.dt.aux[, y]
-
+      print(nrow(loc.dt.aux))
+      print(nrow(out.dt))
+      
       out.dt[, y.prev := loc.y.prev]
       print(out.dt)
       out.dt[, y := abs(y / y.prev)]

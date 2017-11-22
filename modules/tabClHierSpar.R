@@ -222,8 +222,9 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
       return()
     }
     
-    #cat('rownames: ', rownames(dm.t), '\n')
     
+    cat('rownames: ', rownames(dm.t), '\n')
+    cat('=============\ndimensions:', dim(dm.t), '\n')
     perm.out <- HierarchicalSparseCluster.permute(
       dm.t,
       wbounds = NULL,
@@ -238,10 +239,16 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
       method = s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)],
       dissimilarity = s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)]
     )
+    
+    cat('=============\nsparsehc:\n')
+    print(sparsehc$hc)
+    
     return(sparsehc)
   })
   
   
+  
+  # return dendrogram colour coded according to the cut level of the dendrogram
   userFitDendHierSpar <- reactive({
     sparsehc = userFitHierSpar()
     if (is.null(sparsehc)) {
@@ -249,6 +256,9 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     }
     
     dend <- as.dendrogram(sparsehc$hc)
+    
+    cat('=============\ncutree:\n', dendextend::cutree(dend, input$inPlotHierSparNclust, order_clusters_as_data = TRUE), '\n')
+    
     dend <- color_branches(dend, 
                            col = rainbow_hcl,
                            k = input$inPlotHierSparNclust)
@@ -265,7 +275,10 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     if (is.null(loc.dend))
       return(NULL)
     
-    return(getClCol(loc.dend, input$inPlotHierSparNclust))
+    loc.cut = getClCol(loc.dend, input$inPlotHierSparNclust)
+
+    
+    return(loc.cut)
   })
   
 
@@ -273,12 +286,12 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
   # This will be used to display in UI for trajectory highlighting
   getDataTrackObjLabUni_afterTrim <- reactive({
     cat(file = stderr(), 'getDataTrackObjLabUni_afterTrim\n')
-    loc.dt = in.data4trajPlot()
+    loc.dt = in.data4clust()
     
     if (is.null(loc.dt))
       return(NULL)
     else
-      return(unique(loc.dt$id))
+      return(rownames(loc.dt))
   })
   
   # return dt with cell IDs and their corresponding condition name
@@ -309,8 +322,17 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     
     cat(file = stderr(), 'data4trajPlotClSpar: dt not NULL\n')
     
+    cat('rownames: ', rownames(in.data4clust()), '\n')
+
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
+    loc.dt.cl = getDataClSpar(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
+
+    ####
+    ## PROBLEM!!!
+    ## the dendrogram from sparse hier clust doesn't contain cellID's
+    ## the following merge won't work...
+    ## No idea how to solve it
+  
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
     # display only selected clusters
@@ -331,7 +353,7 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     },
     
     content = function(file) {
-      write.csv(x = getDataCl(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim()), file = file, row.names = FALSE)
+      write.csv(x = getDataClSpar(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim()), file = file, row.names = FALSE)
     }
   )
   
@@ -340,15 +362,14 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     cat(file = stderr(), 'data4clSparDistPlot: in\n')
     
     # get cell IDs with cluster assignments depending on dendrogram cut
-    loc.dend <- userFitHierSpar()
+    loc.dend <- userFitDendHierSpar()
     if (is.null(loc.dend)) {
       cat(file = stderr(), 'plotClSparDist: loc.dend is NULL\n')
       return(NULL)
     }
     
-    loc.dt.cl = data.table(id = getDataTrackObjLabUni_afterTrim(),
-                           cl = cutree(as.dendrogram(loc.dend$hc), k = input$inPlotHierSparNclust))
-    
+    # get cell id's with associated cluster numbers
+    loc.dt.cl = getDataClSpar(loc.dend, input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
     
     # get cellIDs with condition name
     loc.dt.gr = getDataCond()

@@ -89,15 +89,57 @@ help.text = c(
 
 
 #####
-## Function for clustering 
+## Functions for clustering 
 
-# get cell IDs with cluster assignments depending on dendrogram cut
-getDataCl = function(in.dend, in.k, in.ids) {
+
+# Return a dt with cell IDs and corresponding cluster assignments depending on dendrogram cut (in.k)
+# This one works wth dist & hclust pair
+# For sparse hierarchical clustering use getDataClSpar
+# Arguments:
+# in.dend  - dendrogram; usually output from as.dendrogram(hclust(distance_matrix))
+# in.k - level at which dendrogram should be cut
+
+getDataCl = function(in.dend, in.k) {
   cat(file = stderr(), 'getDataCl \n')
   
-  loc.dt.cl = data.table(id = in.ids,
-                         cl = cutree(as.dendrogram(in.dend), k = in.k))
+  loc.m = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE)
+  #print(loc.m)
+  
+  # The result of cutree containes named vector with names being cell id's
+  # THIS WON'T WORK with sparse hierarchical clustering because there, the dendrogram doesn't have original id's
+  loc.dt.cl = data.table(id = names(loc.m),
+                         cl = loc.m)
+  
+  cat('===============\ndataCl:\n')
+  print(loc.dt.cl)
+  return(loc.dt.cl)
 }
+
+
+# Return a dt with cell IDs and corresponding cluster assignments depending on dendrogram cut (in.k)
+# This one works with sparse hierarchical clustering!
+# Arguments:
+# in.dend  - dendrogram; usually output from as.dendrogram(hclust(distance_matrix))
+# in.k - level at which dendrogram should be cut
+# in.id - vector of cell id's
+
+getDataClSpar = function(in.dend, in.k, in.id) {
+  cat(file = stderr(), 'getDataClSpar \n')
+  
+  loc.m = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE)
+  #print(loc.m)
+  
+  # The result of cutree containes named vector with names being cell id's
+  # THIS WON'T WORK with sparse hierarchical clustering because there, the dendrogram doesn't have original id's
+  loc.dt.cl = data.table(id = in.id,
+                         cl = loc.m)
+  
+  cat('===============\ndataCl:\n')
+  print(loc.dt.cl)
+  return(loc.dt.cl)
+}
+
+
 
 # prepares a table with cluster numbers in 1st column and colour assignments in 2nd column
 # the number of rows is determined by dendrogram cut
@@ -266,13 +308,17 @@ userDataGen <- function() {
   cat(file=stderr(), 'userDataGen: in\n')
   
   locNtp = 40
-  locNtracks = 100
+  locNtracks = 10
   locNsites = 4
   locNwells = 1
   
   x.rand.1 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 1, 0.2))
   x.rand.2 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, 0.25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 0.5, 0.2))
-#  x.rand.3 = rep(rnorm(locNtracks, 2, 0.5), 1, each = locNtp)
+
+  # add NA's for testing
+  x.rand.1[c(10,20,30)] = NA
+  
+  #  x.rand.3 = rep(rnorm(locNtracks, 2, 0.5), 1, each = locNtp)
 #  x.rand.4 = rep(rnorm(locNtracks, 1, 0.1), 1, each = locNtp)
   
 #  x.arg = rep(seq(0, locNtp-1) / locNtp * 4 * pi, locNtracks * locNsites)
@@ -526,7 +572,9 @@ myPlotHeatmap <- function(data.arg,
     #      rowsep = 1:nrow(loc.dm),
     cexRow = font.row.arg,
     cexCol = font.col.arg,
-    main = title.arg
+    main = title.arg,
+    symbreaks = FALSE,
+    symkey = FALSE
   )
   
   return(loc.p)

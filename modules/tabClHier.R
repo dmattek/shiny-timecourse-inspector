@@ -257,7 +257,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     cat(file = stderr(), 'data4trajPlotCl: dt not NULL\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(userFitDendHier(), input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim())
+    loc.dt.cl = getDataCl(userFitDendHier(), input$inPlotHierNclust)
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
     # display only selected clusters
@@ -277,7 +277,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     },
     
     content = function(file) {
-      write.csv(x = getDataCl(userFitDendHier(), input$inPlotHierNclust, getDataTrackObjLabUni_afterTrim()), file = file, row.names = FALSE)
+      write.csv(x = getDataCl(userFitDendHier(), input$inPlotHierNclust), file = file, row.names = FALSE)
     }
   )
   
@@ -292,9 +292,8 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
       return(NULL)
     }
     
-    loc.dt.cl = data.table(id = getDataTrackObjLabUni_afterTrim(),
-                           cl = cutree(as.dendrogram(loc.dend), k = input$inPlotHierNclust))
-    
+    # get cell id's with associated cluster numbers
+    loc.dt.cl = getDataCl(loc.dend, input$inPlotHierNclust)
     
     # get cellIDs with condition name
     loc.dt.gr = getDataCond()
