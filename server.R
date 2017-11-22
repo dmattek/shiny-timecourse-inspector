@@ -591,21 +591,41 @@ shinyServer(function(input, output, session) {
           loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
         }
     }
-    
-    ## Interpolate NA's and data points not included
-    # dt with a full span of realtime for every group and cell id (here it's already unique across entire dataset) combination
-    loc.dt.IdRt =  CJ(id = loc.out[['id']], 
-                      realtime = loc.out[['realtime']], 
-                      unique = TRUE, sorted = TRUE )
 
-    # dt with all cell id's and their associated group names
-    loc.dt.GrId = loc.out[, .(group = first(group)), by = id]
+    ## Interpolate NA's and data points not include
+    # From: https://stackoverflow.com/questions/28073752/r-how-to-add-rows-for-missing-values-for-unique-group-sequences
+    # Tracks are interpolated only within min and max realtime of every cell id
+    setkey(loc.out, group, id, realtime)
+    loc.out = loc.out[setkey(loc.out[, .(min(realtime):max(realtime)), by = .(group, id)], group, id, V1)]
+
     
-    # merge the 2 above to have all id~rt combinations with associated group names
-    loc.dt.GrIdRt = merge(loc.dt.IdRt, loc.dt.GrId, by = 'id')
-    
-    # join with the original to expand it and create NA's for non-existing group-id-rt combinations
-    loc.out = merge(loc.dt.GrIdRt, loc.out, all.x = TRUE, by = c('group', 'id', 'realtime'))
+    # # dt with a full span of realtime for every group and cell id 
+    # # (here id is already unique across entire dataset) combination
+    # loc.dt.IdRt =  CJ(id = loc.out[['id']], 
+    #                   realtime = loc.out[['realtime']], 
+    #                   unique = TRUE, sorted = TRUE )
+    # 
+    # print('loc.dt.IdRt:')
+    # print(loc.dt.IdRt)
+    # 
+    # # dt with all cell id's and their associated group names
+    # loc.dt.GrId = loc.out[, .(group = first(group)), by = id]
+    # 
+    # print('loc.dt.GrId:')
+    # print(loc.dt.GrId)
+    # 
+    # # merge the 2 above to have all id~rt combinations with associated group names
+    # loc.dt.GrIdRt = merge(loc.dt.IdRt, loc.dt.GrId, by = 'id')
+    # 
+    # print('loc.dt.GrIdRt:')
+    # print(loc.dt.GrIdRt)
+    # 
+    # # join with the original to expand it and create NA's for non-existing group-id-rt combinations
+    # loc.out = merge(loc.dt.GrIdRt, loc.out, all.x = TRUE, by = c('group', 'id', 'realtime'))
+    # 
+    # print('loc.out:')
+    # print(loc.out)
+    # 
     
     # x-check: print all rows with NA's
     print('Rows with NAs:')
@@ -635,12 +655,12 @@ shinyServer(function(input, output, session) {
     # Create a UI filed for selecting the column with mid.in data.
     # What to do with that column during interpolation (see above)
     
-    # Trim x-axis (time)
+    ## Trim x-axis (time)
     if(input$chBtimeTrim) {
       loc.out = loc.out[realtime >= input$slTimeTrim[[1]] & realtime <= input$slTimeTrim[[2]] ]
     }
     
-    # Normalization
+    ## Normalization
     # F-n myNorm adds additional column with .norm suffix
     if (input$chBnorm) {
       loc.out = myNorm(
