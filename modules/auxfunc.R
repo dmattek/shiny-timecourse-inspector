@@ -175,6 +175,7 @@ myGgplotTraj = function(dt.arg, # data table
                         stim.bar.width.arg = 0.5,
                         aux.label1 = NULL, # 1st point label; used for interactive plotting; displayed in the tooltip; typically used to display values of column holding x & y coordinates
                         aux.label2 = NULL,
+                        aux.label3 = NULL,
                         stat.arg = c('', 'mean', 'CI', 'SE')) {
   
   # match arguments for stat plotting
@@ -187,7 +188,8 @@ myGgplotTraj = function(dt.arg, # data table
                             y = y.arg,
                             group = group.arg,
                             label  = aux.label1,
-                            label2 = aux.label2))
+                            label2 = aux.label2,
+                            label3 = aux.label3))
   
   if (is.null(line.col.arg)) {
     p.tmp = p.tmp +

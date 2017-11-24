@@ -122,7 +122,7 @@ modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.f
     
     
     # Future: change such that a column with colouring status is chosen by the user
-    # colour trajectories, if dataset contains mi.din column
+    # colour trajectories, if dataset contains mid.in column
     # with filtering status of trajectory
     if (sum(names(loc.dt) %in% 'mid.in') > 0)
       loc.line.col.arg = 'mid.in'
@@ -137,6 +137,14 @@ modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.f
       locPos = TRUE
     else
       locPos = FALSE
+    
+    # check if column with ObjectNumber is present
+    if (sum(names(loc.dt) %like% 'obj.num') == 1)
+      locObjNum = TRUE
+    else
+      locObjNum = FALSE
+    
+    
     
     # If in.facet.color present,
     # make sure to include the same number of colours in the palette,
@@ -172,6 +180,7 @@ modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.f
       line.col.arg = loc.line.col.arg,
       aux.label1 = if (locPos) 'pos.x' else NULL,
       aux.label2 = if (locPos) 'pos.y' else NULL,
+      aux.label3 = if (locObjNum) 'obj.num' else NULL,
       stat.arg = input$chBPlotTrajStat
     )
     

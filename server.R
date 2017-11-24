@@ -489,10 +489,14 @@ shinyServer(function(input, output, session) {
   #    realtime - selected from input
   #    y        - measurement selected from input
   #               (can be a single column or result of an operation on two cols)
-  #    id       - trackObjectsLabelUni (created in dataMod)
+  #    id       - trackObjectsLabelUni; created in dataMod based on TrackObjects_Label
+  #               and FOV column such as Series or Site (if TrackObjects_Label not unique across entire dataset)
   #    group    - grouping variable for facetting from input
   #    mid.in   - column with trajectory selection status from the input file or
-  #               highlight status from UI
+  #               highlight status from UI 
+  #               (column created if mid.in present in uploaded data or tracks are selected in the UI)
+  #    obj.num  - created if ObjectNumber column present in the input data 
+  #    pos.x,y  - created if columns with x and y positions present in the input data
   data4trajPlot <- reactive({
     cat(file = stderr(), 'data4trajPlot\n')
     
@@ -500,7 +504,7 @@ shinyServer(function(input, output, session) {
     if (is.null(loc.dt))
       return(NULL)
     
-    
+    # create expression for 'y' column based on measurements and math operations selected in UI
     if (input$inSelMath == '')
       loc.s.y = input$inSelMeas1
     else if (input$inSelMath == '1 / ')
@@ -508,7 +512,7 @@ shinyServer(function(input, output, session) {
     else
       loc.s.y = paste0(input$inSelMeas1, input$inSelMath, input$inSelMeas2)
     
-    # create expression for parsing
+    # create expression for 'group' column
     # creates a merged column based on other columns from input
     # used for grouping of plot facets
     if (input$chBgroup) {
@@ -529,7 +533,7 @@ shinyServer(function(input, output, session) {
     
     # Assign tracks selected for highlighting in UI
     loc.tracks.highlight = input$inSelHighlight
-    locBut = input$chBhighlightTraj
+    locButHighlight = input$chBhighlightTraj
     
     
     # Find column names with position
@@ -541,56 +545,66 @@ shinyServer(function(input, output, session) {
     else
       locPos = FALSE
     
+    
+    # Find column names with ObjectNumber
+    # This is different from TrackObject_Label and is handy to keep
+    # because labels on segmented images are typically ObjectNumber
+    loc.s.objnum = names(loc.dt)[names(loc.dt) %like% c('ObjectNumber')]
+
+    if (length(loc.s.objnum) == 1)
+      locObjNum = TRUE
+    else
+      locObjNum = FALSE
+    
+    
     # if dataset contains column mid.in with trajectory filtering status,
     # then, include it in plotting
-    if (sum(names(loc.dt) %in% 'mid.in') > 0) {
-      if (locPos) # position columns present
-        loc.out = loc.dt[, .(
-          y = eval(parse(text = loc.s.y)),
-          id = trackObjectsLabelUni,
-          group = eval(parse(text = loc.s.gr)),
-          realtime = eval(parse(text = loc.s.rt)),
-          pos.x = get(loc.s.pos.x),
-          pos.y = get(loc.s.pos.y),
-          mid.in = mid.in
-        )] else
-          loc.out = loc.dt[, .(
-            y = eval(parse(text = loc.s.y)),
-            id = trackObjectsLabelUni,
-            group = eval(parse(text = loc.s.gr)),
-            realtime = eval(parse(text = loc.s.rt)),
-            mid.in = mid.in
-          )]
-        
-        # add 3rd level with status of track selection
-        # to a column with trajectory filtering status
-        if (locBut) {
-          loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', mid.in)]
-        }
-        
-    } else {
-      if (locPos) # position columns present
-        loc.out = loc.dt[, .(
-          y = eval(parse(text = loc.s.y)),
-          id = trackObjectsLabelUni,
-          group = eval(parse(text = loc.s.gr)),
-          realtime = eval(parse(text = loc.s.rt)),
-          pos.x = get(loc.s.pos.x),
-          pos.y = get(loc.s.pos.y)
-        )] else
-          loc.out = loc.dt[, .(
-            y = eval(parse(text = loc.s.y)),
-            id = trackObjectsLabelUni,
-            group = eval(parse(text = loc.s.gr)),
-            realtime = eval(parse(text = loc.s.rt))
-          )]
-        
-        
+    if (sum(names(loc.dt) %in% 'mid.in') > 0)
+      locMidIn = TRUE
+    else
+      locMidIn = FALSE
+    
+    ## Build expression for selecting columns from loc.dt
+    # Core columns
+    s.colexpr = paste0('.(y = ', loc.s.y,
+                       ', id = trackObjectsLabelUni', 
+                       ', group = ', loc.s.gr,
+                       ', realtime = ', loc.s.rt)
+    
+    # account for the presence of 'mid.in' column in uploaded data
+    if(locMidIn)
+      s.colexpr = paste0(s.colexpr, 
+                         ', mid.in = mid.in')
+    
+    # include position x,y columns in uploaded data
+    if(locPos)
+      s.colexpr = paste0(s.colexpr, 
+                         ', pos.x = ', loc.s.pos.x,
+                         ', pos.y = ', loc.s.pos.y)
+    
+    # include ObjectNumber column
+    if(locObjNum)
+      s.colexpr = paste0(s.colexpr, 
+                         ', obj.num = ', loc.s.objnum)
+    
+    # close bracket, finish the expression
+    s.colexpr = paste0(s.colexpr, ')')
+    
+    # create final dt for output based on columns selected above
+    loc.out = loc.dt[, eval(parse(text = s.colexpr))]
+    
+    
+    # if track selection ON
+    if (locButHighlight){
+      # add a 3rd level with status of track selection
+      # to a column with trajectory filtering status in the uploaded file
+      if(locMidIn)
+        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', mid.in)]
+      else
         # add a column with status of track selection
-        if (locBut) {
-          loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
-        }
+        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
     }
+      
 
     ## Interpolate NA's and data points not include
     # From: https://stackoverflow.com/questions/28073752/r-how-to-add-rows-for-missing-values-for-unique-group-sequences
@@ -598,35 +612,6 @@ shinyServer(function(input, output, session) {
     setkey(loc.out, group, id, realtime)
     loc.out = loc.out[setkey(loc.out[, .(min(realtime):max(realtime)), by = .(group, id)], group, id, V1)]
 
-    
-    # # dt with a full span of realtime for every group and cell id 
-    # # (here id is already unique across entire dataset) combination
-    # loc.dt.IdRt =  CJ(id = loc.out[['id']], 
-    #                   realtime = loc.out[['realtime']], 
-    #                   unique = TRUE, sorted = TRUE )
-    # 
-    # print('loc.dt.IdRt:')
-    # print(loc.dt.IdRt)
-    # 
-    # # dt with all cell id's and their associated group names
-    # loc.dt.GrId = loc.out[, .(group = first(group)), by = id]
-    # 
-    # print('loc.dt.GrId:')
-    # print(loc.dt.GrId)
-    # 
-    # # merge the 2 above to have all id~rt combinations with associated group names
-    # loc.dt.GrIdRt = merge(loc.dt.IdRt, loc.dt.GrId, by = 'id')
-    # 
-    # print('loc.dt.GrIdRt:')
-    # print(loc.dt.GrIdRt)
-    # 
-    # # join with the original to expand it and create NA's for non-existing group-id-rt combinations
-    # loc.out = merge(loc.dt.GrIdRt, loc.out, all.x = TRUE, by = c('group', 'id', 'realtime'))
-    # 
-    # print('loc.out:')
-    # print(loc.out)
-    # 
-    
     # x-check: print all rows with NA's
     print('Rows with NAs:')
     print(loc.out[rowSums(is.na(loc.out)) > 0, ])
@@ -634,14 +619,12 @@ shinyServer(function(input, output, session) {
     # Merge will create NA's where a realtime is missing.
     # Also, NA's may be already present in the dataset'.
     # Interpolate (linear) them with na.interpolate
-    if(locPos) {
+    if(locPos)
       s.cols = c('y', 'pos.x', 'pos.y')
-      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
-    }
-    else {
+    else
       s.cols = c('y')
-      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
-    }
+    
+    loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
     
 
     # !!! Current issue with interpolation:
