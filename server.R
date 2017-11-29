@@ -115,11 +115,11 @@ shinyServer(function(input, output, session) {
   output$varSelTrackLabel = renderUI({
     cat(file = stderr(), 'UI varSelTrackLabel\n')
     locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'rack'][1] # index 1 at the end in case more matches; select 1st
+    locColSel = locCols[locCols %like% 'rack.*abel'][1] # index 1 at the end in case more matches; select 1st
     
     selectInput(
       'inSelTrackLabel',
-      'Select Track Label (e.g. objNuc_Track_ObjectsLabel):',
+      'Select Track Label (e.g. objNuc_TrackObjects_Label):',
       locCols,
       width = '100%',
       selected = locColSel
@@ -134,7 +134,7 @@ shinyServer(function(input, output, session) {
     cat(locColSel, '\n')
     selectInput(
       'inSelTime',
-      'Select time column (e.g. RealTime):',
+      'Select time column (e.g. Metadata_T, RealTime):',
       locCols,
       width = '100%',
       selected = locColSel
@@ -449,7 +449,6 @@ shinyServer(function(input, output, session) {
       
       loc.dt.rem = dataLoadTrajRem()
       
-      
       loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem[[1]])]
     }
     
@@ -550,9 +549,10 @@ shinyServer(function(input, output, session) {
     # This is different from TrackObject_Label and is handy to keep
     # because labels on segmented images are typically ObjectNumber
     loc.s.objnum = names(loc.dt)[names(loc.dt) %like% c('ObjectNumber')]
-
-    if (length(loc.s.objnum) == 1)
+    if (length(loc.s.objnum) > 0) {
+      loc.s.objnum = loc.s.objnum[1]
       locObjNum = TRUE
+    }
     else
       locObjNum = FALSE
     

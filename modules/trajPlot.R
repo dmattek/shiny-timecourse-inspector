@@ -1,3 +1,5 @@
+require(DT)
+
 modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)
   
@@ -46,6 +48,9 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       )
     ),
     uiOutput(ns('uiPlotTraj')),
+    br(),
+    modTrackStatsUI(ns('dispTrackStats')),
+    
     downPlotUI(ns('downPlotTraj'), "Download PDF")
   )
 }
@@ -68,6 +73,11 @@ modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.f
           height = paste0(input$inPlotTrajHeight, 'px')
         )
   })
+  
+
+  callModule(modTrackStats, 'dispTrackStats',
+             in.data = in.data)
+  
   
   output$outPlotTraj <- renderPlot({
     

@@ -103,7 +103,7 @@ shinyUI(fluidPage(
       
       
       tabPanel(
-        "AUI",
+        "AUC",
         modAUCplotUI('tabAUC')
       ),
       

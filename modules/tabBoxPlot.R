@@ -1,5 +1,3 @@
-require(DT)
-
 tabBoxPlotUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
