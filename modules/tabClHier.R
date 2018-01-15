@@ -211,7 +211,17 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     if (is.null(loc.dend))
       return(NULL)
     
-    return(getClCol(loc.dend, input$inPlotHierNclust))
+    loc.dt = getClCol(loc.dend, input$inPlotHierNclust)
+    
+    # Display clusters specified in the inPlotHierClSel field
+    # Data is ordered according to the order of clusters specified in this field
+    if(input$chBPlotHierClSel) {
+      loc.dt = loc.dt[cl.no %in% input$inPlotHierClSel]
+      loc.dt[, cl.no := factor(cl.no, levels = input$inPlotHierClSel)]
+      setkey(loc.dt, cl.no)
+    }
+    
+    return(loc.dt)
   })
   
   
@@ -260,9 +270,13 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     loc.dt.cl = getDataCl(userFitDendHier(), input$inPlotHierNclust)
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
-    # display only selected clusters
-    if(input$chBPlotHierClSel)
+    # Display clusters specified in the inPlotHierClSel field
+    # Data is ordered according to the order of clusters specified in this field
+    if(input$chBPlotHierClSel) {
       loc.dt = loc.dt[cl %in% input$inPlotHierClSel]
+      loc.dt[, cl := factor(cl, levels = input$inPlotHierClSel)]
+      setkey(loc.dt, cl)
+    }
     
     return(loc.dt)    
   })
@@ -304,12 +318,16 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     
     loc.dt = merge(loc.dt.cl, loc.dt.gr, by = 'id')
     
-    # display only selected clusters
-    if(input$chBPlotHierClSel)
-      loc.dt = loc.dt[cl %in% input$inPlotHierClSel]
-    
+      
     loc.dt.aggr = loc.dt[, .(nCells = .N), by = .(group, cl)]
     
+    # Display clusters specified in the inPlotHierClSel field
+    # Data is ordered according to the order of clusters specified in this field
+    if(input$chBPlotHierClSel) {
+      loc.dt.aggr = loc.dt.aggr[cl %in% input$inPlotHierClSel]
+      loc.dt.aggr[, cl := factor(cl, levels = input$inPlotHierClSel)]
+      setkey(loc.dt.aggr, cl)
+    }
     return(loc.dt.aggr)
     
   })

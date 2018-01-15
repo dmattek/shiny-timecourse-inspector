@@ -29,14 +29,20 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
       return(NULL)
     }
     
-    p.out = ggplot(loc.dt, aes(x = group, y = nCells)) +
-      geom_bar(aes(fill = as.factor(cl)), stat = 'identity', position = 'fill')
+    # Two statements: "position_fill(reverse = TRUE)" and "guide_legend(reverse = T)"
+    # result in  stacked bar plot with categories ordered from the bottom to top of the stacked bar
+    p.out = ggplot(loc.dt[], aes(x = group, y = nCells)) +
+      geom_bar(aes(fill = as.factor(cl)), stat = 'identity', position = position_fill(reverse = TRUE)) +
+      guides(fill = guide_legend(reverse = T))
     
     if(is.null(in.cols))
       p.out = p.out + scale_fill_discrete(name = "Cluster no.")
     else
       p.out = p.out + scale_fill_manual(name = "Cluster no.", 
-                                        values = in.cols()$cl.col)
+                                        values = in.cols()$cl.col) #,
+                                        #breaks = in.cols()$cl.no,
+                                        #labels = in.cols()$cl.no,
+                                        #limits = in.cols()$cl.no)
     
     
     p.out = p.out + 

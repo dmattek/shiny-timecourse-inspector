@@ -110,8 +110,8 @@ getDataCl = function(in.dend, in.k) {
   loc.dt.cl = data.table(id = names(loc.m),
                          cl = loc.m)
   
-  cat('===============\ndataCl:\n')
-  print(loc.dt.cl)
+  #cat('===============\ndataCl:\n')
+  #print(loc.dt.cl)
   return(loc.dt.cl)
 }
 
@@ -134,8 +134,8 @@ getDataClSpar = function(in.dend, in.k, in.id) {
   loc.dt.cl = data.table(id = in.id,
                          cl = loc.m)
   
-  cat('===============\ndataCl:\n')
-  print(loc.dt.cl)
+  #cat('===============\ndataCl:\n')
+  #print(loc.dt.cl)
   return(loc.dt.cl)
 }
 
@@ -309,13 +309,13 @@ myGgplotTraj = function(dt.arg, # data table
 userDataGen <- function() {  
   cat(file=stderr(), 'userDataGen: in\n')
   
-  locNtp = 40
+  locNtp = 60
   locNtracks = 10
-  locNsites = 4
+  locNsites = 6
   locNwells = 1
   
-  x.rand.1 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 1, 0.2))
-  x.rand.2 = c(rnorm(locNtp * locNtracks * locNsites * 0.5, 0.25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, 0.5, 0.2))
+  x.rand.1 = c(rnorm(locNtp * locNtracks * locNsites * 1/3, 0.5, 0.1), rnorm(locNtp * locNtracks * locNsites * 1/3,   1, 0.2), rnorm(locNtp * locNtracks * locNsites * 1/3,  2, 0.5))
+  x.rand.2 = c(rnorm(locNtp * locNtracks * locNsites * 1/3, 0.25, 0.1), rnorm(locNtp * locNtracks * locNsites * 1/3, 0.5, 0.2),  rnorm(locNtp * locNtracks * locNsites * 1/3, 1, 0.2))
 
   # add NA's for testing
   x.rand.1[c(10,20,30)] = NA
