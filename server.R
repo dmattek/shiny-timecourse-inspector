@@ -193,7 +193,7 @@ shinyServer(function(input, output, session) {
     locCols = getDataNucCols()
     
     if (!is.null(locCols)) {
-      locColSel = locCols[grep('objCyto_Intensity_MeanIntensity_imErkCor|(R|r)atio|(I|i)ntensity', locCols)[1]] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[grep('objCyto_Intensity_MeanIntensity_imErkCor|(R|r)atio|(I|i)ntensity|y', locCols)[1]] # index 1 at the end in case more matches; select 1st
 
       selectInput(
         'inSelMeas1',
@@ -532,9 +532,11 @@ shinyServer(function(input, output, session) {
     
     # Find column names with position
     loc.s.pos.x = names(loc.dt)[grep('(L|l)ocation.*X|(P|p)os.x|(P|p)osx', names(loc.dt))[1]]
-    loc.s.pos.y = names(loc.dt)[grep('(L|l)ocation.*X|(P|p)os.x|(P|p)osx', names(loc.dt))[1]]
+    loc.s.pos.y = names(loc.dt)[grep('(L|l)ocation.*Y|(P|p)os.y|(P|p)osy', names(loc.dt))[1]]
     
-    if (length(loc.s.pos.x) == 1 & length(loc.s.pos.y) == 1)
+    cat(loc.s.pos.x, loc.s.pos.y, '\n')
+    
+    if (!is.na(loc.s.pos.x) & !is.na(loc.s.pos.y))
       locPos = TRUE
     else
       locPos = FALSE

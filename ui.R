@@ -53,7 +53,7 @@ shinyUI(fluidPage(
       uiOutput('varSelTrackLabel'),
 
       tags$hr(),
-      checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', FALSE),                
+      checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', TRUE),                
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
       uiOutput('varSelMeas1'),
