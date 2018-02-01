@@ -15,7 +15,7 @@ library(gplots) # for heatmap.2
 library(plotly)
 library(d3heatmap) # for interactive heatmap
 library(dendextend) # for color_branches
-library(colorspace) # for palettes (ised to colour dendrogram)
+library(colorspace) # for palettes (used to colour dendrogram)
 library(RColorBrewer)
 library(sparcl) # sparse hierarchical and k-means
 library(scales) # for percentages on y scale
@@ -115,7 +115,7 @@ shinyServer(function(input, output, session) {
   output$varSelTrackLabel = renderUI({
     cat(file = stderr(), 'UI varSelTrackLabel\n')
     locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'rack.*abel'][1] # index 1 at the end in case more matches; select 1st
+    locColSel = locCols[grep('(T|t)rack|ID|id', locCols)[1]] # index 1 at the end in case more matches; select 1st; matches TrackLabel, tracklabel, Track Label etc
     
     selectInput(
       'inSelTrackLabel',
@@ -129,7 +129,7 @@ shinyServer(function(input, output, session) {
   output$varSelTime = renderUI({
     cat(file = stderr(), 'UI varSelTime\n')
     locCols = getDataNucCols()
-    locColSel = locCols[locCols %like% 'RealTime'][1] # index 1 at the end in case more matches; select 1st
+    locColSel = locCols[grep('(T|t)ime|Metadata_T', locCols)[1]] # index 1 at the end in case more matches; select 1st; matches RealTime, realtime, real time, etc.
     
     cat(locColSel, '\n')
     selectInput(
@@ -153,13 +153,9 @@ shinyServer(function(input, output, session) {
       locCols = getDataNucCols()
       
       if (!is.null(locCols)) {
-        locColSel = locCols[locCols %like% 'ite']
-        if (length(locColSel) == 0)
-          locColSel = locCols[locCols %like% 'eries'][1] # index 1 at the end in case more matches; select 1st
-        else if (length(locColSel) > 1) {
-          locColSel = locColSel[1]
-        }
-        #    cat('UI varSelGroup::locColSel ', locColSel, '\n')
+        locColSel = locCols[grep('(G|g)roup|(S|s)tim_All|(S|s)timulation|(S|s)ite', locCols)[1]]
+
+        #cat('UI varSelGroup::locColSel ', locColSel, '\n')
         selectInput(
           'inSelGroup',
           'Select one or more facet groupings (e.g. Site, Well, Channel):',
@@ -177,7 +173,7 @@ shinyServer(function(input, output, session) {
     
     if (!input$chBtrackUni) {
       locCols = getDataNucCols()
-      locColSel = locCols[locCols %like% 'ite'][1] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[grep('(S|s)ite|(S|s)eries', locCols)[1]] # index 1 at the end in case more matches; select 1st
       
       selectInput(
         'inSelSite',
@@ -197,8 +193,7 @@ shinyServer(function(input, output, session) {
     locCols = getDataNucCols()
     
     if (!is.null(locCols)) {
-      locColSel = locCols[locCols %like% 'objCyto_Intensity_MeanIntensity_imErkCor.*' |
-                            locCols %like% 'Ratio'][1] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[grep('objCyto_Intensity_MeanIntensity_imErkCor|(R|r)atio|(I|i)ntensity', locCols)[1]] # index 1 at the end in case more matches; select 1st
 
       selectInput(
         'inSelMeas1',
@@ -217,7 +212,7 @@ shinyServer(function(input, output, session) {
     
     if (!is.null(locCols) &&
         !(input$inSelMath %in% c('', '1 / '))) {
-      locColSel = locCols[locCols %like% 'objNuc_Intensity_MeanIntensity_imErkCor.*'][1] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[grep('objNuc_Intensity_MeanIntensity_imErkCor', locCols)[1]] # index 1 at the end in case more matches; select 1st
 
       selectInput(
         'inSelMeas2',
@@ -536,8 +531,8 @@ shinyServer(function(input, output, session) {
     
     
     # Find column names with position
-    loc.s.pos.x = names(loc.dt)[names(loc.dt) %like% c('.*ocation.*X') | names(loc.dt) %like% c('.*os.x')]
-    loc.s.pos.y = names(loc.dt)[names(loc.dt) %like% c('.*ocation.*Y') | names(loc.dt) %like% c('.*os.y')]
+    loc.s.pos.x = names(loc.dt)[grep('(L|l)ocation.*X|(P|p)os.x|(P|p)osx', names(loc.dt))[1]]
+    loc.s.pos.y = names(loc.dt)[grep('(L|l)ocation.*X|(P|p)os.x|(P|p)osx', names(loc.dt))[1]]
     
     if (length(loc.s.pos.x) == 1 & length(loc.s.pos.y) == 1)
       locPos = TRUE
@@ -548,13 +543,15 @@ shinyServer(function(input, output, session) {
     # Find column names with ObjectNumber
     # This is different from TrackObject_Label and is handy to keep
     # because labels on segmented images are typically ObjectNumber
-    loc.s.objnum = names(loc.dt)[names(loc.dt) %like% c('ObjectNumber')]
-    if (length(loc.s.objnum) > 0) {
+    loc.s.objnum = names(loc.dt)[grep('(O|o)bject(N|n)umber', names(loc.dt))[1]]
+    #cat('data4trajPlot::loc.s.objnum ', loc.s.objnum, '\n')
+    if (is.na(loc.s.objnum)) {
+      locObjNum = FALSE
+    }
+    else {
       loc.s.objnum = loc.s.objnum[1]
       locObjNum = TRUE
     }
-    else
-      locObjNum = FALSE
     
     
     # if dataset contains column mid.in with trajectory filtering status,

@@ -45,6 +45,7 @@ s.cl.spar.linkage = c("average",
 s.cl.diss = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "DTW")
 s.cl.spar.diss = c("squared.distance","absolute.value")
 
+# list of palettes for the heatmap
 l.col.pal = list(
   "White-Orange-Red" = 'OrRd',
   "Yellow-Orange-Red" = 'YlOrRd',
@@ -53,6 +54,16 @@ l.col.pal = list(
   "Greens" = "Greens",
   "Blues" = "Blues",
   "Spectral" = 'Spectral'
+)
+
+# list of palettes for the dendrogram
+l.col.pal.dend = list(
+  "Rainbow" = 'rainbow_hcl',
+  "Sequential" = 'sequential_hcl',
+  "Heat" = 'heat_hcl',
+  "Terrain" = 'terrain_hcl',
+  "Diverge HCL" = 'diverge_hcl',
+  "Diverge HSV" = 'diverge_hsv'
 )
 
 # Creates a popup with help text
@@ -338,6 +349,13 @@ userDataGen <- function() {
                       TrackLabel = rep(1:(locNtracks*locNsites), each = locNtp))
   
   return(dt.nuc)
+}
+
+
+# Fast DTW computation
+fastDTW <-function (x)
+{
+  return(dtw(x, window.type = 'sakoechiba', distance.only = T)$normalizedDistance)
 }
 
 

@@ -59,15 +59,22 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                  column(3,
                         checkboxInput(ns('selectPlotHierDend'), 'Plot dendrogram and re-order samples', TRUE),
                         selectInput(
-                          ns("selectPlotHierPalette"),
-                          label = "Select colour palette:",
-                          choices = l.col.pal,
-                          selected = 'Spectral'
+                          ns("selectPlotHierPaletteDend"),
+                          label = "Dendrogram\'s colour palette:",
+                          choices = l.col.pal.dend,
+                          selected = 'Rainbow'
                         ),
-                        checkboxInput(ns('inPlotHierRevPalette'), 'Reverse colour palette', TRUE),
+
                         checkboxInput(ns('selectPlotHierKey'), 'Plot colour key', TRUE)
                  ),
                  column(3,
+                        selectInput(
+                          ns("selectPlotHierPalette"),
+                          label = "Heatmap\'s colour palette:",
+                          choices = l.col.pal,
+                          selected = 'Spectral'
+                        ),
+                        checkboxInput(ns('inPlotHierRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
                         sliderInput(
                           ns('inPlotHierNAcolor'),
                           'Shade of grey for NA values (0 - black, 1 - white)',
@@ -76,15 +83,17 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                           value = 0.8,
                           step = .1,
                           ticks = TRUE
-                        ),
+                        )
+                 ),
+                 column(6,
+                        h4('Classic hierarchical clustering'),
+                        br(),
                         numericInput(ns('inPlotHierHeatMapHeight'), 
                                      'Display plot height [px]', 
                                      value = 600, 
                                      min = 100,
                                      step = 100)
-                 ),
-                 column(6,
-                        h4('Classic hierarchical clustering')
+                        
                  )
                ),
                
@@ -174,6 +183,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
       return(NULL)
     }
     
+    #pr_DB$set_entry(FUN = fastDTW, names = c("fastDTW"))
     cl.dist = dist(dm.t, method = s.cl.diss[as.numeric(input$selectPlotHierDiss)])
     
     return(cl.dist)
@@ -191,11 +201,10 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     }
     
     cl.hc = hclust(dm.dist, method = s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
-    #cl.lev = rev(row.names(dm.t))
-    
+
     dend <- as.dendrogram(cl.hc)
     dend <- color_branches(dend, 
-                           col = rainbow_hcl, # make sure that n here equals max in the input$inPlotHierNclust slider
+                           col = get(input$selectPlotHierPaletteDend), # make sure that n here equals max in the input$inPlotHierNclust slider
                            k = input$inPlotHierNclust)
     
     return(dend)

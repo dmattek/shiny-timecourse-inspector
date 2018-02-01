@@ -42,7 +42,7 @@ shinyUI(fluidPage(
       uiOutput('uiButLoadTrajRem'),
       
       tags$hr(),
-      checkboxInput('chBtrackUni', 'Track Label unique across entire dataset', FALSE),
+      checkboxInput('chBtrackUni', 'Track Label unique across entire dataset', TRUE),
       helpPopup(
         title = 'Create unique cell ID',
         content = help.text[2],
@@ -53,7 +53,7 @@ shinyUI(fluidPage(
       uiOutput('varSelTrackLabel'),
 
       tags$hr(),
-      checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', TRUE),                
+      checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', FALSE),                
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
       uiOutput('varSelMeas1'),
