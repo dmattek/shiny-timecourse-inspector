@@ -36,13 +36,24 @@ downPlotUI <- function(id, label = "Download Plot") {
         )
       ),
       column(6,
-             downloadButton(ns('downPlot'), 'PDF'))
+             uiOutput(ns('uiDownButton')))
     )
   )
 }
 
 downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
 
+  output$uiDownButton = renderUI({
+    ns <- session$ns
+    
+    if (in.fname %like% 'pdf') {
+      downloadButton(ns('downPlot'), 'PDF')
+    } else {
+      downloadButton(ns('downPlot'), 'PNG')
+    }
+    
+  })
+  
   output$downPlot <- downloadHandler(
     filename = function() {
       in.fname

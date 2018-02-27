@@ -455,7 +455,14 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
                     '_',
                     s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
   
-  
+  callModule(modTrajRibbonPlot, 'modPlotHierSparTrajRibbon', 
+             in.data = data4trajPlotClSpar, 
+             in.facet = 'cl',  
+             in.facet.color = getClColHierSpar,
+             in.fname = paste0('clust_hierchSparse_tCoursesMeans_',
+                               s.cl.diss[as.numeric(input$selectPlotHierSparDiss)],
+                               '_',
+                               s.cl.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
   
   
   callModule(modClDistPlot, 'hierClSparDistPlot', 

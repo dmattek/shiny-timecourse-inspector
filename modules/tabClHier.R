@@ -151,6 +151,9 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
       tabPanel('Time-courses',
                modTrajPlotUI(ns('modPlotHierTraj'))),
       
+      tabPanel('Averages',
+               modTrajRibbonPlotUI(ns('modPlotHierTrajRibbon'))),
+      
       tabPanel('Cluster dist.',
                modClDistPlotUI(ns('hierClDistPlot'), 'xxx'))
       
@@ -407,6 +410,15 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
              in.facet = 'cl',  
              in.facet.color = getClColHier,
              in.fname = paste0('clust_hierch_tCourses_',
+                               s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                               '_',
+                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
+  
+  callModule(modTrajRibbonPlot, 'modPlotHierTrajRibbon', 
+             in.data = data4trajPlotCl, 
+             in.facet = 'cl',  
+             in.facet.color = getClColHier,
+             in.fname = paste0('clust_hierch_tCoursesMeans_',
                                s.cl.diss[as.numeric(input$selectPlotHierDiss)],
                                '_',
                                s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
