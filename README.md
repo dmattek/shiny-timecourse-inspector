@@ -14,14 +14,25 @@ Following packages need to be installed in order to run the app locally:
 * data.table
 * ggplot2
 * gplots
+* scales
 * plotly
 * d3heatmap
 * dendextend
 * RColorBrewer
 * sparcl
-* scales
+* imputeTS
+* dtw
 
 Install packages using `install.packages('name_of_the_package_from_the_list_above')` command in RStudio command line.
+
+```
+install.packages(c("shiny", "shinyjs", 
+					"data.table", 
+					"ggplot2", "gplots", "plotly", "d3heatmap", "scales",
+					"dendextend", "dendextend", "RColorBrewer",
+					"sparcl", "dtw",
+					"imputeTS")) 
+```
 
 **Additionally**, a time series analysis package need to be installed from [GitHub](https://github.com/dmattek/tca-package):
 
