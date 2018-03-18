@@ -6,10 +6,15 @@ modAUCplotUI =  function(id, label = "Plot Area Under Curves") {
   ns <- NS(id)
   
   tagList(
-      uiOutput(ns('uiSlTimeTrim')),
-      modStatsUI(ns('dispStats')),
-      br(),
-      modBoxPlotUI(ns('boxPlot')
+    h4(
+      "Calculate area under curve and plot per group"
+    ),
+    br(),
+    
+    uiOutput(ns('uiSlTimeTrim')),
+    modStatsUI(ns('dispStats')),
+    br(),
+    modBoxPlotUI(ns('boxPlot')
     )
   )
 }
@@ -35,23 +40,23 @@ modAUCplot = function(input, output, session, in.data, in.fname = 'boxplotAUC.pd
   output$uiSlTimeTrim = renderUI({
     cat(file = stderr(), 'UI uiSlTimeTrim\n')
     
-      locTpts  = getDataTpts()
-      
-      if(is.null(locTpts))
-        return(NULL)
-      
-      locRTmin = min(locTpts)
-      locRTmax = max(locTpts)
-      
-      sliderInput(
-        ns('slTimeTrim'),
-        label = 'Select time range for AUC calculation',
-        min = locRTmin,
-        max = locRTmax,
-        value = c(locRTmin, locRTmax),
-        step = 1
-      )
-      
+    locTpts  = getDataTpts()
+    
+    if(is.null(locTpts))
+      return(NULL)
+    
+    locRTmin = min(locTpts)
+    locRTmax = max(locTpts)
+    
+    sliderInput(
+      ns('slTimeTrim'),
+      label = 'Select time range for AUC calculation',
+      min = locRTmin,
+      max = locRTmax,
+      value = c(locRTmin, locRTmax),
+      step = 1
+    )
+    
   })
   
   AUCcells = reactive({
@@ -65,7 +70,7 @@ modAUCplot = function(input, output, session, in.data, in.fname = 'boxplotAUC.pd
       return(loc.res)
     }
   })
-
+  
   callModule(modStats, 'dispStats',
              in.data = AUCcells,
              in.meascol = 'AUC',

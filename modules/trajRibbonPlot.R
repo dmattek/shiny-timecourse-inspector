@@ -45,7 +45,11 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
 }
 
 
-modTrajRibbonPlot = function(input, output, session, in.data, in.facet = 'group', in.facet.color = NULL, in.fname = 'tCourses.pdf') {
+modTrajRibbonPlot = function(input, output, session, 
+                             in.data, 
+                             in.facet = 'group', 
+                             in.facet.color = NULL, 
+                             in.fname = 'tCoursesMeans.pdf') {
   
   ns <- session$ns
   
@@ -166,7 +170,7 @@ modTrajRibbonPlot = function(input, output, session, in.data, in.facet = 'group'
       loc.facet.col = loc.facet.col[loc.groups]
     }
     
-    loc.dt.aggr = calcTrajCI(in.dt = loc.dt, 
+    loc.dt.aggr = tca::calcTrajCI(in.dt = loc.dt, 
                              in.col.meas = 'y', 
                              in.col.by = c(in.facet, 'realtime'), 
                              in.type = 'normal')
@@ -180,22 +184,6 @@ modTrajRibbonPlot = function(input, output, session, in.data, in.facet = 'group'
                            group.arg = in.facet,
                            xlab.arg = 'Time (min)',
                            ylab.arg = '')
-    
-    # p.out = myGgplotTraj(
-    #   dt.arg = loc.dt,
-    #   x.arg = 'realtime',
-    #   y.arg = 'y',
-    #   group.arg = "id",
-    #   facet.arg = in.facet,
-    #   facet.ncol.arg = input$inPlotTrajFacetNcol,
-    #   facet.color.arg = loc.facet.col,
-    #   xlab.arg = 'Time (min)',
-    #   line.col.arg = loc.line.col.arg,
-    #   aux.label1 = if (locPos) 'pos.x' else NULL,
-    #   aux.label2 = if (locPos) 'pos.y' else NULL,
-    #   aux.label3 = if (locObjNum) 'obj.num' else NULL,
-    #   stat.arg = input$chBPlotTrajStat
-    # )
     
     return(p.out)
   }

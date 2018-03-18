@@ -21,6 +21,7 @@ library(sparcl) # sparse hierarchical and k-means
 library(scales) # for percentages on y scale
 library(dtw) # for dynamic time warping
 library(imputeTS) # for interpolating NAs
+library(tca) # for time series manipulatiom, e.g. normTraj, genTraj, plotTrajRibbon
 
 # increase file upload limit
 options(shiny.maxRequestSize = 200 * 1024 ^ 2)
@@ -53,7 +54,7 @@ shinyServer(function(input, output, session) {
   dataGen1 <- eventReactive(input$inDataGen1, {
     cat("dataGen1\n")
     
-    return(userDataGen())
+    return(tca::genTraj(in.nwells = 3))
   })
   
   # load main data file
@@ -171,7 +172,7 @@ shinyServer(function(input, output, session) {
   output$varSelSite = renderUI({
     cat(file = stderr(), 'UI varSelSite\n')
     
-    if (!input$chBtrackUni) {
+    if (input$chBtrackUni) {
       locCols = getDataNucCols()
       locColSel = locCols[grep('(S|s)ite|(S|s)eries', locCols)[1]] # index 1 at the end in case more matches; select 1st
       
@@ -339,13 +340,6 @@ shinyServer(function(input, output, session) {
   ####
   ## data processing
   
-  # generate random dataset 1
-  dataGen1 <- eventReactive(input$inDataGen1, {
-    cat("dataGen1\n")
-    
-    return(userDataGen())
-  })
-  
   dataInBoth <- reactive({
     # Without direct references to inDataGen1,2 and inFileLoad, inDataGen2
     #    does not trigger running this reactive once inDataGen1 is used.
@@ -412,7 +406,7 @@ shinyServer(function(input, output, session) {
     if (is.null(loc.dt))
       return(NULL)
     
-    if (!input$chBtrackUni) {
+    if (input$chBtrackUni) {
       loc.types = lapply(loc.dt, class)
       if(loc.types[[input$inSelTrackLabel]] %in% c('numeric', 'integer') & loc.types[[input$inSelSite]] %in% c('numeric', 'integer'))
       {
@@ -645,7 +639,7 @@ shinyServer(function(input, output, session) {
     ## Normalization
     # F-n myNorm adds additional column with .norm suffix
     if (input$chBnorm) {
-      loc.out = myNorm(
+      loc.out = tca::normTraj(
         in.dt = loc.out,
         in.meas.col = 'y',
         in.rt.col = 'realtime',
@@ -730,9 +724,16 @@ shinyServer(function(input, output, session) {
     }
   )
   
+  ###### Trajectory plotting
+  callModule(modTrajRibbonPlot, 'modTrajRibbon', data4trajPlot)
+  callModule(modTrajRibbonPlot, 'modTrajRibbon', 
+             in.data = data4trajPlot)
   
-  ####
-  ## UI for trajectory plot
+  ###### Trajectory plotting
+  callModule(modTrajPlot, 'modTrajPlot', data4trajPlot)
+  
+  ## UI for selecting trajectories
+  # The output data table of data4trajPlot is modified based on inSelHighlight field
   output$varSelHighlight = renderUI({
     cat(file = stderr(), 'UI varSelHighlight\n')
     
@@ -752,16 +753,11 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  ###### Trajectory plotting
-  callModule(modTrajPlot, 'modTrajPlot', data4trajPlot)
-  
-  ###### AUC caluclation and plotting
+  ###### AUC calculation and plotting
   callModule(modAUCplot, 'tabAUC', data4trajPlot)
   
   ###### Box-plot
   callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlot)
-  
-  
   
   ###### Scatter plot
   callModule(tabScatterPlot, 'tabScatter', data4trajPlot)

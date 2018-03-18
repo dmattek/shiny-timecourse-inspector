@@ -159,8 +159,12 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
                plotOutput(ns('outPlotHierSpar'))
       ),
 
+      tabPanel('Averages',
+               modTrajRibbonPlotUI(ns('modPlotHierSparTrajRibbon'))),
+      
       tabPanel('Time-courses',
                modTrajPlotUI(ns('modPlotHierSparTraj'))),
+      
       tabPanel('Cluster dist.',
                modClDistPlotUI(ns('hierClSparDistPlot')))
     )
@@ -222,9 +226,9 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
       return()
     }
     
+    #cat('rownames: ', rownames(dm.t), '\n')
+    #cat('=============\ndimensions:', dim(dm.t), '\n')
     
-    cat('rownames: ', rownames(dm.t), '\n')
-    cat('=============\ndimensions:', dim(dm.t), '\n')
     perm.out <- HierarchicalSparseCluster.permute(
       dm.t,
       wbounds = NULL,
@@ -240,8 +244,8 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
       dissimilarity = s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)]
     )
     
-    cat('=============\nsparsehc:\n')
-    print(sparsehc$hc)
+    #cat('=============\nsparsehc:\n')
+    #print(sparsehc$hc)
     
     return(sparsehc)
   })
@@ -257,7 +261,7 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     
     dend <- as.dendrogram(sparsehc$hc)
     
-    cat('=============\ncutree:\n', dendextend::cutree(dend, input$inPlotHierSparNclust, order_clusters_as_data = TRUE), '\n')
+    #cat('=============\ncutree:\n', dendextend::cutree(dend, input$inPlotHierSparNclust, order_clusters_as_data = TRUE), '\n')
     
     dend <- color_branches(dend, 
                            col = rainbow_hcl,
@@ -322,7 +326,7 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     
     cat(file = stderr(), 'data4trajPlotClSpar: dt not NULL\n')
     
-    cat('rownames: ', rownames(in.data4clust()), '\n')
+    #cat('rownames: ', rownames(in.data4clust()), '\n')
 
     # get cellIDs with cluster assignments based on dendrogram cut
     loc.dt.cl = getDataClSpar(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())

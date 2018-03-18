@@ -23,6 +23,20 @@ Following packages need to be installed in order to run the app locally:
 
 Install packages using `install.packages('name_of_the_package_from_the_list_above')` command in RStudio command line.
 
+**Additionally**, a time series analysis package need to be installed from [GitHub](https://github.com/dmattek/tca-package):
+
+```
+install_github("dmattek/tca-package")
+```
+
+The `install_github` function is available in *devtools* package:
+
+```
+install.packages("devtools")
+library(devtools)
+```
+
+
 #### Input file
 The app recognizes CSV (comma-separated values) files: data columns separated by a comma, floating point numbers using a dot (full-stop).
 

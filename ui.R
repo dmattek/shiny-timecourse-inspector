@@ -42,7 +42,7 @@ shinyUI(fluidPage(
       uiOutput('uiButLoadTrajRem'),
       
       tags$hr(),
-      checkboxInput('chBtrackUni', 'Track Label unique across entire dataset', TRUE),
+      checkboxInput('chBtrackUni', 'Create unique TrackLabel', T),
       helpPopup(
         title = 'Create unique cell ID',
         content = help.text[2],
@@ -51,7 +51,7 @@ shinyUI(fluidPage(
       ),
       uiOutput('varSelSite'),
       uiOutput('varSelTrackLabel'),
-
+      
       tags$hr(),
       checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', TRUE),                
       uiOutput('varSelGroup'),
@@ -87,47 +87,58 @@ shinyUI(fluidPage(
       downloadButton('downloadDataClean', 'Download mod\'d data')
     ),
     
-    mainPanel(tabsetPanel(
-      tabPanel(
-        "Time courses",
-        h4(
-          "Plot time series"
+    mainPanel(
+      tabsetPanel(
+        tabPanel(
+          "Time series",
+          h4(
+            "Plot time series: means per group or individual"
+          ),
+          br(),
+          
+          tabsetPanel(
+            tabPanel("Means",
+                     br(),
+                     modTrajRibbonPlotUI('modTrajRibbon')
+            ),
+            
+            tabPanel(
+              "Individual",
+              br(),
+              checkboxInput('chBhighlightTraj', 'Highlight trajectories?', FALSE),
+              uiOutput('varSelHighlight'),
+              br(),
+              modTrajPlotUI('modTrajPlot')
+            )
+          )
         ),
         
-        br(),
-        checkboxInput('chBhighlightTraj', 'Highlight trajectories?', FALSE),
-        uiOutput('varSelHighlight'),
-        br(),
-        modTrajPlotUI('modTrajPlot')
-      ),
-      
-      
-      tabPanel(
-        "AUC",
-        modAUCplotUI('tabAUC')
-      ),
-      
-      tabPanel(
-        "Box-plots",
-        tabBoxPlotUI('tabBoxPlot')
-      ),
-      
-      
-      # scatter plot
-      tabPanel(
-        'Scatter',
-        tabScatterPlotUI('tabScatter')
-      ),
-      
-      tabPanel(
-        'Hierarchical',
-        clustHierUI('tabClHier')
-      ),
-      
-      tabPanel(
-        'Hierarchical Sparse',
-        clustHierSparUI('tabClHierSpar')
-      )
-    ))
+        tabPanel(
+          "AUC",
+          modAUCplotUI('tabAUC')
+        ),
+        
+        tabPanel(
+          "Box-plots",
+          tabBoxPlotUI('tabBoxPlot')
+        ),
+        
+        
+        # scatter plot
+        tabPanel(
+          'Scatter',
+          tabScatterPlotUI('tabScatter')
+        ),
+        
+        tabPanel(
+          'Hierarchical',
+          clustHierUI('tabClHier')
+        ),
+        
+        tabPanel(
+          'Hierarchical Sparse',
+          clustHierSparUI('tabClHierSpar')
+        )
+      ))
   )
 ))

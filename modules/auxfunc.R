@@ -95,7 +95,7 @@ help.text = c(
   Say, the main data file contains columns Metadata_Site and TrackLabel. 
   These two columns should be then selected in UI to form a unique cell ID, e.g. 001_0001 where former part corresponds to Metadata_Site and the latter to TrackLabel.',
   'Plotting and data processing requires a unique cell ID across entire dataset. A typical dataset from CellProfiler assigns unique cell ID (TrackLabel) within each field of view (Metadata_Site).
-                   Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, check this box and select a single column only.'
+                   Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, UNcheck this box and select a single column only.'
 )
 
 
@@ -317,106 +317,12 @@ myGgplotTraj = function(dt.arg, # data table
 }
 
 
-userDataGen <- function() {  
-  cat(file=stderr(), 'userDataGen: in\n')
-  
-  locNtp = 60
-  locNtracks = 10
-  locNsites = 6
-  locNwells = 1
-  
-  x.rand.1 = c(rnorm(locNtp * locNtracks * locNsites * 1/3, 0.5, 0.1), rnorm(locNtp * locNtracks * locNsites * 1/3,   1, 0.2), rnorm(locNtp * locNtracks * locNsites * 1/3,  2, 0.5))
-  x.rand.2 = c(rnorm(locNtp * locNtracks * locNsites * 1/3, 0.25, 0.1), rnorm(locNtp * locNtracks * locNsites * 1/3, 0.5, 0.2),  rnorm(locNtp * locNtracks * locNsites * 1/3, 1, 0.2))
-
-  # add NA's for testing
-  x.rand.1[c(10,20,30)] = NA
-  
-  #  x.rand.3 = rep(rnorm(locNtracks, 2, 0.5), 1, each = locNtp)
-#  x.rand.4 = rep(rnorm(locNtracks, 1, 0.1), 1, each = locNtp)
-  
-#  x.arg = rep(seq(0, locNtp-1) / locNtp * 4 * pi, locNtracks * locNsites)
-  x.arg = rep(seq(1, locNtp), locNtracks * locNsites)
-  
-  dt.nuc = data.table(Metadata_Site = rep(1:locNsites, each = locNtp * locNtracks),
-                      Metadata_Well = rep(1:locNwells, each = locNtp * locNsites * locNtracks / locNwells),
-                      Metadata_RealTime = x.arg,
-                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.1,
-                      objNuc_Intensity_MeanIntensity_imErkCor  = x.rand.2,
-                      objNuc_Location_X = runif(locNtp * locNtracks * locNsites, min = 0, max = 1),
-                      objNuc_Location_Y = runif(locNtp * locNtracks * locNsites, min = 0, max = 1),
-#                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.3 + ifelse(x.arg < 4, 0, 1) / x.rand.3,
-#                      objNuc_Intensity_MeanIntensity_imErkCor  = c(rnorm(locNtp * locNtracks * locNsites * 0.5, .25, 0.1), rnorm(locNtp * locNtracks * locNsites * 0.5, .5, 0.2)),
-                      TrackLabel = rep(1:(locNtracks*locNsites), each = locNtp))
-  
-  return(dt.nuc)
-}
-
-
 # Fast DTW computation
 fastDTW <-function (x)
 {
   return(dtw(x, window.type = 'sakoechiba', distance.only = T)$normalizedDistance)
 }
 
-
-# Returns original dt with an additional column with normalized quantity.
-# The column to be normalised is given by 'in.meas.col'.
-# The name of additional column is the same as in.meas.col but with ".norm" suffix added.
-# Normalisation is based on part of the trajectory;
-# this is defined by in.rt.min and max, and the column with time in.rt.col.
-# Additional parameters:
-# in.by.cols - character vector with 'by' columns to calculate normalisation per group
-#              if NULL, no grouping is done
-# in.robust - whether robust measures should be used (median instead of mean, mad instead of sd)
-# in.type - type of normalization: z.score or mean (fi.e. old change w.r.t. mean)
-
-myNorm = function(in.dt,
-                  in.meas.col,
-                  in.rt.col = 'RealTime',
-                  in.rt.min = 10,
-                  in.rt.max = 20,
-                  in.by.cols = NULL,
-                  in.robust = TRUE,
-                  in.type = 'z.score') {
-  loc.dt <-
-    copy(in.dt) # copy so as not to alter original dt object w intermediate assignments
-  
-  if (is.null(in.by.cols)) {
-    if (in.robust)
-      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
-                                 get(in.rt.col) <= in.rt.max, .(meas.md = median(get(in.meas.col), na.rm = TRUE),
-                                                               meas.mad = mad(get(in.meas.col), na.rm = TRUE))]
-    else
-      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
-                                 get(in.rt.col) <= in.rt.max, .(meas.md = mean(get(in.meas.col), na.rm = TRUE),
-                                                               meas.mad = sd(get(in.meas.col), na.rm = TRUE))]
-    
-    loc.dt = cbind(loc.dt, loc.dt.pre.aggr)
-  }  else {
-    if (in.robust)
-      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
-                                 get(in.rt.col) <= in.rt.max, .(meas.md = median(get(in.meas.col), na.rm = TRUE),
-                                                               meas.mad = mad(get(in.meas.col), na.rm = TRUE)), by = in.by.cols]
-    else
-      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
-                                 get(in.rt.col) <= in.rt.max, .(meas.md = mean(get(in.meas.col), na.rm = TRUE),
-                                                               meas.mad = sd(get(in.meas.col), na.rm = TRUE)), by = in.by.cols]
-    
-    loc.dt = merge(loc.dt, loc.dt.pre.aggr, by = in.by.cols)
-  }
-  
-  
-  if (in.type == 'z.score') {
-    loc.dt[, meas.norm := (get(in.meas.col) - meas.md) / meas.mad]
-  } else {
-    loc.dt[, meas.norm := (get(in.meas.col) / meas.md)]
-  }
-  
-  setnames(loc.dt, 'meas.norm', paste0(in.meas.col, '.norm'))
-  
-  loc.dt[, c('meas.md', 'meas.mad') := NULL]
-  return(loc.dt)
-}
 
 # Plots a scatter plot with marginal histograms
 # Points are connected by a line (grouping by cellID)

@@ -148,11 +148,11 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                plotOutput(ns('outPlotHier'))
       ),
 
-      tabPanel('Time-courses',
-               modTrajPlotUI(ns('modPlotHierTraj'))),
-      
       tabPanel('Averages',
                modTrajRibbonPlotUI(ns('modPlotHierTrajRibbon'))),
+      
+      tabPanel('Time-courses',
+               modTrajPlotUI(ns('modPlotHierTraj'))),
       
       tabPanel('Cluster dist.',
                modClDistPlotUI(ns('hierClDistPlot'), 'xxx'))
