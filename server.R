@@ -132,13 +132,25 @@ shinyServer(function(input, output, session) {
     locCols = getDataNucCols()
     locColSel = locCols[grep('(T|t)ime|Metadata_T', locCols)[1]] # index 1 at the end in case more matches; select 1st; matches RealTime, realtime, real time, etc.
     
-    cat(locColSel, '\n')
     selectInput(
       'inSelTime',
       'Select time column (e.g. Metadata_T, RealTime):',
       locCols,
       width = '100%',
       selected = locColSel
+    )
+  })
+
+  output$varSelTimeFreq = renderUI({
+    cat(file = stderr(), 'UI varSelTimeFreq\n')
+    
+    numericInput(
+      'inSelTimeFreq',
+      'Provide time frequency:',
+      min = 1,
+      step = 1,
+      width = '100%',
+      value = 1
     )
   })
   
@@ -528,7 +540,7 @@ shinyServer(function(input, output, session) {
     loc.s.pos.x = names(loc.dt)[grep('(L|l)ocation.*X|(P|p)os.x|(P|p)osx', names(loc.dt))[1]]
     loc.s.pos.y = names(loc.dt)[grep('(L|l)ocation.*Y|(P|p)os.y|(P|p)osy', names(loc.dt))[1]]
     
-    cat(loc.s.pos.x, loc.s.pos.y, '\n')
+    cat('Position columns: ', loc.s.pos.x, loc.s.pos.y, '\n')
     
     if (!is.na(loc.s.pos.x) & !is.na(loc.s.pos.y))
       locPos = TRUE
@@ -599,19 +611,24 @@ shinyServer(function(input, output, session) {
     }
       
 
-    ## Interpolate NA's and data points not include
+    ## Interpolate NA's and data points that are missing
     # From: https://stackoverflow.com/questions/28073752/r-how-to-add-rows-for-missing-values-for-unique-group-sequences
-    # Tracks are interpolated only within min and max realtime of every cell id
+    # Tracks are interpolated only within first and last time points of every cell id
+    # Datasets can have different realtime frequency (e.g. every 1', 2', etc),
+    # or the frame number metadata can be missing, as is the case for tCourseSelected files that already have realtime column.
+    # Therefore, we cnanot rely on that info to get time frequency; user provides this number!
+    
     setkey(loc.out, group, id, realtime)
-    loc.out = loc.out[setkey(loc.out[, .(min(realtime):max(realtime)), by = .(group, id)], group, id, V1)]
+    
+    # here we fill missing data with NA's
+    loc.out = loc.out[setkey(loc.out[, .(seq(min(realtime), max(realtime), input$inSelTimeFreq)), by = .(group, id)], group, id, V1)]
 
     # x-check: print all rows with NA's
     print('Rows with NAs:')
     print(loc.out[rowSums(is.na(loc.out)) > 0, ])
     
-    # Merge will create NA's where a realtime is missing.
-    # Also, NA's may be already present in the dataset'.
-    # Interpolate (linear) them with na.interpolate
+    # NA's may be already present in the dataset'.
+    # Interpolate (linear) them with na.interpolate as well
     if(locPos)
       s.cols = c('y', 'pos.x', 'pos.y')
     else

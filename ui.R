@@ -56,6 +56,7 @@ shinyUI(fluidPage(
       checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', TRUE),                
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
+      uiOutput('varSelTimeFreq'),
       uiOutput('varSelMeas1'),
       radioButtons(
         'inSelMath',
