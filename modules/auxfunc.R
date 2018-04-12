@@ -198,9 +198,11 @@ myGgplotTraj = function(dt.arg, # data table
                  aes_string(x = x.arg,
                             y = y.arg,
                             group = group.arg,
-                            label  = aux.label1,
-                            label2 = aux.label2,
-                            label3 = aux.label3))
+                            label = group.arg))
+  #,
+  #                          label  = aux.label1,
+  #                          label2 = aux.label2,
+  #                          label3 = aux.label3))
   
   if (is.null(line.col.arg)) {
     p.tmp = p.tmp +
@@ -309,9 +311,6 @@ myGgplotTraj = function(dt.arg, # data table
       legend.key.width = unit(2, "lines"),
       legend.position = "top"
     )
-  
-  
-
   
   return(p.tmp)
 }

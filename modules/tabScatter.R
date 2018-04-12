@@ -66,7 +66,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
 }
 
 # SERVER
-tabScatterPlot <- function(input, output, session, in.data) {
+tabScatterPlot <- function(input, output, session, in.data, in.fname) {
   
 # return all unique time points (real time)
 # This will be used to display in UI for box-plot
@@ -251,7 +251,7 @@ output$outPlotScatterInt <- renderPlotly({
 })
 
   # download pdf
-  callModule(downPlot, "downPlotScatter", "scatter.pdf", plotScatter, TRUE)
+  callModule(downPlot, "downPlotScatter", in.fname, plotScatter, TRUE)
   
   # Hierarchical - choose to display regular heatmap.2 or d3heatmap (interactive)
   output$plotInt_ui <- renderUI({

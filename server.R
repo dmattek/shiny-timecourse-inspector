@@ -449,7 +449,7 @@ shinyServer(function(input, output, session) {
       cat(file = stderr(), 'dataMod: trajRem not NULL\n')
       
       loc.dt.rem = dataLoadTrajRem()
-      
+      print(loc.dt.rem)
       loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem[[1]])]
     }
     
@@ -742,12 +742,14 @@ shinyServer(function(input, output, session) {
   )
   
   ###### Trajectory plotting
-  callModule(modTrajRibbonPlot, 'modTrajRibbon', data4trajPlot)
   callModule(modTrajRibbonPlot, 'modTrajRibbon', 
-             in.data = data4trajPlot)
+             in.data = data4trajPlot,
+             in.fname = function() return( "tCoursesMeans.pdf"))
   
   ###### Trajectory plotting
-  callModule(modTrajPlot, 'modTrajPlot', data4trajPlot)
+  callModule(modTrajPlot, 'modTrajPlot', 
+             in.data = data4trajPlot, 
+             in.fname = function() {return( "tCourses.pdf")})
   
   ## UI for selecting trajectories
   # The output data table of data4trajPlot is modified based on inSelHighlight field
@@ -771,13 +773,13 @@ shinyServer(function(input, output, session) {
   })
   
   ###### AUC calculation and plotting
-  callModule(modAUCplot, 'tabAUC', data4trajPlot)
+  callModule(modAUCplot, 'tabAUC', data4trajPlot, in.fname = function() return('boxplotAUC.pdf'))
   
   ###### Box-plot
-  callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlot)
+  callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlot, in.fname = function() return('boxplotTP.pdf'))
   
   ###### Scatter plot
-  callModule(tabScatterPlot, 'tabScatter', data4trajPlot)
+  callModule(tabScatterPlot, 'tabScatter', data4trajPlot, in.fname = function() return('scatter.pdf'))
   
   ##### Hierarchical clustering
   callModule(clustHier, 'tabClHier', data4clust, data4trajPlot)

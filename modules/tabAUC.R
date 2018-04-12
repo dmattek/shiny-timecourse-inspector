@@ -19,7 +19,7 @@ modAUCplotUI =  function(id, label = "Plot Area Under Curves") {
   )
 }
 
-modAUCplot = function(input, output, session, in.data, in.fname = 'boxplotAUC.pdf') {
+modAUCplot = function(input, output, session, in.data, in.fname) {
   
   ns <- session$ns
   

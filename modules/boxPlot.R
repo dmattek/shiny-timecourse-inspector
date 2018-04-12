@@ -72,7 +72,7 @@ modBoxPlot = function(input, output, session,
                                      meas.y = 'y',
                                      group = 'group',
                                      id = 'id'), 
-                      in.fname = 'boxplot.pdf') {
+                      in.fname) {
   
   ns <- session$ns
  

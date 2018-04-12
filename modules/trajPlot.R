@@ -56,7 +56,11 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
 }
 
 
-modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.facet.color = NULL, in.fname = 'tCourses.pdf') {
+modTrajPlot = function(input, output, session, 
+                       in.data, 
+                       in.fname,
+                       in.facet = 'group', 
+                       in.facet.color = NULL) {
   
   ns <- session$ns
   
@@ -102,7 +106,7 @@ modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.f
     if(is.null(loc.p))
       return(NULL)
     
-    return(plotly_build(loc.p))
+    return(ggplotly(loc.p))
   })
   
   
@@ -176,7 +180,7 @@ modTrajPlot = function(input, output, session, in.data, in.facet = 'group', in.f
       loc.facet.col = in.facet.color()$cl.col
       loc.facet.col = loc.facet.col[loc.groups]
     }
-    
+
     
     p.out = myGgplotTraj(
       dt.arg = loc.dt,

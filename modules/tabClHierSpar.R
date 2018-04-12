@@ -449,33 +449,65 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     return (input$inPlotHierSparHeatMapHeight)
   }
   
+  createFnameHeatMap = reactive({
+    
+    paste0('clust_hierchSparse_heatMap_',
+           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           '_',
+           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)],
+           '.png')
+  })
+  
+  createFnameTrajPlot = reactive({
+    
+    paste0('clust_hierchSparse_tCourses_',
+           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           '_',
+           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], 
+           '.pdf')
+  })
+  
+  createFnameRibbonPlot = reactive({
+    
+    paste0('clust_hierchSparse_tCoursesMeans_',
+           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           '_',
+           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], 
+           '.pdf')
+  })
+  
+  createFnameDistPlot = reactive({
+    
+    paste0('clust_hierchSparse_clDist_',
+           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           '_',
+           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf')  })
+  
+  
+  
+  # Sparse Hierarchical - Heat Map - download pdf
+  callModule(downPlot, "downPlotHierSparHM", createFnameHeatMap, plotHierSpar)
+  
+  
+  
   
   callModule(modTrajPlot, 'modPlotHierSparTraj', 
              in.data = data4trajPlotClSpar, 
              in.facet = 'cl', 
              in.facet.color = getClColHierSpar,
-             paste0('clust_hierchSparse_tCourses_',
-                    s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
-                    '_',
-                    s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
+             in.fname = createFnameTrajPlot)
   
   callModule(modTrajRibbonPlot, 'modPlotHierSparTrajRibbon', 
              in.data = data4trajPlotClSpar, 
              in.facet = 'cl',  
              in.facet.color = getClColHierSpar,
-             in.fname = paste0('clust_hierchSparse_tCoursesMeans_',
-                               s.cl.diss[as.numeric(input$selectPlotHierSparDiss)],
-                               '_',
-                               s.cl.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
+             in.fname = createFnameRibbonPlot)
   
   
   callModule(modClDistPlot, 'hierClSparDistPlot', 
              in.data = data4clSparDistPlot,
              in.cols = getClColHierSpar,
-             in.fname = paste0('clust_hierchSparse_clDist_',
-                               s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
-                               '_',
-                               s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf'))
+             in.fname = createFnameDistPlot)
   
   
   
@@ -491,12 +523,5 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     
     plotHierSpar()
   }, height = getPlotHierSparHeatMapHeight)
-  
-  # Sparse Hierarchical - Heat Map - download pdf
-  callModule(downPlot, "downPlotHierSparHM",       paste0('clust_hierchSparse_heatMap_',
-                                                          s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
-                                                          '_',
-                                                          s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.png'), plotHierSpar)
-  
   
 }

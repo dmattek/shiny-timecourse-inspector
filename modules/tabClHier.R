@@ -344,7 +344,14 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     
   })
   
- 
+  createMethodStr = reactive({
+
+    paste0(s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+    '_',
+    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
+    
+  })
+  
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
@@ -369,7 +376,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
                           nacol.arg = input$inPlotHierNAcolor, 
                           font.row.arg = input$inPlotHierFontX, 
                           font.col.arg = input$inPlotHierFontY, 
-                          title.arg = paste(
+                          title.arg = paste0(
                             "Distance measure: ",
                             s.cl.diss[as.numeric(input$selectPlotHierDiss)],
                             "\nLinkage method: ",
@@ -398,38 +405,61 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     plotHier()
   }, height = getPlotHierHeatMapHeight)
   
+  createFnameHeatMap = reactive({
+    
+    paste0('clust_hierch_heatMap_',
+           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           '_',
+           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)],
+           '.png')
+  })
+  
+  createFnameTrajPlot = reactive({
+    
+    paste0('clust_hierch_tCourses_',
+           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           '_',
+           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], 
+           '.pdf')
+  })
+  
+  createFnameRibbonPlot = reactive({
+    
+    paste0('clust_hierch_tCoursesMeans_',
+           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           '_',
+           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], 
+           '.pdf')
+  })
+  
+  createFnameDistPlot = reactive({
+    
+    paste0('clust_hierch_clDist_',
+           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           '_',
+           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf')  })
+  
+  
   
   #  Hierarchical - Heat Map - download pdf
-  callModule(downPlot, "downPlotHier",       paste0('clust_hierch_heatMap_',
-                                                    s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-                                                    '_',
-                                                    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.png'), plotHier)
+  callModule(downPlot, "downPlotHier", createFnameHeatMap, plotHier)
   
   callModule(modTrajPlot, 'modPlotHierTraj', 
              in.data = data4trajPlotCl, 
              in.facet = 'cl',  
              in.facet.color = getClColHier,
-             in.fname = paste0('clust_hierch_tCourses_',
-                               s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-                               '_',
-                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
+             in.fname = createFnameTrajPlot)
   
   callModule(modTrajRibbonPlot, 'modPlotHierTrajRibbon', 
              in.data = data4trajPlotCl, 
              in.facet = 'cl',  
              in.facet.color = getClColHier,
-             in.fname = paste0('clust_hierch_tCoursesMeans_',
-                               s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-                               '_',
-                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
+             in.fname = createFnameRibbonPlot)
   
   callModule(modClDistPlot, 'hierClDistPlot', 
              in.data = data4clDistPlot,
              in.cols = getClColHier,
-             in.fname = paste0('clust_hierch_clDist_',
-                               s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-                               '_',
-                               s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf'))
+             in.fname = createFnameDistPlot)
 
   
 }

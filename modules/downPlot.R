@@ -46,7 +46,7 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
   output$uiDownButton = renderUI({
     ns <- session$ns
     
-    if (in.fname %like% 'pdf') {
+    if (in.fname() %like% 'pdf') {
       downloadButton(ns('downPlot'), 'PDF')
     } else {
       downloadButton(ns('downPlot'), 'PNG')
@@ -56,7 +56,8 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
   
   output$downPlot <- downloadHandler(
     filename = function() {
-      in.fname
+      cat(in.fname(), "\n")
+      in.fname()
     },
     
     content = function(file) {
@@ -69,7 +70,7 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
           height = input$inPlotHeight
         )
       } else {
-        if (in.fname %like% 'pdf') {
+        if (in.fname() %like% 'pdf') {
           pdf(file,
               width  = input$inPlotWidth,
               height = input$inPlotHeight)

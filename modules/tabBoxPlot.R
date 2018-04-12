@@ -21,7 +21,7 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
 
 ####
 ## server box-plot
-tabBoxPlot = function(input, output, session, in.data, in.fname = 'boxplotTP.pdf') {
+tabBoxPlot = function(input, output, session, in.data, in.fname) {
   
   callModule(modStats, 'dispStats',
              in.data = data4boxPlot,

@@ -49,7 +49,7 @@ modTrajRibbonPlot = function(input, output, session,
                              in.data, 
                              in.facet = 'group', 
                              in.facet.color = NULL, 
-                             in.fname = 'tCoursesMeans.pdf') {
+                             in.fname) {
   
   ns <- session$ns
   
@@ -101,7 +101,9 @@ modTrajRibbonPlot = function(input, output, session,
   
   
   # Trajectory plot - download pdf
-  callModule(downPlot, "downPlotTraj", in.fname, plotTraj, TRUE)
+  callModule(downPlot, "downPlotTraj", 
+             in.fname = in.fname, 
+             plotTraj, TRUE)
   
   plotTraj <- function() {
     cat(file = stderr(), 'plotTraj: in\n')
