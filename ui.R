@@ -42,6 +42,7 @@ shinyUI(fluidPage(
       uiOutput('uiButLoadTrajRem'),
       
       tags$hr(),
+      checkboxInput('chBtrajInter', 'Interpolate NAs?', value = T),
       checkboxInput('chBtrackUni', 'Create unique TrackLabel', T),
       helpPopup(
         title = 'Create unique cell ID',

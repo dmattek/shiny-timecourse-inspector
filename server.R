@@ -144,14 +144,16 @@ shinyServer(function(input, output, session) {
   output$varSelTimeFreq = renderUI({
     cat(file = stderr(), 'UI varSelTimeFreq\n')
     
-    numericInput(
-      'inSelTimeFreq',
-      'Provide time frequency:',
-      min = 1,
-      step = 1,
-      width = '100%',
-      value = 1
-    )
+    if (input$chBtrajInter) {
+      numericInput(
+        'inSelTimeFreq',
+        'Provide time frequency:',
+        min = 1,
+        step = 1,
+        width = '100%',
+        value = 1
+      )
+    }
   })
   
   # This is main field to select plot facet grouping
@@ -619,34 +621,37 @@ shinyServer(function(input, output, session) {
     # Therefore, we cnanot rely on that info to get time frequency; user provides this number!
     
     setkey(loc.out, group, id, realtime)
-    
-    # here we fill missing data with NA's
-    loc.out = loc.out[setkey(loc.out[, .(seq(min(realtime), max(realtime), input$inSelTimeFreq)), by = .(group, id)], group, id, V1)]
 
-    # x-check: print all rows with NA's
-    print('Rows with NAs:')
-    print(loc.out[rowSums(is.na(loc.out)) > 0, ])
-    
-    # NA's may be already present in the dataset'.
-    # Interpolate (linear) them with na.interpolate as well
-    if(locPos)
-      s.cols = c('y', 'pos.x', 'pos.y')
-    else
-      s.cols = c('y')
-    
-    loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
-    
-
-    # !!! Current issue with interpolation:
-    # The column mid.in is not taken into account.
-    # If a trajectory is selected in the UI,
-    # the mid.in column is added (if it doesn't already exist in the dataset),
-    # and for the interpolated point, it will still be NA. Not really an issue.
-    #
-    # Also, think about the current option of having mid.in column in the uploaded dataset.
-    # Keep it? Expand it?
-    # Create a UI filed for selecting the column with mid.in data.
-    # What to do with that column during interpolation (see above)
+    if (input$chBtrajInter) {
+      # here we fill missing data with NA's
+      loc.out = loc.out[setkey(loc.out[, .(seq(min(realtime), max(realtime), input$inSelTimeFreq)), by = .(group, id)], group, id, V1)]
+      
+      # x-check: print all rows with NA's
+      print('Rows with NAs:')
+      print(loc.out[rowSums(is.na(loc.out)) > 0, ])
+      
+      # NA's may be already present in the dataset'.
+      # Interpolate (linear) them with na.interpolate as well
+      if(locPos)
+        s.cols = c('y', 'pos.x', 'pos.y')
+      else
+        s.cols = c('y')
+      
+      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
+      
+      
+      # !!! Current issue with interpolation:
+      # The column mid.in is not taken into account.
+      # If a trajectory is selected in the UI,
+      # the mid.in column is added (if it doesn't already exist in the dataset),
+      # and for the interpolated point, it will still be NA. Not really an issue.
+      #
+      # Also, think about the current option of having mid.in column in the uploaded dataset.
+      # Keep it? Expand it?
+      # Create a UI filed for selecting the column with mid.in data.
+      # What to do with that column during interpolation (see above)
+      
+    }    
     
     ## Trim x-axis (time)
     if(input$chBtimeTrim) {
