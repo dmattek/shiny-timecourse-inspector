@@ -694,8 +694,8 @@ shinyServer(function(input, output, session) {
     
     if (input$chBoutliers) {
       loc.out[, y.sc := scale(y)]  
-      loc.tmp = loc.out[ y.sc < quantile(y.sc, (1 - input$slOutliersPerc * 0.01)*0.5) | 
-                           y.sc > quantile(y.sc, 1 - (1 - input$slOutliersPerc * 0.01)*0.5)]
+      loc.tmp = loc.out[ y.sc < quantile(y.sc, (1 - input$slOutliersPerc * 0.01)*0.5, na.rm = T) | 
+                           y.sc > quantile(y.sc, 1 - (1 - input$slOutliersPerc * 0.01)*0.5, na.rm = T)]
       loc.out = loc.out[!(id %in% unique(loc.tmp$id))]
       loc.out[, y.sc := NULL]
     }
