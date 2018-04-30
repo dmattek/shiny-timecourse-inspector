@@ -317,7 +317,7 @@ shinyServer(function(input, output, session) {
     if (input$chBnorm) {
       radioButtons('chBnormGroup',
                    label = 'Normalisation grouping',
-                   choices = list('Entire dataset' = 'none', 'Per facet' = 'group', 'Per trajectory (Korean way)' = 'id'))
+                   choices = list('Entire dataset' = 'none', 'Per facet' = 'group', 'Per trajectory' = 'id'))
     }
   })
   
