@@ -22,16 +22,21 @@ Following packages need to be installed in order to run the app locally:
 * sparcl
 * imputeTS
 * dtw
+* DT
+* MASS
+* robust
+* pracma
 
 Install packages using `install.packages('name_of_the_package_from_the_list_above')` command in RStudio command line.
 
 ```
 install.packages(c("shiny", "shinyjs", 
-					"data.table", 
+					"data.table", "DT",
 					"ggplot2", "gplots", "plotly", "d3heatmap", "scales",
 					"dendextend", "dendextend", "RColorBrewer",
 					"sparcl", "dtw",
-					"imputeTS")) 
+					"imputeTS",
+					"MASS", "robust", "pracma")) 
 ```
 
 **Additionally**, a time series analysis package need to be installed from [GitHub](https://github.com/dmattek/tca-package):
