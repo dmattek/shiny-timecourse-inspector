@@ -24,7 +24,8 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       ),
       column(
         3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1)
+        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1),
+        uiOutput(ns('uiSlYTrim'))
       ),
       column(
         3,
@@ -79,6 +80,27 @@ modTrajPlot = function(input, output, session,
   })
   
 
+  # UI for trimming y-axis
+  output$uiSlYTrim = renderUI({
+    cat(file = stderr(), 'UI uiSlYTrim\n')
+    
+    loc.dt = in.data()
+    
+      locYmin = signif(min(loc.dt$y), 4)
+      locYmax = signif(max(loc.dt$y), 4)
+      
+      sliderInput(
+        ns('slYTrim'),
+        label = 'Trim y-axis',
+        min = locYmin,
+        max = locYmax,
+        value = c(locYmin, locYmax)
+      )
+      
+  })
+  
+  
+  
   callModule(modTrackStats, 'dispTrackStats',
              in.data = in.data)
   
@@ -195,7 +217,8 @@ modTrajPlot = function(input, output, session,
       aux.label1 = if (locPos) 'pos.x' else NULL,
       aux.label2 = if (locPos) 'pos.y' else NULL,
       aux.label3 = if (locObjNum) 'obj.num' else NULL,
-      stat.arg = input$chBPlotTrajStat
+      stat.arg = input$chBPlotTrajStat,
+      ylim.arg = input$slYTrim
     )
     
     return(p.out)
