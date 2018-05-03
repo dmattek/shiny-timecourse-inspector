@@ -86,8 +86,8 @@ modTrajPlot = function(input, output, session,
     
     loc.dt = in.data()
     
-      locYmin = signif(min(loc.dt$y), 4)
-      locYmax = signif(max(loc.dt$y), 4)
+      locYmin = signif(min(loc.dt$y, na.rm = T), 4)
+      locYmax = signif(max(loc.dt$y, na.rm = T), 4)
       
       sliderInput(
         ns('slYTrim'),
