@@ -65,7 +65,17 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                           selected = 'Rainbow'
                         ),
 
-                        checkboxInput(ns('selectPlotHierKey'), 'Plot colour key', TRUE)
+                        checkboxInput(ns('selectPlotHierKey'), 'Plot colour key', TRUE),
+                        checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
+                        
+                        fluidRow(
+                          column(3,
+                                 uiOutput(ns('uiSetColBoundsLow'))
+                          ),
+                          column(3,
+                                 uiOutput(ns('uiSetColBoundsHigh'))
+                          )
+                        )
                  ),
                  column(3,
                         selectInput(
@@ -172,6 +182,39 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
                   choices = seq(1, input$inPlotHierNclust, 1),
                   multiple = TRUE, 
                   selected = 1)
+    }
+  })
+  
+  output$uiSetColBoundsLow = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetColBounds) {
+
+      loc.dt = in.data4trajPlot()
+
+      numericInput(
+        ns('inSetColBoundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = floor(min(loc.dt[['y']], na.rm = T))
+      )
+    }
+  })
+  
+  
+  output$uiSetColBoundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetColBounds) {
+
+      loc.dt = in.data4trajPlot()
+      
+      numericInput(
+        ns('inSetColBoundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = ceil(max(loc.dt[['y']], na.rm = T))
+      )
     }
   })
   
@@ -365,6 +408,13 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     if (is.null(loc.dend))
       return(NULL)
     
+    loc.col.bounds = NULL
+    if (input$chBsetColBounds)
+      loc.col.bounds = c(input$inSetColBoundsLow, input$inSetColBoundsHigh)
+    else 
+      loc.col.bounds = NULL
+    
+    
     loc.p = myPlotHeatmap(loc.dm,
                           loc.dend, 
                           palette.arg = input$selectPlotHierPalette, 
@@ -376,6 +426,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
                           nacol.arg = input$inPlotHierNAcolor, 
                           font.row.arg = input$inPlotHierFontX, 
                           font.col.arg = input$inPlotHierFontY, 
+                          breaks.arg = loc.col.bounds,
                           title.arg = paste0(
                             "Distance measure: ",
                             s.cl.diss[as.numeric(input$selectPlotHierDiss)],

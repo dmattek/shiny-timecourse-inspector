@@ -456,14 +456,17 @@ myPlotHeatmap <- function(data.arg,
                           labCol.arg = NULL,
                           font.row.arg = 1,
                           font.col.arg = 1,
+                          breaks.arg = NULL,
                           title.arg = 'Clustering') {
+  
+  loc.n.colbreaks = 99
   
   if (palette.rev.arg)
     my_palette <-
-    rev(colorRampPalette(brewer.pal(9, palette.arg))(n = 99))
+    rev(colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks))
   else
     my_palette <-
-    colorRampPalette(brewer.pal(9, palette.arg))(n = 99)
+    colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks)
   
   
   col_labels <- get_leaves_branches_col(dend.arg)
@@ -501,7 +504,8 @@ myPlotHeatmap <- function(data.arg,
     cexCol = font.col.arg,
     main = title.arg,
     symbreaks = FALSE,
-    symkey = FALSE
+    symkey = FALSE,
+    breaks = if (is.null(breaks.arg)) NULL else seq(breaks.arg[1], breaks.arg[2], length.out = loc.n.colbreaks+1)
   )
   
   return(loc.p)

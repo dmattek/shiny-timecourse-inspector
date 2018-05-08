@@ -70,7 +70,19 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
                           selected = 'Spectral'
                         ),
                         checkboxInput(ns('inPlotHierSparRevPalette'), 'Reverse colour palette', TRUE),
-                        checkboxInput(ns('selectPlotHierSparKey'), 'Plot colour key', TRUE)
+                        checkboxInput(ns('selectPlotHierSparKey'), 'Plot colour key', TRUE),
+                        
+                        checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
+                        
+                        fluidRow(
+                          column(3,
+                                 uiOutput(ns('uiSetColBoundsLow'))
+                          ),
+                          column(3,
+                                 uiOutput(ns('uiSetColBoundsHigh'))
+                          )
+                        )
+                        
                  ),
                  column(3,
                         sliderInput(
@@ -187,6 +199,39 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
         step = 1,
         ticks = TRUE
       )
+  })
+  
+  output$uiSetColBoundsLow = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetColBounds) {
+      
+      loc.dt = in.data4trajPlot()
+      
+      numericInput(
+        ns('inSetColBoundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = floor(min(loc.dt[['y']], na.rm = T))
+      )
+    }
+  })
+  
+  
+  output$uiSetColBoundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetColBounds) {
+      
+      loc.dt = in.data4trajPlot()
+      
+      numericInput(
+        ns('inSetColBoundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = ceil(max(loc.dt[['y']], na.rm = T))
+      )
+    }
   })
   
   # UI for advanced options
@@ -422,6 +467,13 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
                             ifelse(sparsehc$ws <= 0.5, "green", "red")
                           ))
     
+    loc.col.bounds = NULL
+    if (input$chBsetColBounds)
+      loc.col.bounds = c(input$inSetColBoundsLow, input$inSetColBoundsHigh)
+    else 
+      loc.col.bounds = NULL
+    
+    
     loc.p = myPlotHeatmap(loc.dm,
                           loc.dend, 
                           palette.arg = input$selectPlotHierSparPalette, 
@@ -435,6 +487,7 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
                           labCol.arg = loc.colnames,
                           font.row.arg = input$inPlotHierSparFontX, 
                           font.col.arg = input$inPlotHierSparFontY, 
+                          breaks.arg = loc.col.bounds,
                           title.arg = paste(
                             "Distance measure: ",
                             s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
