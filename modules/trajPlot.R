@@ -88,7 +88,7 @@ modTrajPlot = function(input, output, session,
     
       locYmin = signif(min(loc.dt$y, na.rm = T), 4)
       locYmax = signif(max(loc.dt$y, na.rm = T), 4)
-      
+
       sliderInput(
         ns('slYTrim'),
         label = 'Trim y-axis',

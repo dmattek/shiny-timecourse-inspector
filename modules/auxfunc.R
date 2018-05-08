@@ -95,7 +95,9 @@ help.text = c(
   Say, the main data file contains columns Metadata_Site and TrackLabel. 
   These two columns should be then selected in UI to form a unique cell ID, e.g. 001_0001 where former part corresponds to Metadata_Site and the latter to TrackLabel.',
   'Plotting and data processing requires a unique cell ID across entire dataset. A typical dataset from CellProfiler assigns unique cell ID (TrackLabel) within each field of view (Metadata_Site).
-                   Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, UNcheck this box and select a single column only.'
+                   Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, UNcheck this box and select a single column only.',
+  'This option allows to interpolate NAs or missing data. Some rows in the input file might be missing because a particular time point might not had been acquired. 
+  This option, interpolates such missing points as well as points with NAs in the measurement column. When this option is checked, the interval of time column must be provided!'
 )
 
 

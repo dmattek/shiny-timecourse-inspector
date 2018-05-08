@@ -451,7 +451,6 @@ shinyServer(function(input, output, session) {
       cat(file = stderr(), 'dataMod: trajRem not NULL\n')
       
       loc.dt.rem = dataLoadTrajRem()
-      print(loc.dt.rem)
       loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem[[1]])]
     }
     
@@ -613,18 +612,18 @@ shinyServer(function(input, output, session) {
     }
       
 
-    ## Interpolate NA's and data points that are missing
+    ## Interpolate missing data and NA data points
     # From: https://stackoverflow.com/questions/28073752/r-how-to-add-rows-for-missing-values-for-unique-group-sequences
     # Tracks are interpolated only within first and last time points of every cell id
     # Datasets can have different realtime frequency (e.g. every 1', 2', etc),
     # or the frame number metadata can be missing, as is the case for tCourseSelected files that already have realtime column.
-    # Therefore, we cnanot rely on that info to get time frequency; user provides this number!
+    # Therefore, we cannot rely on that info to get time frequency; user provides this number!
     
     setkey(loc.out, group, id, realtime)
 
     if (input$chBtrajInter) {
       # here we fill missing data with NA's
-      loc.out = loc.out[setkey(loc.out[, .(seq(min(realtime), max(realtime), input$inSelTimeFreq)), by = .(group, id)], group, id, V1)]
+      loc.out = loc.out[setkey(loc.out[, .(seq(min(realtime, na.rm = T), max(realtime, na.rm = T), input$inSelTimeFreq)), by = .(group, id)], group, id, V1)]
       
       # x-check: print all rows with NA's
       print('Rows with NAs:')
@@ -727,11 +726,13 @@ shinyServer(function(input, output, session) {
     loc.out = as.matrix(loc.out[, -1])
     rownames(loc.out) = loc.rownames
     
+    # This might be removed entirely because all NA treatment happens in data4trajPlot
+    # Clustering should work with NAs present. These might result from data itself or from missing time point rows that were turned into NAs when dcast-ing from long format.
     # Remove NA's
     # na.interpolation from package imputeTS works with multidimensional data
     # but imputation is performed for each column independently
     # The matrix for clustering contains time series in rows, hence transposing it twice
-    loc.out = t(na.interpolation(t(loc.out)))
+    # loc.out = t(na.interpolation(t(loc.out)))
     
     return(loc.out)
   }) 

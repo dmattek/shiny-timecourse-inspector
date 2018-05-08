@@ -42,7 +42,15 @@ shinyUI(fluidPage(
       uiOutput('uiButLoadTrajRem'),
       
       tags$hr(),
-      checkboxInput('chBtrajInter', 'Interpolate NAs?', value = T),
+      checkboxInput('chBtrajInter', 'Interpolate NAs and missing data?', value = T),
+      helpPopup(
+        title = 'Interpolation of NAs and missing data',
+        content = help.text[3],
+        placement = 'right',
+        trigger = 'hover'
+      ),
+      
+      uiOutput('varSelTimeFreq'),
       checkboxInput('chBtrackUni', 'Create unique TrackLabel', T),
       helpPopup(
         title = 'Create unique cell ID',
@@ -57,7 +65,6 @@ shinyUI(fluidPage(
       checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', TRUE),                
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
-      uiOutput('varSelTimeFreq'),
       uiOutput('varSelMeas1'),
       radioButtons(
         'inSelMath',
