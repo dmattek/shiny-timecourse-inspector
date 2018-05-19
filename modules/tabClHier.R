@@ -184,7 +184,8 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
                   selected = 1)
     }
   })
-  
+
+  # UI for setting lower and upper bounds for heat map colour scale  
   output$uiSetColBoundsLow = renderUI({
     ns <- session$ns
     

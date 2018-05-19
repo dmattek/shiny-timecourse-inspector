@@ -25,7 +25,17 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       column(
         3,
         sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1),
-        uiOutput(ns('uiSlYTrim'))
+        checkboxInput(ns('chBsetColBounds'), 'Set bounds for y-axis', FALSE),
+        
+        fluidRow(
+          column(6,
+                 uiOutput(ns('uiSetColBoundsLow'))
+          ),
+          column(6,
+                 uiOutput(ns('uiSetColBoundsHigh'))
+          )
+        )
+        
       ),
       column(
         3,
@@ -81,7 +91,40 @@ modTrajPlot = function(input, output, session,
   
 
   # UI for trimming y-axis
-  output$uiSlYTrim = renderUI({
+  output$uiSetColBoundsLow = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetColBounds) {
+      
+      loc.dt = in.data()
+      
+      numericInput(
+        ns('inSetColBoundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = floor(min(loc.dt[['y']], na.rm = T))
+      )
+    }
+  })
+  
+  
+  output$uiSetColBoundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetColBounds) {
+      
+      loc.dt = in.data()
+      
+      numericInput(
+        ns('inSetColBoundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = ceil(max(loc.dt[['y']], na.rm = T))
+      )
+    }
+  })
+
+    output$uiSlYTrim = renderUI({
     cat(file = stderr(), 'UI uiSlYTrim\n')
     
     loc.dt = in.data()
@@ -218,7 +261,7 @@ modTrajPlot = function(input, output, session,
       aux.label2 = if (locPos) 'pos.y' else NULL,
       aux.label3 = if (locObjNum) 'obj.num' else NULL,
       stat.arg = input$chBPlotTrajStat,
-      ylim.arg = input$slYTrim
+      ylim.arg = c(input$inSetColBoundsLow, input$inSetColBoundsHigh)
     )
     
     return(p.out)
