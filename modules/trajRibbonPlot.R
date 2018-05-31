@@ -9,6 +9,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
       column(
         3,
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot?'),
+        radioButtons(ns('rBlegendPos'), 'Legend placement:', list('top' = 'top', 'right' = 'right')),
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
       column(
@@ -185,7 +186,7 @@ modTrajRibbonPlot = function(input, output, session,
                            col.arg = loc.facet.col,
                            group.arg = in.facet,
                            xlab.arg = 'Time (min)',
-                           ylab.arg = '')
+                           ylab.arg = '', legendpos.arg = input$rBlegendPos)
     
     return(p.out)
   }

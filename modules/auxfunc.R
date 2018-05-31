@@ -357,8 +357,9 @@ myGgplotScat = function(dt.arg,
   if (is.null(band.arg))
     p.tmp = p.tmp +
       stat_smooth(
-        method = function(formula, data, weights = weight)
-          rlm(formula, data, weights = weight, method = 'MM'),
+        # method = function(formula, data, weights = weight)
+        #   rlm(formula, data, weights = weight, method = 'MM'),
+        method = "lm",
         fullrange = FALSE,
         level = 0.95,
         colour = 'blue'

@@ -202,6 +202,7 @@ modBoxPlot = function(input, output, session,
     
     if('dot' %in% input$inPlotType)
       p.out = p.out + geom_dotplot(aes_string(fill = in.cols[['group']]), 
+                                   color = NA,
                                    binaxis = "y", 
                                    stackdir = "center", 
                                    position = loc.par.dodge, 
