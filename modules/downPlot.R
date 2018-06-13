@@ -19,8 +19,8 @@ downPlotUI <- function(id, label = "Download Plot") {
         3,
         numericInput(
           ns('inPlotWidth'),
-          "Width",
-          17,
+          "Width (in)",
+          8.5,
           min = 1,
           width = 100
         )
@@ -29,8 +29,8 @@ downPlotUI <- function(id, label = "Download Plot") {
         3,
         numericInput(
           ns('inPlotHeight'),
-          "Height",
-          10,
+          "Height (in)",
+          11,
           min = 1,
           width = 100
         )
