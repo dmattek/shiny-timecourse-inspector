@@ -186,7 +186,9 @@ modTrajRibbonPlot = function(input, output, session,
                            col.arg = loc.facet.col,
                            group.arg = in.facet,
                            xlab.arg = 'Time (min)',
-                           ylab.arg = '', legendpos.arg = input$rBlegendPos)
+                           ylab.arg = '') +
+      ggplotTheme() +
+      theme(legend.position = input$rBlegendPos)
     
     return(p.out)
   }

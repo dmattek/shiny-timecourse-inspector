@@ -296,7 +296,7 @@ myGgplotTraj = function(dt.arg, # data table
     xlab(paste0(xlab.arg, "\n")) +
     ylab(paste0("\n", ylab.arg)) +
     ggtitle(plotlab.arg) +
-    myGgplotTheme + 
+    ggplotTheme() + 
     theme(legend.position = "top")
   
   return(p.tmp)
@@ -387,7 +387,7 @@ myGgplotScat = function(dt.arg,
   
   
   p.tmp = p.tmp +
-    myGgplotTheme +
+    ggplotTheme() +
     theme(legend.position = "none")
 
   # Marginal distributions don;t work with plotly...
@@ -396,27 +396,6 @@ myGgplotScat = function(dt.arg,
   # else
   return(p.tmp)
 }
-
-myGgplotTheme = 
-  theme_bw(base_size = 12, base_family = "Helvetica") +
-  theme(
-    panel.spacing = unit(1, "lines"),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.border = element_blank(),
-    axis.line = element_line(color = "black", size = 0.25),
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 12),
-    axis.title = element_text(size = 14),
-    strip.text = element_text(size = 14, face = "bold"),
-    strip.background = element_blank(),
-    legend.key = element_blank(), 
-    legend.text = element_text(size = 12),
-    legend.key.height = unit(1, "lines"),
-    legend.key.width = unit(2, "lines"),
-    legend.position = "right"
-  )
-
 
 
 myPlotHeatmap <- function(data.arg,

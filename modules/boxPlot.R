@@ -236,7 +236,7 @@ modBoxPlot = function(input, output, session,
       scale_fill_discrete(name = '') +
       xlab('') +
       ylab('') +
-      myGgplotTheme + 
+      ggplotTheme() + 
       theme(legend.position = input$selPlotBoxLegendPos)
     
     if (input$chBxAxisLabelsRotate)

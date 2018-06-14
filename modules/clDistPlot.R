@@ -49,7 +49,7 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
       scale_y_continuous(labels = percent) +
       ylab("percentage of cells\n") +  
       xlab("") +  
-      myGgplotTheme
+      ggplotTheme()
     
     return(p.out)
     

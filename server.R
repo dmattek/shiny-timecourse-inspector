@@ -658,7 +658,7 @@ shinyServer(function(input, output, session) {
     }
     
     ## Normalization
-    # F-n myNorm adds additional column with .norm suffix
+    # F-n tca::normTraj adds additional column with .norm suffix
     if (input$chBnorm) {
       loc.out = tca::normTraj(
         in.dt = loc.out,
