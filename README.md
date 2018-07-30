@@ -39,6 +39,9 @@ install.packages(c("shiny", "shinyjs",
 					"MASS", "robust", "pracma")) 
 ```
 
+**Note**
+As of July 2018, *sparcl* has been removed from CRAN. If you don't need sparse hierarchical clustering, you can simply comment the line ''library(sparcl)'' in ''server.R'' file or install it from the [archive][https://cran.r-project.org/web/packages/sparcl/index.html].
+
 **Additionally**, a time series analysis package need to be installed from [GitHub](https://github.com/dmattek/tca-package):
 
 ```
@@ -51,7 +54,6 @@ The `install_github` function is available in *devtools* package:
 install.packages("devtools")
 library(devtools)
 ```
-
 
 ## Input file
 The app recognises CSV (comma-separated values) files: data columns separated by a comma, floating point numbers using a dot (full-stop).
