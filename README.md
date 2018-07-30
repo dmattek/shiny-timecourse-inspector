@@ -2,7 +2,7 @@
 
 ## Running the app from the server
 The app can be accessed here:
-http://pertzlab.unibe.ch:3838/shiny-timecourse-inspector/
+http://pertzlab.unibe.ch:3838/shiny-timecourse-inspector/ (UniBe VPN only!)
 
 ## Running the app locally
 Alternatively, after downloading the code, the app can be run within RStudio. Open `server.R` or `ui.R` file, then click "Run App" button with green triangle in the upper right corner of the window with code open.
