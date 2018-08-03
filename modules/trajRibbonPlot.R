@@ -188,6 +188,7 @@ modTrajRibbonPlot = function(input, output, session,
                            xlab.arg = 'Time (min)',
                            ylab.arg = '') +
       ggplotTheme() +
+      #myGgplotTheme +
       theme(legend.position = input$rBlegendPos)
     
     return(p.out)

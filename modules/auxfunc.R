@@ -170,6 +170,26 @@ getClCol <- function(in.dend, in.k) {
 #####
 ## Common plotting functions
 
+myGgplotTheme = 
+  theme_bw(base_size = 8, base_family = "Helvetica") +
+  theme(
+    panel.spacing = unit(1, "lines"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    axis.line.x = element_line(color = "black", size = 0.25),
+    axis.line.y = element_line(color = "black", size = 0.25),
+    axis.text = element_text(size = 8),
+    axis.title = element_text(size = 8),
+    strip.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    legend.key = element_blank(), 
+    legend.text = element_text(size = 8),
+    legend.key.height = unit(1, "lines"),
+    legend.key.width = unit(2, "lines"),
+    legend.position = "top"
+  )
+
 myGgplotTraj = function(dt.arg, # data table
                         x.arg,  # string with column name for x-axis
                         y.arg, # string with column name for y-axis

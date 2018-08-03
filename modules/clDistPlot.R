@@ -50,6 +50,7 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
       ylab("percentage of cells\n") +  
       xlab("") +  
       ggplotTheme()
+      #myGgplotTheme
     
     return(p.out)
     
