@@ -18,7 +18,7 @@ library(dendextend) # for color_branches
 library(colorspace) # for palettes (used to colour dendrogram)
 library(RColorBrewer)
 # sparcl temporarily unavailable on CRAN
-#library(sparcl) # sparse hierarchical and k-means
+library(sparcl) # sparse hierarchical and k-means
 library(scales) # for percentages on y scale
 library(dtw) # for dynamic time warping
 library(imputeTS) # for interpolating NAs

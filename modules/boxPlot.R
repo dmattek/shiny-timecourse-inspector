@@ -31,7 +31,6 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
           ),
           selected = 'top'
         ),
-        checkboxInput(ns('chBxAxisLabelsRotate'), 'Rotate x-axis labels?'),
         uiOutput(ns('uiPlotBoxNotches')),
         uiOutput(ns('uiPlotBoxOutliers')),
         uiOutput(ns('uiPlotBoxDodge')),
@@ -56,7 +55,11 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
           min = 100,
           width = '100px',
           step = 50
-        )
+        ),
+        radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels:",
+                     c("horizontal" = 0,
+                       "45deg" = 45,
+                       "90 deg" = 90))
       )
     ),
     
@@ -238,15 +241,9 @@ modBoxPlot = function(input, output, session,
       ylab('') +
       ggplotTheme() + 
       #myGgplotTheme + 
-      theme(legend.position = input$selPlotBoxLegendPos)
-    
-    if (input$chBxAxisLabelsRotate)
-      p.out = p.out +
-      theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
-    else
-      p.out = p.out +
-      theme(axis.text.x = element_text(size = 12))
-    
+      theme(legend.position = input$selPlotBoxLegendPos,
+            axis.text.x = element_text(size = 12, angle = as.numeric(input$rBAxisLabelsRotate), hjust = ifelse(input$rBAxisLabelsRotate == 0, 0, 1)))
+
     
     return(p.out)
   }

@@ -142,13 +142,13 @@ shinyUI(fluidPage(
         tabPanel(
           'Hierarchical',
           clustHierUI('tabClHier')
-        )
+        ),
         
         # sparse hierarchical clustering package sparcl temporarily unavailable from CRAN
-        # tabPanel(
-        #   'Hierarchical Sparse',
-        #   clustHierSparUI('tabClHierSpar')
-        #)
+         tabPanel(
+           'Hierarchical Sparse',
+           clustHierSparUI('tabClHierSpar')
+        )
       ))
   )
 ))

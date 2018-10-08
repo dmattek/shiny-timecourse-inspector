@@ -2,6 +2,10 @@ modClDistPlotUI =  function(id, label = "Plot Fractions WIthin Clusters") {
   ns <- NS(id)
   
   tagList(
+    radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels:",
+                 c("horizontal" = 0,
+                   "45deg" = 45,
+                   "90 deg" = 90)),
     actionButton(ns('butPlotClDist'), 'Plot!'),
     plotOutput(ns('outPlotClDist'), height = '800px', width = 'auto'),
     downPlotUI(ns('downPlotClDist'), "Download PDF")
@@ -45,11 +49,18 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
                                         #limits = in.cols()$cl.no)
     
     
+    loc.rads = as.numeric(input$rBAxisLabelsRotate) * pi / 180
+    loc.hjust = 0.5*(1-sin(loc.rads))
+    loc.vjust = 0.5*(1-cos(loc.rads))
+    
     p.out = p.out + 
       scale_y_continuous(labels = percent) +
       ylab("percentage of cells\n") +  
       xlab("") +  
-      ggplotTheme()
+      ggplotTheme() +
+      theme(
+        axis.text.x = rotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate))
+    )
       #myGgplotTheme
     
     return(p.out)

@@ -170,6 +170,22 @@ getClCol <- function(in.dend, in.k) {
 #####
 ## Common plotting functions
 
+# Build Function to Return Element Text Object
+# From: https://stackoverflow.com/a/36979201/1898713
+rotatedAxisElementText = function(angle, position='x', size = 12){
+  angle     = angle[1]; 
+  position  = position[1]
+  positions = list(x=0, y=90, top=180, right=270)
+  if(!position %in% names(positions))
+    stop(sprintf("'position' must be one of [%s]",paste(names(positions),collapse=", ")), call.=FALSE)
+  if(!is.numeric(angle))
+    stop("'angle' must be numeric",call.=FALSE)
+  rads = (-angle - positions[[ position ]])*pi/180
+  hjust = round((1 - sin(rads)))/2
+  vjust = round((1 + cos(rads)))/2
+  element_text(size = 12, angle = angle, vjust = vjust, hjust = hjust)
+}
+
 myGgplotTheme = 
   theme_bw(base_size = 8, base_family = "Helvetica") +
   theme(

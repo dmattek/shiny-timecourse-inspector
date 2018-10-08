@@ -40,15 +40,19 @@ install.packages(c("shiny", "shinyjs",
 ```
 
 **Note**
-As of July 2018, *sparcl* has been removed from CRAN. If you don't need sparse hierarchical clustering, you can simply comment the line `library(sparcl)` in `server.R` file or install it from the [archive](https://cran.r-project.org/web/packages/sparcl/index.html).
+As of July 2018, *sparcl* has been removed from CRAN. If you don't need sparse hierarchical clustering, you can simply comment the line `library(sparcl)` in `server.R` file or install it from the [archive](https://cran.r-project.org/web/packages/sparcl/index.html):
 
-**Additionally**, a time series analysis package need to be installed from [GitHub](https://github.com/dmattek/tca-package):
+```
+install_url('https://cran.r-project.org/src/contrib/Archive/sparcl/sparcl_1.0.3.tar.gz')
+```
+
+**Additionally**, a time series analysis package needs to be installed from [GitHub](https://github.com/dmattek/tca-package):
 
 ```
 install_github("dmattek/tca-package")
 ```
 
-The `install_github` function is available in *devtools* package:
+The `install_url` and `install_github` functions are available in *devtools* package:
 
 ```
 install.packages("devtools")
