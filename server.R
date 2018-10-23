@@ -37,8 +37,8 @@ shinyServer(function(input, output, session) {
     # The value of inDataGen1,2 actionButton is the number of times they were pressed
     dataGen1     = isolate(input$inDataGen1),
     dataLoadNuc  = isolate(input$inButLoadNuc),
-    dataLoadTrajRem = isolate(input$inButLoadTrajRem)
-    #dataLoadStim = isolate(input$inButLoadStim)
+    dataLoadTrajRem = isolate(input$inButLoadTrajRem),
+    dataLoadStim    = isolate(input$inButLoadStim)
   )
   
   ####
@@ -78,7 +78,36 @@ shinyServer(function(input, output, session) {
     #    reset("inFileStimLoad")  # reset is a shinyjs function
     
   })
+
+  # load data with trajectories to remove
+  dataLoadTrajRem <- eventReactive(input$inButLoadTrajRem, {
+    cat(file = stderr(), "dataLoadTrajRem\n")
+    locFilePath = input$inFileLoadTrajRem$datapath
+    
+    counter$dataLoadTrajRem <- input$inButLoadTrajRem - 1
+    
+    if (is.null(locFilePath) || locFilePath == '')
+      return(NULL)
+    else {
+      return(fread(locFilePath))
+    }
+  })
   
+  # load data with stimulation pattern
+  dataLoadStim <- eventReactive(input$inButLoadStim, {
+    cat(file = stderr(), "dataLoadStim\n")
+    locFilePath = input$inFileLoadStim$datapath
+    
+    counter$dataLoadStim <- input$inButLoadStim - 1
+    
+    if (is.null(locFilePath) || locFilePath == '')
+      return(NULL)
+    else {
+      return(fread(locFilePath))
+    }
+  })
+  
+    
   # UI for loading csv with cell IDs for trajectory removal
   output$uiFileLoadTrajRem = renderUI({
     cat(file = stderr(), 'UI uiFileLoadTrajRem\n')
@@ -98,20 +127,26 @@ shinyServer(function(input, output, session) {
       actionButton("inButLoadTrajRem", "Load Data")
   })
 
-  # load main data file
-  dataLoadTrajRem <- eventReactive(input$inButLoadTrajRem, {
-    cat(file = stderr(), "dataLoadTrajRem\n")
-    locFilePath = input$inFileLoadTrajRem$datapath
+  # UI for loading csv with stimulation pattern
+  output$uiFileLoadStim = renderUI({
+    cat(file = stderr(), 'UI uiFileLoadStim\n')
     
-    counter$dataLoadTrajRem <- input$inButLoadTrajRem - 1
-    
-    if (is.null(locFilePath) || locFilePath == '')
-      return(NULL)
-    else {
-      return(fread(locFilePath))
-    }
+    if(input$chBstim) 
+      fileInput(
+        'inFileLoadStim',
+        'Select data file (e.g. stim.csv) and press "Load Data"',
+        accept = c('text/csv', 'text/comma-separated-values,text/plain')
+      )
   })
   
+  output$uiButLoadStim = renderUI({
+    cat(file = stderr(), 'UI uiButLoadStim\n')
+    
+    if(input$chBstim)
+      actionButton("inButLoadStim", "Load Data")
+  })
+  
+
   
   # COLUMN SELECTION
   output$varSelTrackLabel = renderUI({
@@ -739,6 +774,22 @@ shinyServer(function(input, output, session) {
   }) 
   
   
+  # prepare data with stimulation pattern
+  # this dataset is displayed underneath of trajectory plot (modules/trajPlot.R) as geom_segment
+  data4stimPlot <- reactive({
+    cat(file = stderr(), 'data4stimPlot\n')
+    
+    if (input$chBstim) {
+      cat(file = stderr(), 'data4stimPlot: stim not NULL\n')
+      
+      loc.dt.stim = dataLoadStim()
+      return(loc.dt.stim)
+    } else {
+      cat(file = stderr(), 'data4stimPlot: stim is NULL\n')
+      return(NULL)
+    }
+  })
+  
   # download data as prepared for plotting
   # after all modification
   output$downloadDataClean <- downloadHandler(
@@ -751,11 +802,13 @@ shinyServer(function(input, output, session) {
   ###### Trajectory plotting
   callModule(modTrajRibbonPlot, 'modTrajRibbon', 
              in.data = data4trajPlot,
+             in.data.stim = data4stimPlot,
              in.fname = function() return( "tCoursesMeans.pdf"))
   
   ###### Trajectory plotting
   callModule(modTrajPlot, 'modTrajPlot', 
              in.data = data4trajPlot, 
+             in.data.stim = data4stimPlot,
              in.fname = function() {return( "tCourses.pdf")})
   
   ## UI for selecting trajectories
@@ -789,10 +842,10 @@ shinyServer(function(input, output, session) {
   callModule(tabScatterPlot, 'tabScatter', data4trajPlot, in.fname = function() return('scatter.pdf'))
   
   ##### Hierarchical clustering
-  callModule(clustHier, 'tabClHier', data4clust, data4trajPlot)
+  callModule(clustHier, 'tabClHier', data4clust, data4trajPlot, data4stimPlot)
   
   ##### Sparse hierarchical clustering using sparcl
-  callModule(clustHierSpar, 'tabClHierSpar', data4clust, data4trajPlot)
+  callModule(clustHierSpar, 'tabClHierSpar', data4clust, data4trajPlot, data4stimPlot)
 
   
 })

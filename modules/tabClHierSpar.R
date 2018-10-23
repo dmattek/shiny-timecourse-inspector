@@ -184,7 +184,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
 }
 
 # SERVER
-clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlot) {
+clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
 
   # UI for advanced options
   output$uiPlotHierSparNperms = renderUI({
@@ -391,6 +391,20 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     return(loc.dt)    
   })
   
+  data4stimPlotClSpar <- reactive({
+    cat(file = stderr(), 'data4stimPlotClSpar: in\n')
+    
+    loc.dt = in.data4stimPlot()
+    
+    if (is.null(loc.dt)) {
+      cat(file = stderr(), 'data4stimPlotClSpar: dt is NULL\n')
+      return(NULL)
+    }
+    
+    cat(file = stderr(), 'data4stimPlotClSpar: dt not NULL\n')
+    return(loc.dt)
+  })
+  
   
   # download a list of cellIDs with cluster assignments
   output$downCellClSpar <- downloadHandler(
@@ -541,22 +555,23 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
   # Sparse Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHierSparHM", createFnameHeatMap, plotHierSpar)
   
-  
-  
-  
+  # plot individual trajectories withina cluster  
   callModule(modTrajPlot, 'modPlotHierSparTraj', 
              in.data = data4trajPlotClSpar, 
+             in.data.stim = data4stimPlotClSpar,
              in.facet = 'cl', 
              in.facet.color = getClColHierSpar,
              in.fname = createFnameTrajPlot)
   
+  # plot cluster means
   callModule(modTrajRibbonPlot, 'modPlotHierSparTrajRibbon', 
              in.data = data4trajPlotClSpar, 
+             in.data.stim = data4stimPlotClSpar,
              in.facet = 'cl',  
              in.facet.color = getClColHierSpar,
              in.fname = createFnameRibbonPlot)
   
-  
+  # plot distribution barplot
   callModule(modClDistPlot, 'hierClSparDistPlot', 
              in.data = data4clSparDistPlot,
              in.cols = getClColHierSpar,

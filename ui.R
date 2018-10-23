@@ -42,6 +42,18 @@ shinyUI(fluidPage(
       uiOutput('uiButLoadTrajRem'),
       
       tags$hr(),
+      checkboxInput('chBstim', 'Upload stimulation pattern'),
+      helpPopup(
+        title = 'Upload stimulations',
+        content = help.text[4],
+        placement = 'right',
+        trigger = 'hover'
+      ),
+      
+      uiOutput('uiFileLoadStim'),
+      uiOutput('uiButLoadStim'),
+      
+      tags$hr(),
       checkboxInput('chBtrajInter', 'Interpolate NAs and missing data?', value = T),
       helpPopup(
         title = 'Interpolation of NAs and missing data',

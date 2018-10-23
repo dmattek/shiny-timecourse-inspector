@@ -69,6 +69,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
 
 modTrajPlot = function(input, output, session, 
                        in.data, 
+                       in.data.stim,
                        in.fname,
                        in.facet = 'group', 
                        in.facet.color = NULL) {
@@ -189,6 +190,7 @@ modTrajPlot = function(input, output, session,
       return(NULL)
     }
     
+    # check main data exists
     loc.dt = isolate(in.data())
     
     cat("plotTraj: on to plot\n\n")
@@ -198,6 +200,17 @@ modTrajPlot = function(input, output, session,
     }
     
     cat(file = stderr(), 'plotTraj: dt not NULL\n')
+
+
+    # check if stim data exists
+    loc.dt.stim = isolate(in.data.stim())
+
+    if (is.null(loc.dt.stim)) {
+      cat(file = stderr(), 'plotTraj: dt.stim is NULL\n')
+    } else {
+      cat(file = stderr(), 'plotTraj: dt.stim not NULL\n')
+    }
+
     
     
     # Future: change such that a column with colouring status is chosen by the user
@@ -247,14 +260,17 @@ modTrajPlot = function(input, output, session,
     }
 
     
-    p.out = myGgplotTraj(
+    p.out = LOCplotTraj(
       dt.arg = loc.dt,
       x.arg = 'realtime',
       y.arg = 'y',
       group.arg = "id",
       facet.arg = in.facet,
       facet.ncol.arg = input$inPlotTrajFacetNcol,
-      facet.color.arg = loc.facet.col,
+      facet.color.arg = loc.facet.col, 
+      dt.stim.arg = loc.dt.stim, 
+      x.stim.arg = c('tstart', 'tend'),
+      y.stim.arg = c('ystart', 'yend'),
       xlab.arg = 'Time (min)',
       line.col.arg = loc.line.col.arg,
       aux.label1 = if (locPos) 'pos.x' else NULL,

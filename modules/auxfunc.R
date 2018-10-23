@@ -97,7 +97,8 @@ help.text = c(
   'Plotting and data processing requires a unique cell ID across entire dataset. A typical dataset from CellProfiler assigns unique cell ID (TrackLabel) within each field of view (Metadata_Site).
                    Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, UNcheck this box and select a single column only.',
   'This option allows to interpolate NAs or missing data. Some rows in the input file might be missing because a particular time point might not had been acquired. 
-  This option, interpolates such missing points as well as points with NAs in the measurement column. When this option is checked, the interval of time column must be provided!'
+  This option, interpolates such missing points as well as points with NAs in the measurement column. When this option is checked, the interval of time column must be provided!',
+  'Accepts CSV file with two columns: grouping, time points of stimulation.'
 )
 
 
@@ -186,6 +187,7 @@ rotatedAxisElementText = function(angle, position='x', size = 12){
   element_text(size = 12, angle = angle, vjust = vjust, hjust = hjust)
 }
 
+# default ggplot theme used in the app
 myGgplotTheme = 
   theme_bw(base_size = 8, base_family = "Helvetica") +
   theme(
@@ -206,7 +208,9 @@ myGgplotTheme =
     legend.position = "top"
   )
 
-myGgplotTraj = function(dt.arg, # data table
+
+# Plot individual time series
+LOCplotTraj = function(dt.arg, # input data table
                         x.arg,  # string with column name for x-axis
                         y.arg, # string with column name for y-axis
                         group.arg, # string with column name for grouping time series (typicaly cell ID)
@@ -218,9 +222,10 @@ myGgplotTraj = function(dt.arg, # data table
                         ylab.arg = NULL, # string with y-axis label
                         plotlab.arg = NULL, # string with plot label
                         dt.stim.arg = NULL, # plotting additional dataset; typically to indicate stimulations (not fully implemented yet, not tested!)
+                        x.stim.arg = c('tstart', 'tend'), # column names in stimulation dt with x and xend parameters
+                        y.stim.arg = c('ystart', 'yend'), # column names in stimulation dt with y and yend parameters
                         tfreq.arg = 1,
                         ylim.arg = NULL,
-                        stim.bar.height.arg = 0.1,
                         stim.bar.width.arg = 0.5,
                         aux.label1 = NULL, # 1st point label; used for interactive plotting; displayed in the tooltip; typically used to display values of column holding x & y coordinates
                         aux.label2 = NULL,
@@ -313,16 +318,19 @@ myGgplotTraj = function(dt.arg, # data table
     facet_wrap(as.formula(paste("~", facet.arg)),
                ncol = facet.ncol.arg,
                scales = "free_x")
-  
+
+  # plot stimulation bars underneath time series
+  # dt.stim.arg is read separately and should contain 4 columns with
+  # xy positions of beginning and end of the bar
   if(!is.null(dt.stim.arg)) {
     p.tmp = p.tmp + geom_segment(data = dt.stim.arg,
-                                 aes(x = Stimulation_time - tfreq.arg,
-                                     xend = Stimulation_time - tfreq.arg,
-                                     y = ylim.arg[1],
-                                     yend = ylim.arg[1] + abs(ylim.arg[2] - ylim.arg[1]) * stim.bar.height.arg),
+                                 aes_string(x = x.stim.arg[1],
+                                            xend = x.stim.arg[2],
+                                            y = y.stim.arg[1],
+                                            yend = y.stim.arg[2],
+                                            group = 'group'),
                                  colour = rhg_cols[[3]],
-                                 size = stim.bar.width.arg,
-                                 group = 1) 
+                                 size = stim.bar.width.arg) 
   }
   
   if (!is.null(ylim.arg)) 
@@ -338,12 +346,63 @@ myGgplotTraj = function(dt.arg, # data table
   return(p.tmp)
 }
 
+# Plot average time series with CI together in one facet
+LOCplotTrajRibbon = function(dt.arg, # input data table
+                          x.arg, # string with column name for x-axis
+                          y.arg, # string with column name for y-axis
+                          group.arg = NULL, # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
+                          col.arg = NULL, # colour pallette for individual time series
+                          dt.stim.arg = NULL, # data table with stimulation pattern
+                          x.stim.arg = c('tstart', 'tend'), # column names in stimulation dt with x and xend parameters
+                          y.stim.arg = c('ystart', 'yend'), # column names in stimulation dt with y and yend parameters
+                          stim.bar.width.arg = 0.5,
+                          ribbon.lohi.arg = c('Lower', 'Upper'),
+                          ribbon.fill.arg = 'grey50',
+                          ribbon.alpha.arg = 0.5,
+                          xlab.arg = NULL,
+                          ylab.arg = NULL,
+                          plotlab.arg = NULL) {
+  
+  p.tmp = ggplot(dt.arg, aes_string(x = x.arg, group = group.arg)) +
+    geom_ribbon(aes_string(ymin = ribbon.lohi.arg[1], ymax = ribbon.lohi.arg[2]),
+                fill = ribbon.fill.arg,
+                alpha = ribbon.alpha.arg) +
+    geom_line(aes_string(y = y.arg, colour = group.arg))
+  
 
-# Fast DTW computation
-fastDTW <-function (x)
-{
-  return(dtw(x, window.type = 'sakoechiba', distance.only = T)$normalizedDistance)
+  # plot stimulation bars underneath time series
+  # dt.stim.arg is read separately and should contain 4 columns with
+  # xy positions of beginning and end of the bar
+  if(!is.null(dt.stim.arg)) {
+    p.tmp = p.tmp + geom_segment(data = dt.stim.arg,
+                                 aes_string(x = x.stim.arg[1],
+                                     xend = x.stim.arg[2],
+                                     y = y.stim.arg[1],
+                                     yend = y.stim.arg[2]),
+                                 colour = rhg_cols[[3]],
+                                 size = stim.bar.width.arg,
+                                 group = 1) 
+  }
+
+  
+  if (is.null(col.arg)) {
+    p.tmp = p.tmp +
+      scale_color_discrete(name = '')
+  } else {
+    p.tmp = p.tmp +
+      scale_colour_manual(values = col.arg, name = '')
+  }
+  
+  if (!is.null(plotlab.arg))
+    p.tmp = p.tmp + ggtitle(plotlab.arg)
+  
+  p.tmp = p.tmp +
+    xlab(xlab.arg) +
+    ylab(ylab.arg)
+  
+  return(p.tmp)
 }
+
 
 
 # Plots a scatter plot with marginal histograms

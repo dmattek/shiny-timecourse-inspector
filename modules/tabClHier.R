@@ -172,7 +172,7 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
 }
 
 # SERVER
-clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
+clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
   
   output$uiPlotHierClSel = renderUI({
     ns <- session$ns
@@ -337,6 +337,20 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
     return(loc.dt)    
   })
   
+  data4stimPlotCl <- reactive({
+    cat(file = stderr(), 'data4stimPlotCl: in\n')
+    
+    loc.dt = in.data4stimPlot()
+    
+    if (is.null(loc.dt)) {
+      cat(file = stderr(), 'data4stimPlotCl: dt is NULL\n')
+      return(NULL)
+    }
+    
+    cat(file = stderr(), 'data4stimPlotCl: dt not NULL\n')
+    return(loc.dt)
+  })
+  
   # download a list of cellIDs with cluster assignments
   output$downCellCl <- downloadHandler(
     filename = function() {
@@ -495,19 +509,24 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot) {
   
   #  Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHier", createFnameHeatMap, plotHier)
-  
+
+  # plot individual trajectories withina cluster  
   callModule(modTrajPlot, 'modPlotHierTraj', 
              in.data = data4trajPlotCl, 
+             in.data.stim = data4stimPlotCl,
              in.facet = 'cl',  
              in.facet.color = getClColHier,
              in.fname = createFnameTrajPlot)
   
+  # plot cluster means
   callModule(modTrajRibbonPlot, 'modPlotHierTrajRibbon', 
              in.data = data4trajPlotCl, 
+             in.data.stim = data4stimPlotCl,
              in.facet = 'cl',  
              in.facet.color = getClColHier,
              in.fname = createFnameRibbonPlot)
   
+  # plot distribution barplot
   callModule(modClDistPlot, 'hierClDistPlot', 
              in.data = data4clDistPlot,
              in.cols = getClColHier,
