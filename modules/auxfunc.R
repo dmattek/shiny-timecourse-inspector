@@ -98,7 +98,7 @@ help.text = c(
                    Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, UNcheck this box and select a single column only.',
   'This option allows to interpolate NAs or missing data. Some rows in the input file might be missing because a particular time point might not had been acquired. 
   This option, interpolates such missing points as well as points with NAs in the measurement column. When this option is checked, the interval of time column must be provided!',
-  'Accepts CSV file with two columns: grouping, time points of stimulation.'
+  'Accepts CSV file with 5 columns: grouping (e.g. condition), start and end time points of stimulation, start and end points of y-position, dummy column with id.'
 )
 
 
