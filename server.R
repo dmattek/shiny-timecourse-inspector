@@ -15,12 +15,10 @@ library(d3heatmap) # for interactive heatmap
 library(dendextend) # for color_branches
 library(colorspace) # for palettes (used to colour dendrogram)
 library(RColorBrewer)
-# sparcl temporarily unavailable on CRAN
 library(sparcl) # sparse hierarchical and k-means
 library(scales) # for percentages on y scale
 library(dtw) # for dynamic time warping
 library(imputeTS) # for interpolating NAs
-library(tca) # for time series manipulatiom, e.g. normTraj, genTraj, plotTrajRibbon
 
 # change to increase the limit of the upload file size
 options(shiny.maxRequestSize = 200 * 1024 ^ 2)
@@ -46,7 +44,7 @@ shinyServer(function(input, output, session) {
   dataGen1 <- eventReactive(input$inDataGen1, {
     cat("dataGen1\n")
     
-    return(tca::genTraj(in.nwells = 3))
+    return(LOCgenTraj(in.nwells = 3))
   })
   
   # Load main data file
@@ -670,9 +668,9 @@ shinyServer(function(input, output, session) {
     }
     
     ## Normalization
-    # F-n tca::normTraj adds additional column with .norm suffix
+    # F-n normTraj adds additional column with .norm suffix
     if (input$chBnorm) {
-      loc.out = tca::normTraj(
+      loc.out = LOCnormTraj(
         in.dt = loc.out,
         in.meas.col = 'y',
         in.rt.col = 'realtime',

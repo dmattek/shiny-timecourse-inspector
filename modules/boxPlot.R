@@ -58,7 +58,7 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
         ),
         radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels:",
                      c("horizontal" = 0,
-                       "45deg" = 45,
+                       "45 deg" = 45,
                        "90 deg" = 90))
       )
     ),
@@ -239,10 +239,9 @@ modBoxPlot = function(input, output, session,
       scale_fill_discrete(name = '') +
       xlab('') +
       ylab('') +
-      ggplotTheme() + 
-      #myGgplotTheme + 
+      LOCggplotTheme() + 
       theme(legend.position = input$selPlotBoxLegendPos,
-            axis.text.x = element_text(size = 12, angle = as.numeric(input$rBAxisLabelsRotate), hjust = ifelse(input$rBAxisLabelsRotate == 0, 0, 1)))
+            axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate)))
 
     
     return(p.out)

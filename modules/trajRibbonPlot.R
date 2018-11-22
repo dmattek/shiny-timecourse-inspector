@@ -1,5 +1,4 @@
 require(DT)
-require(tca)
 
 modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)
@@ -194,7 +193,7 @@ modTrajRibbonPlot = function(input, output, session,
       loc.facet.col = loc.facet.col[loc.groups]
     }
     
-    loc.dt.aggr = tca::calcTrajCI(in.dt = loc.dt, 
+    loc.dt.aggr = LOCcalcTrajCI(in.dt = loc.dt, 
                              in.col.meas = 'y', 
                              in.col.by = c(in.facet, 'realtime'), 
                              in.type = 'normal')
@@ -211,8 +210,7 @@ modTrajRibbonPlot = function(input, output, session,
                            y.stim.arg = c('ystart', 'yend'),
                            xlab.arg = 'Time (min)',
                            ylab.arg = '') +
-      ggplotTheme() +
-      #myGgplotTheme +
+      LOCggplotTheme() +
       theme(legend.position = input$rBlegendPos)
     
     return(p.out)

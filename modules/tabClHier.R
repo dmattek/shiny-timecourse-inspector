@@ -430,7 +430,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
       loc.col.bounds = NULL
     
     
-    loc.p = myPlotHeatmap(loc.dm,
+    loc.p = LOCplotHeatmap(loc.dm,
                           loc.dend, 
                           palette.arg = input$selectPlotHierPalette, 
                           palette.rev.arg = input$inPlotHierRevPalette, 

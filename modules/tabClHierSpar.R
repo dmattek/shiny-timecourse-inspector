@@ -488,7 +488,7 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
       loc.col.bounds = NULL
     
     
-    loc.p = myPlotHeatmap(loc.dm,
+    loc.p = LOCplotHeatmap(loc.dm,
                           loc.dend, 
                           palette.arg = input$selectPlotHierSparPalette, 
                           palette.rev.arg = input$inPlotHierSparRevPalette, 

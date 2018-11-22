@@ -10,6 +10,7 @@ require(ggplot2)
 require(RColorBrewer)
 require(gplots) # for heatmap.2
 require(grid) # for modifying grob
+require(Hmisc) # for CI calculation
 
 # Colour definitions ----
 rhg_cols <- c(
@@ -113,6 +114,152 @@ help.text = c(
   'Accepts CSV file with 5 columns: grouping (e.g. condition), start and end time points of stimulation, start and end points of y-position, dummy column with id.'
 )
 
+# Functions for data processing ----
+#' Calculate the mean and CI around time series
+#'
+#' @param in.dt Data table in long format
+#' @param in.col.meas Name of the column with the measurement
+#' @param in.col.by Column names for grouping (default NULL - no grouping). Typically, you want to use at least a column with time.
+#' @param in.type Choice of normal approximation or boot-strapping
+#' @param ... Other params passed to smean.cl.normal and smean.cl.boot; these include \code{conf.int} for the confidence level, \code{B} for the number of boot-strapping iterations.
+#'
+#' @return Datatable with columns: Mean, lower and upper CI, and grouping columns if provided.
+#' @export
+#' @import data.table
+#' @import Hmisc
+#'
+#' @examples
+#'
+#'
+#' # generate synthetic time series; 100 time points long, with 10 randomly placed NAs
+#' dt.tmp = genTraj(100, 10, 6, 3, in.addna = 10)
+#'
+#' # calculate single stats from all time points
+#' calcTrajCI(dt.tmp, 'objCyto_Intensity_MeanIntensity_imErkCor')
+#'
+#' # calculate the mean and CI along the time course
+#' calcTrajCI(dt.tmp, 'objCyto_Intensity_MeanIntensity_imErkCor', 'Metadata_RealTime')
+LOCcalcTrajCI = function(in.dt, in.col.meas, in.col.by = NULL, in.type = c('normal', 'boot'), ...) {
+  in.type = match.arg(in.type)
+  
+  if (in.type %like% 'normal')
+    loc.dt = in.dt[, as.list(smean.cl.normal(get(in.col.meas), ...)), by = in.col.by] else
+      loc.dt = in.dt[, as.list(smean.cl.boot(get(in.col.meas), ...)), by = in.col.by]
+    
+    return(loc.dt)
+}
+
+#' Generate synthetic CellProfiler output with single cell time series
+#'
+#'
+#'
+#' @param in.ntpts Number of time points (default 60)
+#' @param in.ntracks Number of tracks per FOV (default 10)
+#' @param in.nfov Number of FOV (default 6)
+#' @param in.nwells Number of wells (default 1)
+#' @param in.addna Number of NAs to add randomly in the data (default NULL)
+#'
+#' @return Data table with the follwoing columns: Metadata_Site, Metadata_Well, Metadata_RealTime, objCyto_Intensity_MeanIntensity_imErkCor (normal distributed),
+#' objNuc_Intensity_MeanIntensity_imErkCor (normal distributed), objNuc_Location_X and objNuc_Location_Y (uniform ditributed), TrackLabel
+#' @export
+#' @import data.table
+
+LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 1, in.addna = NULL) {
+  
+  x.rand.1 = c(rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.5, 0.1), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3,   1, 0.2), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3,  2, 0.5))
+  x.rand.2 = c(rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.25, 0.1), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.5, 0.2),  rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 1, 0.2))
+  
+  # add NA's for testing
+  if (!is.null(in.addna)) {
+    locTabLen = length(x.rand.1)
+    x.rand.1[round(runif(in.addna) * locTabLen)] = NA
+    x.rand.2[round(runif(in.addna) * locTabLen)] = NA
+  }
+  
+  x.arg = rep(seq(1, in.ntpts), in.ntracks * in.nfov)
+  
+  dt.nuc = data.table(Metadata_Well = rep(LETTERS[1:in.nwells], each = in.ntpts * in.nfov * in.ntracks / in.nwells),
+                      Metadata_Site = rep(1:in.nfov, each = in.ntpts * in.ntracks),
+                      Metadata_RealTime = x.arg,
+                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.1,
+                      objNuc_Intensity_MeanIntensity_imErkCor  = x.rand.2,
+                      objNuc_Location_X = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
+                      objNuc_Location_Y = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
+                      TrackLabel = rep(1:(in.ntracks*in.nfov), each = in.ntpts))
+  
+  return(dt.nuc)
+}
+
+#' Normalize Trajectory
+#'
+#' Returns original dt with an additional column with normalized quantity.
+#' The column to be normalised is given by 'in.meas.col'.
+#' The name of additional column is the same as in.meas.col but with ".norm" suffix added.
+#' Normalisation is based on part of the trajectory;
+#' this is defined by in.rt.min and max, and the column with time in.rt.col.#'
+#'
+#' @param in.dt Data table in long format
+#' @param in.meas.col String with the column name to normalize
+#' @param in.rt.col String with the colum name holding time
+#' @param in.rt.min Lower bound for time period used for normalization
+#' @param in.rt.max Upper bound for time period used for normalization
+#' @param in.by.cols String vector with 'by' columns to calculate normalization per group; if NULL, no grouping is done
+#' @param in.robust Whether robust measures should be used (median instead of mean, mad instead of sd); default TRUE
+#' @param in.type Type of normalization: z.score or mean (i.e. fold change w.r.t. mean); default 'z-score'
+#'
+#' @return Returns original dt with an additional column with normalized quantity.
+#' @export
+#' @import data.table
+
+LOCnormTraj = function(in.dt,
+                    in.meas.col,
+                    in.rt.col = 'RealTime',
+                    in.rt.min = 10,
+                    in.rt.max = 20,
+                    in.by.cols = NULL,
+                    in.robust = TRUE,
+                    in.type = 'z.score') {
+  loc.dt <-
+    copy(in.dt) # copy so as not to alter original dt object w intermediate assignments
+  
+  if (is.null(in.by.cols)) {
+    if (in.robust)
+      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
+                                 get(in.rt.col) <= in.rt.max, .(meas.md = median(get(in.meas.col), na.rm = TRUE),
+                                                                meas.mad = mad(get(in.meas.col), na.rm = TRUE))]
+    else
+      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
+                                 get(in.rt.col) <= in.rt.max, .(meas.md = mean(get(in.meas.col), na.rm = TRUE),
+                                                                meas.mad = sd(get(in.meas.col), na.rm = TRUE))]
+    
+    loc.dt = cbind(loc.dt, loc.dt.pre.aggr)
+  }  else {
+    if (in.robust)
+      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
+                                 get(in.rt.col) <= in.rt.max, .(meas.md = median(get(in.meas.col), na.rm = TRUE),
+                                                                meas.mad = mad(get(in.meas.col), na.rm = TRUE)), by = in.by.cols]
+    else
+      loc.dt.pre.aggr = loc.dt[get(in.rt.col) >= in.rt.min &
+                                 get(in.rt.col) <= in.rt.max, .(meas.md = mean(get(in.meas.col), na.rm = TRUE),
+                                                                meas.mad = sd(get(in.meas.col), na.rm = TRUE)), by = in.by.cols]
+    
+    loc.dt = merge(loc.dt, loc.dt.pre.aggr, by = in.by.cols)
+  }
+  
+  
+  if (in.type == 'z.score') {
+    loc.dt[, meas.norm := (get(in.meas.col) - meas.md) / meas.mad]
+  } else {
+    loc.dt[, meas.norm := (get(in.meas.col) / meas.md)]
+  }
+  
+  setnames(loc.dt, 'meas.norm', paste0(in.meas.col, '.norm'))
+  
+  loc.dt[, c('meas.md', 'meas.mad') := NULL]
+  return(loc.dt)
+}
+
+
 
 # Functions for clustering ----
 
@@ -180,9 +327,48 @@ getClCol <- function(in.dend, in.k) {
 
 # Custom plotting functions ----
 
+
+#' Custom ggPlot theme based on theme_bw
+#'
+#' @param in.font.base
+#' @param in.font.axis.text
+#' @param in.font.axis.title
+#' @param in.font.strip
+#' @param in.font.legend
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+LOCggplotTheme = function(in.font.base = 12,
+                       in.font.axis.text = 12,
+                       in.font.axis.title = 12,
+                       in.font.strip = 14,
+                       in.font.legend = 12) {
+  loc.theme =
+    theme_bw(base_size = in.font.base, base_family = "Helvetica") +
+    theme(
+      panel.spacing = unit(1, "lines"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      axis.line = element_line(color = "black", size = 0.25),
+      axis.text = element_text(size = in.font.axis.text),
+      axis.title = element_text(size = in.font.axis.title),
+      strip.text = element_text(size = in.font.strip, face = "bold"),
+      strip.background = element_blank(),
+      legend.key = element_blank(),
+      legend.text = element_text(size = in.font.legend),
+      legend.key.height = unit(1, "lines"),
+      legend.key.width = unit(2, "lines"))
+  
+  return(loc.theme)
+}
+
 # Build Function to Return Element Text Object
 # From: https://stackoverflow.com/a/36979201/1898713
-rotatedAxisElementText = function(angle, position='x', size = 12){
+LOCrotatedAxisElementText = function(angle, position='x', size = 12){
   angle     = angle[1]; 
   position  = position[1]
   positions = list(x=0, y=90, top=180, right=270)
@@ -195,28 +381,6 @@ rotatedAxisElementText = function(angle, position='x', size = 12){
   vjust = round((1 + cos(rads)))/2
   element_text(size = 12, angle = angle, vjust = vjust, hjust = hjust)
 }
-
-# default ggplot theme used in the app
-myGgplotTheme = 
-  theme_bw(base_size = 8, base_family = "Helvetica") +
-  theme(
-    panel.spacing = unit(1, "lines"),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.border = element_blank(),
-    axis.line.x = element_line(color = "black", size = 0.25),
-    axis.line.y = element_line(color = "black", size = 0.25),
-    axis.text = element_text(size = 8),
-    axis.title = element_text(size = 8),
-    strip.text = element_text(size = 10, face = "bold"),
-    strip.background = element_blank(),
-    legend.key = element_blank(), 
-    legend.text = element_text(size = 8),
-    legend.key.height = unit(1, "lines"),
-    legend.key.width = unit(2, "lines"),
-    legend.position = "top"
-  )
-
 
 # Plot individual time series
 LOCplotTraj = function(dt.arg, # input data table
@@ -349,7 +513,7 @@ LOCplotTraj = function(dt.arg, # input data table
     xlab(paste0(xlab.arg, "\n")) +
     ylab(paste0("\n", ylab.arg)) +
     ggtitle(plotlab.arg) +
-    ggplotTheme() + 
+    LOCggplotTheme() + 
     theme(legend.position = "top")
   
   return(p.tmp)
@@ -422,7 +586,7 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
 # id - a unique point identifier (here corresponds to cellID)
 # mid - a (0,1) column by which points are coloured (here corresponds to whether cells are within bounds)
 
-myGgplotScat = function(dt.arg,
+LOCggplotScat = function(dt.arg,
                         band.arg = NULL,
                         facet.arg = NULL,
                         facet.ncol.arg = 2,
@@ -491,7 +655,7 @@ myGgplotScat = function(dt.arg,
   
   
   p.tmp = p.tmp +
-    ggplotTheme() +
+    LOCggplotTheme() +
     theme(legend.position = "none")
 
   # Marginal distributions don;t work with plotly...
@@ -502,7 +666,7 @@ myGgplotScat = function(dt.arg,
 }
 
 
-myPlotHeatmap <- function(data.arg,
+LOCplotHeatmap <- function(data.arg,
                           dend.arg,
                           palette.arg,
                           palette.rev.arg = TRUE,

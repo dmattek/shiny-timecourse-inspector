@@ -196,7 +196,7 @@ plotScatter <- function() {
   
   #     loc.fit.rsq = ifelse(input$inRobustFit, loc.fit$r.squared, )
 
-  p.out = myGgplotScat(
+  p.out = LOCggplotScat(
     dt.arg = loc.dt,
     band.arg = NULL, #list(a = loc.fit$coeff.a, b = loc.fit$coeff.b, width = input$inBandWidth),
     group.col.arg = NULL,
