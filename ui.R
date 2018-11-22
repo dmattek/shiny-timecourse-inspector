@@ -1,14 +1,13 @@
-
-
-# This is the user-interface definition of a Shiny web application.
-# You can find out more about building applications with Shiny here:
 #
-# http://shiny.rstudio.com
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
 #
+# This is the user-interface definition for a Shiny web application.
+#
+
 
 library(shiny)
 library(shinyjs) #http://deanattali.com/shinyjs/
-library(plotly)
 
 shinyUI(fluidPage(
   useShinyjs(),

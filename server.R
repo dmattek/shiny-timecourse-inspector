@@ -1,10 +1,8 @@
-
-
-
-# This is the server logic for a Shiny web application.
-# You can find out more about building applications with Shiny here:
 #
-# http://shiny.rstudio.com
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This is the server logic for a Shiny web application.
 #
 
 library(shiny)
@@ -24,41 +22,34 @@ library(dtw) # for dynamic time warping
 library(imputeTS) # for interpolating NAs
 library(tca) # for time series manipulatiom, e.g. normTraj, genTraj, plotTrajRibbon
 
-# increase file upload limit
+# change to increase the limit of the upload file size
 options(shiny.maxRequestSize = 200 * 1024 ^ 2)
 
+# Server logic ----
 shinyServer(function(input, output, session) {
   useShinyjs()
   
   # This is only set at session start
-  # we use this as a way to determine which input was
+  # We use this as a way to determine which input was
   # clicked in the dataInBoth reactive
   counter <- reactiveValues(
-    # The value of inDataGen1,2 actionButton is the number of times they were pressed
-    dataGen1     = isolate(input$inDataGen1),
-    dataLoadNuc  = isolate(input$inButLoadNuc),
+    # The value of actionButton is the number of times the button is pressed
+    dataGen1        = isolate(input$inDataGen1),
+    dataLoadNuc     = isolate(input$inButLoadNuc),
     dataLoadTrajRem = isolate(input$inButLoadTrajRem),
     dataLoadStim    = isolate(input$inButLoadStim)
   )
   
-  ####
-  ## UI for side panel
+  # UI-side-panel-data-load ----
   
-  # FILE LOAD
-  # This button will reset the inFileLoad
-  observeEvent(input$inButReset, {
-    reset("inFileLoadNuc")  # reset is a shinyjs function
-    #reset("inButLoadStim")  # reset is a shinyjs function
-  })
-  
-  # generate random dataset 1
+  # Generate random dataset
   dataGen1 <- eventReactive(input$inDataGen1, {
     cat("dataGen1\n")
     
     return(tca::genTraj(in.nwells = 3))
   })
   
-  # load main data file
+  # Load main data file
   dataLoadNuc <- eventReactive(input$inButLoadNuc, {
     cat("dataLoadNuc\n")
     locFilePath = input$inFileLoadNuc$datapath
@@ -75,11 +66,9 @@ shinyServer(function(input, output, session) {
   # This button will reset the inFileLoad
   observeEvent(input$butReset, {
     reset("inFileLoadNuc")  # reset is a shinyjs function
-    #    reset("inFileStimLoad")  # reset is a shinyjs function
-    
   })
 
-  # load data with trajectories to remove
+  # Load data with trajectories to remove
   dataLoadTrajRem <- eventReactive(input$inButLoadTrajRem, {
     cat(file = stderr(), "dataLoadTrajRem\n")
     locFilePath = input$inFileLoadTrajRem$datapath
@@ -93,7 +82,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # load data with stimulation pattern
+  # Load data with stimulation pattern
   dataLoadStim <- eventReactive(input$inButLoadStim, {
     cat(file = stderr(), "dataLoadStim\n")
     locFilePath = input$inFileLoadStim$datapath
@@ -148,7 +137,7 @@ shinyServer(function(input, output, session) {
   
 
   
-  # COLUMN SELECTION
+  # UI-side-panel-column-selection ----
   output$varSelTrackLabel = renderUI({
     cat(file = stderr(), 'UI varSelTrackLabel\n')
     locCols = getDataNucCols()
@@ -192,10 +181,10 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # This is main field to select plot facet grouping
+  # This is the main field to select plot facet grouping
   # It's typically a column with the entire experimental description,
-  # e.g. in Yannick's case it's Stim_All_Ch or Stim_All_S.
-  # In Coralie's case it's a combination of 3 columns called Stimulation_...
+  # e.g.1 Stim_All_Ch or Stim_All_S.
+  # e.g.2 a combination of 3 columns called Stimulation_...
   output$varSelGroup = renderUI({
     cat(file = stderr(), 'UI varSelGroup\n')
     
@@ -237,8 +226,6 @@ shinyServer(function(input, output, session) {
   })
   
   
-  
-  
   output$varSelMeas1 = renderUI({
     cat(file = stderr(), 'UI varSelMeas1\n')
     locCols = getDataNucCols()
@@ -275,7 +262,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # UI for trimming x-axis (time)
+  # UI-side-panel-trim x-axis (time) ----
   output$uiSlTimeTrim = renderUI({
     cat(file = stderr(), 'UI uiSlTimeTrim\n')
     
@@ -300,8 +287,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # UI for normalization
-  
+  # UI-side-panel-normalization ----
   output$uiChBnorm = renderUI({
     cat(file = stderr(), 'UI uiChBnorm\n')
     
@@ -358,7 +344,7 @@ shinyServer(function(input, output, session) {
   })
   
   
-  # UI for removing outliers
+  # UI-side-panel-remove-outliers ----
   output$uiSlOutliers = renderUI({
     cat(file = stderr(), 'UI uiSlOutliers\n')
     
@@ -377,18 +363,8 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$uiTxtOutliers = renderUI({
-    if (input$chBoutliers) {
-      
-      p("Total tracks")
-      
-    }
-    
-  })
   
-  
-  ####
-  ## data processing
+  # Processing-data ----
   
   dataInBoth <- reactive({
     # Without direct references to inDataGen1,2 and inFileLoad, inDataGen2
@@ -799,19 +775,9 @@ shinyServer(function(input, output, session) {
     }
   )
   
-  ###### Trajectory plotting
-  callModule(modTrajRibbonPlot, 'modTrajRibbon', 
-             in.data = data4trajPlot,
-             in.data.stim = data4stimPlot,
-             in.fname = function() return( "tCoursesMeans.pdf"))
-  
-  ###### Trajectory plotting
-  callModule(modTrajPlot, 'modTrajPlot', 
-             in.data = data4trajPlot, 
-             in.data.stim = data4stimPlot,
-             in.fname = function() {return( "tCourses.pdf")})
-  
-  ## UI for selecting trajectories
+  # Plotting-trajectories ----
+
+  # UI for selecting trajectories
   # The output data table of data4trajPlot is modified based on inSelHighlight field
   output$varSelHighlight = renderUI({
     cat(file = stderr(), 'UI varSelHighlight\n')
@@ -832,6 +798,20 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # Trajectory plotting - ribbon
+  callModule(modTrajRibbonPlot, 'modTrajRibbon', 
+             in.data = data4trajPlot,
+             in.data.stim = data4stimPlot,
+             in.fname = function() return( "tCoursesMeans.pdf"))
+  
+  ###### Trajectory plotting - individual
+  callModule(modTrajPlot, 'modTrajPlot', 
+             in.data = data4trajPlot, 
+             in.data.stim = data4stimPlot,
+             in.fname = function() {return( "tCourses.pdf")})
+  
+  
+  # Tabs ----
   ###### AUC calculation and plotting
   callModule(modAUCplot, 'tabAUC', data4trajPlot, in.fname = function() return('boxplotAUC.pdf'))
   

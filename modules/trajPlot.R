@@ -1,4 +1,14 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This is the module for plotting individual time series
+#
+
+
 require(DT)
+
+# UI ----
 
 modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)
@@ -66,7 +76,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
   )
 }
 
-
+# Server ----
 modTrajPlot = function(input, output, session, 
                        in.data, 
                        in.data.stim,
@@ -270,7 +280,8 @@ modTrajPlot = function(input, output, session,
       facet.color.arg = loc.facet.col, 
       dt.stim.arg = loc.dt.stim, 
       x.stim.arg = c('tstart', 'tend'),
-      y.stim.arg = c('ystart', 'yend'),
+      y.stim.arg = c('ystart', 'yend'), 
+      stim.bar.width.arg = 1,
       xlab.arg = 'Time (min)',
       line.col.arg = loc.line.col.arg,
       aux.label1 = if (locPos) 'pos.x' else NULL,

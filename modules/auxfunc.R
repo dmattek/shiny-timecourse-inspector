@@ -1,9 +1,17 @@
-## Custom plotting
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# These are auxilary functions
+#
+
+
 require(ggplot2)
 require(RColorBrewer)
 require(gplots) # for heatmap.2
 require(grid) # for modifying grob
 
+# Colour definitions ----
 rhg_cols <- c(
   "#771C19",
   "#AA3929",
@@ -29,22 +37,6 @@ md_cols <- c(
   "#238443"
 )
 
-s.cl.linkage = c("ward.D",
-                 "ward.D2",
-                 "single",
-                 "complete",
-                 "average",
-                 "mcquitty",
-                 "centroid")
-
-s.cl.spar.linkage = c("average",
-                      "complete", 
-                      "single",
-                      "centroid")
-
-s.cl.diss = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "DTW")
-s.cl.spar.diss = c("squared.distance","absolute.value")
-
 # list of palettes for the heatmap
 l.col.pal = list(
   "White-Orange-Red" = 'OrRd',
@@ -66,6 +58,26 @@ l.col.pal.dend = list(
   "Diverge HSV" = 'diverge_hsv'
 )
 
+# Clustering algorithms ----
+
+s.cl.linkage = c("ward.D",
+                 "ward.D2",
+                 "single",
+                 "complete",
+                 "average",
+                 "mcquitty",
+                 "centroid")
+
+s.cl.spar.linkage = c("average",
+                      "complete", 
+                      "single",
+                      "centroid")
+
+s.cl.diss = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "DTW")
+s.cl.spar.diss = c("squared.distance","absolute.value")
+
+
+# Help text ----
 # Creates a popup with help text
 # From: https://gist.github.com/jcheng5/5913297
 helpPopup <- function(title, content,
@@ -102,9 +114,7 @@ help.text = c(
 )
 
 
-#####
-## Functions for clustering 
-
+# Functions for clustering ----
 
 # Return a dt with cell IDs and corresponding cluster assignments depending on dendrogram cut (in.k)
 # This one works wth dist & hclust pair
@@ -168,8 +178,7 @@ getClCol <- function(in.dend, in.k) {
 }
 
 
-#####
-## Common plotting functions
+# Custom plotting functions ----
 
 # Build Function to Return Element Text Object
 # From: https://stackoverflow.com/a/36979201/1898713
