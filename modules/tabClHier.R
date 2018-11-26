@@ -45,6 +45,8 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                ticks = TRUE,
                round = TRUE
              ),
+             checkboxInput(ns('chBPlotHierClAss'), 'Manually assign cluster colours'),
+             uiOutput(ns('uiPlotHierClAss')),
              checkboxInput(ns('chBPlotHierClSel'), 'Manually select clusters to display'),
              uiOutput(ns('uiPlotHierClSel')),
              downloadButton(ns('downCellCl'), 'Download CSV with cell IDs and cluster no.')
@@ -174,6 +176,17 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
 # SERVER
 clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
   
+  output$uiPlotHierClAss = renderUI({
+    ns <- session$ns
+    
+    if(input$chBPlotHierClAss) {
+      selectInput(ns('inPlotHierClAss'), 'Assign cluster order', 
+                  choices = seq(1, input$inPlotHierNclust, 1),
+                  multiple = TRUE, 
+                  selected = seq(1, input$inPlotHierNclust, 1))
+    }
+  })
+  
   output$uiPlotHierClSel = renderUI({
     ns <- session$ns
     
@@ -249,10 +262,21 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
     cl.hc = hclust(dm.dist, method = s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
 
+    # number of clusters at which dendrigram is cut
+    loc.k = input$inPlotHierNclust
+    
+    # make a palette with the amount of colours equal to the number of clusters
+    loc.col = get(input$selectPlotHierPaletteDend)(n = loc.k)
+
+    # take into account manual assignment of cluster numbers
+    if (input$chBPlotHierClAss) {
+      loc.col = loc.col[as.numeric(input$inPlotHierClAss)]
+    }
+    
     dend <- as.dendrogram(cl.hc)
     dend <- color_branches(dend, 
-                           col = get(input$selectPlotHierPaletteDend), # make sure that n here equals max in the input$inPlotHierNclust slider
-                           k = input$inPlotHierNclust)
+                           col = loc.col, 
+                           k = loc.k)
     
     return(dend)
   })
