@@ -210,7 +210,11 @@ modTrajRibbonPlot = function(input, output, session,
                            y.stim.arg = c('ystart', 'yend'),
                            xlab.arg = 'Time (min)',
                            ylab.arg = '') +
-      LOCggplotTheme() +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND) + 
       theme(legend.position = input$rBlegendPos)
     
     return(p.out)

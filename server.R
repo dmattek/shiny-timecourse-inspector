@@ -20,6 +20,7 @@ library(scales) # for percentages on y scale
 library(dtw) # for dynamic time warping
 library(imputeTS) # for interpolating NAs
 
+# Global parameters ----
 # change to increase the limit of the upload file size
 options(shiny.maxRequestSize = 200 * 1024 ^ 2)
 

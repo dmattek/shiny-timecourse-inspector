@@ -20,7 +20,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         numericInput(
           ns('inPlotTrajFacetNcol'),
           '#Columns:',
-          value = 4,
+          value = PLOTNFACETDEFAULT,
           min = 1,
           width = '100px',
           step = 1

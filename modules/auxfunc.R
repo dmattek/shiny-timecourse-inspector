@@ -12,6 +12,18 @@ require(gplots) # for heatmap.2
 require(grid) # for modifying grob
 require(Hmisc) # for CI calculation
 
+
+# Global parameters ----
+# font sizes in pts for plots
+PLOTFONTBASE = 12
+PLOTFONTAXISTEXT = 12
+PLOTFONTAXISTITLE = 12
+PLOTFONTFACETSTRIP = 14
+PLOTFONTLEGEND = 12
+
+# default number of facets in plots
+PLOTNFACETDEFAULT = 3
+
 # Colour definitions ----
 rhg_cols <- c(
   "#771C19",
@@ -513,7 +525,11 @@ LOCplotTraj = function(dt.arg, # input data table
     xlab(paste0(xlab.arg, "\n")) +
     ylab(paste0("\n", ylab.arg)) +
     ggtitle(plotlab.arg) +
-    LOCggplotTheme() + 
+    LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                   in.font.axis.text = PLOTFONTAXISTEXT, 
+                   in.font.axis.title = PLOTFONTAXISTITLE, 
+                   in.font.strip = PLOTFONTFACETSTRIP, 
+                   in.font.legend = PLOTFONTLEGEND) + 
     theme(legend.position = "top")
   
   return(p.tmp)
@@ -655,7 +671,11 @@ LOCggplotScat = function(dt.arg,
   
   
   p.tmp = p.tmp +
-    LOCggplotTheme() +
+    LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                   in.font.axis.text = PLOTFONTAXISTEXT, 
+                   in.font.axis.title = PLOTFONTAXISTITLE, 
+                   in.font.strip = PLOTFONTFACETSTRIP, 
+                   in.font.legend = PLOTFONTLEGEND) + 
     theme(legend.position = "none")
 
   # Marginal distributions don;t work with plotly...

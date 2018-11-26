@@ -239,7 +239,11 @@ modBoxPlot = function(input, output, session,
       scale_fill_discrete(name = '') +
       xlab('') +
       ylab('') +
-      LOCggplotTheme() + 
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND) + 
       theme(legend.position = input$selPlotBoxLegendPos,
             axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate)))
 

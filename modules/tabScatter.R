@@ -48,7 +48,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         numericInput(
           ns('inPlotNcolFacet'),
           '#columns',
-          value = 2,
+          value = PLOTNFACETDEFAULT,
           min = 1,
           step = 1
         )

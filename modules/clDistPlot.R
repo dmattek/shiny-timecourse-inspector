@@ -57,7 +57,11 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
       scale_y_continuous(labels = percent) +
       ylab("percentage of cells\n") +  
       xlab("") +  
-      LOCggplotTheme() +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND) + 
       theme(
         axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate))
     )
