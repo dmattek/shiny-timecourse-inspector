@@ -1,5 +1,11 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This is the module of a Shiny web application.
+# Hierarchical clustering
 
-# UI
+# UI ----
 clustHierUI <- function(id, label = "Hierarchical CLustering") {
   ns <- NS(id)
   
@@ -173,7 +179,7 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
   )
 }
 
-# SERVER
+# SERVER ----
 clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
   
   output$uiPlotHierClAss = renderUI({

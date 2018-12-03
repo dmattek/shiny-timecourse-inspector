@@ -38,6 +38,15 @@ shinyServer(function(input, output, session) {
     dataLoadTrajRem = isolate(input$inButLoadTrajRem),
     dataLoadStim    = isolate(input$inButLoadStim)
   )
+
+  nCellsCounter <- reactiveValues(
+    nCellsOrig = 0,
+    nCellsAfterOutlierTrim = 0
+  )
+    
+  myReactVals = reactiveValues(
+    outlierIDs = NULL
+  )
   
   # UI-side-panel-data-load ----
   
@@ -45,7 +54,7 @@ shinyServer(function(input, output, session) {
   dataGen1 <- eventReactive(input$inDataGen1, {
     cat("dataGen1\n")
     
-    return(LOCgenTraj(in.nwells = 3))
+    return(LOCgenTraj(in.nwells = 3, in.addout = 3))
   })
   
   # Load main data file
@@ -343,7 +352,7 @@ shinyServer(function(input, output, session) {
   })
   
   
-  # UI-side-panel-remove-outliers ----
+  # UI-main-tab-remove-outliers ----
   output$uiSlOutliers = renderUI({
     cat(file = stderr(), 'UI uiSlOutliers\n')
     
@@ -362,7 +371,22 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  output$uiTxtOutliers = renderUI({
+    cat(file = stderr(), 'UI uiTxtOutliers\n')
+    
+    if (input$chBoutliers) {
+      htmlOutput(
+        'txtOutliersPerc'
+      )
+    }
+  })
   
+  output$txtOutliersPerc <- renderText({ 
+    sprintf('<b>#tracks: %d <br>#outliers: %d</b>', 
+            nCellsCounter[['nCellsOrig']], 
+            nCellsCounter[['nCellsOrig']] - nCellsCounter[['nCellsAfterOutlierTrim']])  })
+  
+
   # Processing-data ----
   
   dataInBoth <- reactive({
@@ -634,7 +658,7 @@ shinyServer(function(input, output, session) {
 
     if (input$chBtrajInter) {
       # here we fill missing data with NA's
-      loc.out = loc.out[setkey(loc.out[, .(seq(min(realtime, na.rm = T), max(realtime, na.rm = T), input$inSelTimeFreq)), by = .(group, id)], group, id, V1)]
+      loc.out = loc.out[setkeyv(loc.out[, .(seq(min(get(COLRT), na.rm = T), max(get(COLRT), na.rm = T), input$inSelTimeFreq)), by = c(COLGR, COLID)], c(COLGR, COLID, 'V1'))]
       
       # x-check: print all rows with NA's
       print('Rows with NAs:')
@@ -643,11 +667,11 @@ shinyServer(function(input, output, session) {
       # NA's may be already present in the dataset'.
       # Interpolate (linear) them with na.interpolate as well
       if(locPos)
-        s.cols = c('y', 'pos.x', 'pos.y')
+        s.cols = c(COLY, COLPOSX, COLPOSY)
       else
-        s.cols = c('y')
+        s.cols = c(COLY)
       
-      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = id, .SDcols = s.cols]
+      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = c(COLID), .SDcols = s.cols]
       
       
       # !!! Current issue with interpolation:
@@ -665,7 +689,7 @@ shinyServer(function(input, output, session) {
     
     ## Trim x-axis (time)
     if(input$chBtimeTrim) {
-      loc.out = loc.out[realtime >= input$slTimeTrim[[1]] & realtime <= input$slTimeTrim[[2]] ]
+      loc.out = loc.out[get(COLRT) >= input$slTimeTrim[[1]] & get(COLRT) <= input$slTimeTrim[[2]] ]
     }
     
     ## Normalization
@@ -673,8 +697,8 @@ shinyServer(function(input, output, session) {
     if (input$chBnorm) {
       loc.out = LOCnormTraj(
         in.dt = loc.out,
-        in.meas.col = 'y',
-        in.rt.col = 'realtime',
+        in.meas.col = COLY,
+        in.rt.col = COLRT,
         in.rt.min = input$slNormRtMinMax[1],
         in.rt.max = input$slNormRtMinMax[2],
         in.type = input$rBnormMeth,
@@ -684,37 +708,12 @@ shinyServer(function(input, output, session) {
       
       # Column with normalized data is renamed to the original name
       # Further code assumes column name y produced by data4trajPlot
-      loc.out[, y := NULL]
-      setnames(loc.out, 'y.norm', 'y')
+      loc.out[, get(COLY) := NULL]
+      setnames(loc.out, 'y.norm', COLY)
     }
-    
-    ##### MOD HERE
-    ## display number of filtered tracks in textUI: uiTxtOutliers
-    ## How? 
-    ## 1. through reactive values?
-    ## 2. through additional comumn to tag outliers?
-    
-    # Remove outliers
-    # 1. Scale all points (independently per track)
-    # 2. Pick time points that exceed the bounds
-    # 3. Identify IDs of outliers
-    # 4. Select cells that don't have these IDs
-    
-    cat('Ncells orig = ', length(unique(loc.out$id)), '\n')
-    
-    if (input$chBoutliers) {
-      loc.out[, y.sc := scale(y)]  
-      loc.tmp = loc.out[ y.sc < quantile(y.sc, (1 - input$slOutliersPerc * 0.01)*0.5, na.rm = T) | 
-                           y.sc > quantile(y.sc, 1 - (1 - input$slOutliersPerc * 0.01)*0.5, na.rm = T)]
-      loc.out = loc.out[!(id %in% unique(loc.tmp$id))]
-      loc.out[, y.sc := NULL]
-    }
-    
-    cat('Ncells trim = ', length(unique(loc.out$id)), '\n')
     
     return(loc.out)
   })
-  
   
   
   # prepare data for clustering
@@ -724,7 +723,7 @@ shinyServer(function(input, output, session) {
   data4clust <- reactive({
     cat(file = stderr(), 'data4clust\n')
     
-    loc.dt = data4trajPlot()
+    loc.dt = data4trajPlotNoOut()
     if (is.null(loc.dt))
       return(NULL)
     
@@ -768,9 +767,9 @@ shinyServer(function(input, output, session) {
   # download data as prepared for plotting
   # after all modification
   output$downloadDataClean <- downloadHandler(
-    filename = 'tCoursesSelected_clean.csv',
+    filename = FCSVTCCLEAN,
     content = function(file) {
-      write.csv(data4trajPlot(), file, row.names = FALSE)
+      write.csv(data4trajPlotNoOut(), file, row.names = FALSE)
     }
   )
   
@@ -797,34 +796,37 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # Taking out outliers 
+  data4trajPlotNoOut = callModule(modSelOutliers, 'returnOutlierIDs', data4trajPlot)
+  
   # Trajectory plotting - ribbon
   callModule(modTrajRibbonPlot, 'modTrajRibbon', 
-             in.data = data4trajPlot,
+             in.data = data4trajPlotNoOut,
              in.data.stim = data4stimPlot,
-             in.fname = function() return( "tCoursesMeans.pdf"))
+             in.fname = function() return(FPDFTCMEAN))
   
-  ###### Trajectory plotting - individual
+  # Trajectory plotting - individual
   callModule(modTrajPlot, 'modTrajPlot', 
-             in.data = data4trajPlot, 
+             in.data = data4trajPlotNoOut, 
              in.data.stim = data4stimPlot,
-             in.fname = function() {return( "tCourses.pdf")})
+             in.fname = function() {return(FPDFTCSINGLE)})
   
   
   # Tabs ----
   ###### AUC calculation and plotting
-  callModule(modAUCplot, 'tabAUC', data4trajPlot, in.fname = function() return('boxplotAUC.pdf'))
+  callModule(modAUCplot, 'tabAUC', data4trajPlotNoOut, in.fname = function() return(FPDFBOXAUC))
   
   ###### Box-plot
-  callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlot, in.fname = function() return('boxplotTP.pdf'))
+  callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlotNoOut, in.fname = function() return(FPDFBOXTP))
   
   ###### Scatter plot
-  callModule(tabScatterPlot, 'tabScatter', data4trajPlot, in.fname = function() return('scatter.pdf'))
+  callModule(tabScatterPlot, 'tabScatter', data4trajPlotNoOut, in.fname = function() return(FPDFSCATTER))
   
   ##### Hierarchical clustering
-  callModule(clustHier, 'tabClHier', data4clust, data4trajPlot, data4stimPlot)
+  callModule(clustHier, 'tabClHier', data4clust, data4trajPlotNoOut, data4stimPlot)
   
   ##### Sparse hierarchical clustering using sparcl
-  callModule(clustHierSpar, 'tabClHierSpar', data4clust, data4trajPlot, data4stimPlot)
+  callModule(clustHierSpar, 'tabClHierSpar', data4clust, data4trajPlotNoOut, data4stimPlot)
 
   
 })

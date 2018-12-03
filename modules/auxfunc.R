@@ -24,6 +24,28 @@ PLOTFONTLEGEND = 12
 # default number of facets in plots
 PLOTNFACETDEFAULT = 3
 
+# internal column names
+COLRT   = 'realtime'
+COLY    = 'y'
+COLID   = 'id'
+COLIDUNI = 'trackObjectsLabelUni'
+COLGR   = 'group'
+COLIN   = 'mid.in'
+COLOBJN = 'obj.num'
+COLPOSX = 'pos.x'
+COLPOSY = 'pos.y'
+COLIDX = 'IDX'
+COLIDXDIFF = 'IDXdiff'
+
+# file names
+FCSVOUTLIERS = 'outliers.csv'
+FCSVTCCLEAN  = 'tCoursesSelected_clean.csv'
+FPDFTCMEAN   = "tCoursesMeans.pdf"
+FPDFTCSINGLE = "tCourses.pdf"
+FPDFBOXAUC   = 'boxplotAUC.pdf'
+FPDFBOXTP    = 'boxplotTP.pdf'
+FPDFSCATTER  = 'scatter.pdf'
+
 # Colour definitions ----
 rhg_cols <- c(
   "#771C19",
@@ -176,7 +198,7 @@ LOCcalcTrajCI = function(in.dt, in.col.meas, in.col.by = NULL, in.type = c('norm
 #' @export
 #' @import data.table
 
-LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 1, in.addna = NULL) {
+LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 1, in.addna = NULL, in.addout = NULL) {
   
   x.rand.1 = c(rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.5, 0.1), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3,   1, 0.2), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3,  2, 0.5))
   x.rand.2 = c(rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.25, 0.1), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.5, 0.2),  rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 1, 0.2))
@@ -186,6 +208,13 @@ LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 
     locTabLen = length(x.rand.1)
     x.rand.1[round(runif(in.addna) * locTabLen)] = NA
     x.rand.2[round(runif(in.addna) * locTabLen)] = NA
+  }
+  
+  # add outliers for testing
+  if (!is.null(in.addout)) {
+    locTabLen = length(x.rand.1)
+    x.rand.1[round(runif(in.addout) * locTabLen)] = 10
+    x.rand.2[round(runif(in.addout) * locTabLen)] = 10
   }
   
   x.arg = rep(seq(1, in.ntpts), in.ntracks * in.nfov)
@@ -225,7 +254,7 @@ LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 
 
 LOCnormTraj = function(in.dt,
                     in.meas.col,
-                    in.rt.col = 'RealTime',
+                    in.rt.col = COLRT,
                     in.rt.min = 10,
                     in.rt.max = 20,
                     in.by.cols = NULL,

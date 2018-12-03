@@ -17,7 +17,7 @@ modTrackStats = function(input, output, session,
   ns <- session$ns
   
   output$uiTabStats = renderUI({
-    cat(file = stderr(), 'UI uiTabStats\n')
+    cat(file = stderr(), 'modTrackStats: uiTabStats\n')
     ns <- session$ns
     
     if(input$chbTabStats) {
@@ -33,7 +33,7 @@ modTrackStats = function(input, output, session,
   
   # unused at the moment
   calcStats = reactive({
-    cat(file = stderr(), 'tabBoxPlot: calsStats\n')
+    cat(file = stderr(), 'modTrackStats: calsStats\n')
     loc.dt = in.data()
     
     if (is.null(loc.dt))
@@ -53,6 +53,9 @@ modTrackStats = function(input, output, session,
   
   # Print number of tracks
   output$txtNtracks = renderText({
+    cat(file = stderr(), 'modTrackStats: txtNtracks\n')
+    loc.dt = in.data()
+    
     loc.dt = in.data()
     
     if (is.null(loc.dt))
@@ -66,7 +69,7 @@ modTrackStats = function(input, output, session,
   
   # Print a table with Track IDs assigned to multiple objects in a frame
   output$outTabStats = DT::renderDataTable(server = FALSE, {
-    cat(file = stderr(), 'tabBoxPlot: outTabStats\n')
+    cat(file = stderr(), 'modTrackStats: outTabStats\n')
     loc.dt = in.data()
     
     if (is.null(loc.dt))

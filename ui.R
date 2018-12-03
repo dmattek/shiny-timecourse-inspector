@@ -101,9 +101,6 @@ shinyUI(fluidPage(
       uiOutput('uiChBnormRobust'),
       uiOutput('uiChBnormGroup'),
       tags$hr(),
-      checkboxInput('chBoutliers', 'Remove outliers', FALSE),
-      uiOutput('uiSlOutliers'),
-      uiOutput("uiTxtOutliers"),
       downloadButton('downloadDataClean', 'Download mod\'d data')
     ),
     
@@ -115,7 +112,7 @@ shinyUI(fluidPage(
             "Plot time series: means per group or individual"
           ),
           br(),
-          
+          modSelOutliersUI('returnOutlierIDs'),
           tabsetPanel(
             tabPanel("Means",
                      br(),
