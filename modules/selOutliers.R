@@ -58,11 +58,13 @@ modSelOutliers = function(input, output, session, in.data) {
     id = NULL
   )
 
+  
+  
   # Display number of tracks and outliers  
   output$txtOutliersPerc <- renderText({ 
     cat(file = stderr(), 'modSelOutliers: txtOutliersPerc\n')
     
-      sprintf('<b>%d total tracks<br>%d outlier tracks<br>%d outlier points</b><br>', 
+      sprintf('<b>%d total track(s)<br>%d outlier track(s)<br>%d outlier point(s)</b><br>', 
             nCellsCounter[['nCellsOrig']], 
             nCellsCounter[['nCellsOrig']] - nCellsCounter[['nCellsAfter']],
             nCellsCounter[['nOutlierTpts']])

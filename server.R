@@ -153,7 +153,7 @@ shinyServer(function(input, output, session) {
     
     selectInput(
       'inSelTrackLabel',
-      'Select Track Label (e.g. objNuc_TrackObjects_Label):',
+      'Select Track Label:',
       locCols,
       width = '100%',
       selected = locColSel
@@ -206,7 +206,7 @@ shinyServer(function(input, output, session) {
         #cat('UI varSelGroup::locColSel ', locColSel, '\n')
         selectInput(
           'inSelGroup',
-          'Select one or more facet groupings (e.g. Site, Well, Channel):',
+          'Select columns for plot grouping:',
           locCols,
           width = '100%',
           selected = locColSel,
@@ -216,6 +216,8 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # UI for selecting grouping to add to track ID to make 
+  # the track ID unique across entire dataset
   output$varSelSite = renderUI({
     cat(file = stderr(), 'UI varSelSite\n')
     
@@ -225,10 +227,11 @@ shinyServer(function(input, output, session) {
       
       selectInput(
         'inSelSite',
-        'Select FOV (e.g. Metadata_Site or Metadata_Series):',
+        'Select grouping columns to add to track label:',
         locCols,
         width = '100%',
-        selected = locColSel
+        selected = locColSel,
+        multiple = T
       )
     }
   })
@@ -352,39 +355,6 @@ shinyServer(function(input, output, session) {
   })
   
   
-  # UI-main-tab-remove-outliers ----
-  output$uiSlOutliers = renderUI({
-    cat(file = stderr(), 'UI uiSlOutliers\n')
-    
-    if (input$chBoutliers) {
-      
-      sliderInput(
-        'slOutliersPerc',
-        label = 'Percentage of middle data',
-        min = 90,
-        max = 100,
-        value = 99.5, 
-        step = 0.1
-      )
-      
-      
-    }
-  })
-  
-  output$uiTxtOutliers = renderUI({
-    cat(file = stderr(), 'UI uiTxtOutliers\n')
-    
-    if (input$chBoutliers) {
-      htmlOutput(
-        'txtOutliersPerc'
-      )
-    }
-  })
-  
-  output$txtOutliersPerc <- renderText({ 
-    sprintf('<b>#tracks: %d <br>#outliers: %d</b>', 
-            nCellsCounter[['nCellsOrig']], 
-            nCellsCounter[['nCellsOrig']] - nCellsCounter[['nCellsAfterOutlierTrim']])  })
   
 
   # Processing-data ----
@@ -456,26 +426,10 @@ shinyServer(function(input, output, session) {
       return(NULL)
     
     if (input$chBtrackUni) {
-      loc.types = lapply(loc.dt, class)
-      if(loc.types[[input$inSelTrackLabel]] %in% c('numeric', 'integer') & loc.types[[input$inSelSite]] %in% c('numeric', 'integer'))
-      {
-        loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
-                                               sprintf("%04d", get(input$inSelTrackLabel)),
-                                               sep = "_")]
-      } else if(loc.types[[input$inSelTrackLabel]] %in% c('numeric', 'integer')) {
-        loc.dt[, trackObjectsLabelUni := paste(sprintf("%s", get(input$inSelSite)),
-                                               sprintf("%04d", get(input$inSelTrackLabel)),
-                                               sep = "_")]
-      } else if(loc.types[[input$inSelSite]] %in% c('numeric', 'integer')) {
-        loc.dt[, trackObjectsLabelUni := paste(sprintf("%03d", get(input$inSelSite)),
-                                               sprintf("%s", get(input$inSelTrackLabel)),
-                                               sep = "_")]
-      } else {
-        loc.dt[, trackObjectsLabelUni := paste(sprintf("%s", get(input$inSelSite)),
-                                               sprintf("%s", get(input$inSelTrackLabel)),
-                                               sep = "_")]
-      }
+      # create unique track ID based on columns specified in input$inSelSite field and combine with input$inSelTrackLabel
+      loc.dt[, trackObjectsLabelUni := do.call(paste, c(.SD, sep = "_")), .SDcols = c(input$inSelSite, input$inSelTrackLabel) ]
     } else {
+      # stay with track ID provided in the loaded dataset; has to be unique
       loc.dt[, trackObjectsLabelUni := get(input$inSelTrackLabel)]
     }
     
