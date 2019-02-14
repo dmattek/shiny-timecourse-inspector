@@ -427,10 +427,10 @@ shinyServer(function(input, output, session) {
     
     if (input$chBtrackUni) {
       # create unique track ID based on columns specified in input$inSelSite field and combine with input$inSelTrackLabel
-      loc.dt[, trackObjectsLabelUni := do.call(paste, c(.SD, sep = "_")), .SDcols = c(input$inSelSite, input$inSelTrackLabel) ]
+      loc.dt[, (COLIDUNI) := do.call(paste, c(.SD, sep = "_")), .SDcols = c(input$inSelSite, input$inSelTrackLabel) ]
     } else {
       # stay with track ID provided in the loaded dataset; has to be unique
-      loc.dt[, trackObjectsLabelUni := get(input$inSelTrackLabel)]
+      loc.dt[, (COLIDUNI) := get(input$inSelTrackLabel)]
     }
     
     
@@ -603,10 +603,10 @@ shinyServer(function(input, output, session) {
 
     ## Interpolate missing data and NA data points
     # From: https://stackoverflow.com/questions/28073752/r-how-to-add-rows-for-missing-values-for-unique-group-sequences
-    # Tracks are interpolated only within first and last time points of every cell id
+    # Tracks are interpolated only within first and last time points of every track id
     # Datasets can have different realtime frequency (e.g. every 1', 2', etc),
     # or the frame number metadata can be missing, as is the case for tCourseSelected files that already have realtime column.
-    # Therefore, we cannot rely on that info to get time frequency; user provides this number!
+    # Therefore, we cannot rely on that info to get time frequency; user must provide this number!
     
     setkey(loc.out, group, id, realtime)
 
@@ -625,7 +625,18 @@ shinyServer(function(input, output, session) {
       else
         s.cols = c(COLY)
       
-      loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = c(COLID), .SDcols = s.cols]
+      # Interpolated columns should be of type numeric (float)
+      # This is to ensure that interpolated columns are of porper type.
+      
+      # Apparently the loop is faster than lapply+SDcols
+      for(col in s.cols) {
+        #loc.out[, (col) := as.numeric(get(col))]
+        data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
+
+        loc.out[, (col) := na.interpolation(get(col)), by = c(COLID)]        
+      }
+      
+      # loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = c(COLID), .SDcols = s.cols]
       
       
       # !!! Current issue with interpolation:
