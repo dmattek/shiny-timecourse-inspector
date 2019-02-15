@@ -14,6 +14,10 @@ require(Hmisc) # for CI calculation
 
 
 # Global parameters ----
+
+# if true, additional output printed to R console
+DEB = T
+
 # font sizes in pts for plots
 PLOTFONTBASE = 12
 PLOTFONTAXISTEXT = 12

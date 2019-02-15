@@ -20,7 +20,8 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
                          min = 0,
                          max = 100,
                          value = 0, 
-                         step = 0.05, width = '100px')
+                         step = 0.05, width = '100px'),
+             checkboxInput(ns('chBtrajInter'), 'Interpolate gaps?', value = F)
       ),
       column(2, 
              radioButtons(ns('rbOutliersType'), 
@@ -62,7 +63,7 @@ modSelOutliers = function(input, output, session, in.data) {
   
   # Display number of tracks and outliers  
   output$txtOutliersPerc <- renderText({ 
-    cat(file = stderr(), 'modSelOutliers: txtOutliersPerc\n')
+    cat(file = stdout(), 'modSelOutliers: txtOutliersPerc\n')
     
       sprintf('<b>%d total track(s)<br>%d outlier track(s)<br>%d outlier point(s)</b><br>', 
             nCellsCounter[['nCellsOrig']], 
@@ -85,7 +86,7 @@ modSelOutliers = function(input, output, session, in.data) {
   
 # Identify outliers and remove them from dt
   dtReturn = reactive({ 
-    cat(file = stderr(), 'modSelOutliers: dtReturn\n')
+    cat(file = stdout(), 'modSelOutliers: dtReturn\n')
     
     loc.out = in.data()
     
@@ -93,13 +94,13 @@ modSelOutliers = function(input, output, session, in.data) {
       return(NULL)
     }
 
-    # Remove outliers if the slider with percentage of data is smaller than 100
-    if (input$numOutliersPerc < 100) {
+    # Remove outliers if the field with percentage of data to remove is greater than 0
+    if (input$numOutliersPerc > 0) {
       
       # store the number of trajectories before prunning
       nCellsCounter[['nCellsOrig']] = length(unique(loc.out[['id']]))
 
-      # scale all points (independently per track)      
+      # scale all measurement points      
       loc.out[, y.sc := scale(get(COLY))]  
 
       # Identify outlier points
@@ -112,18 +113,22 @@ modSelOutliers = function(input, output, session, in.data) {
         'bot' = {loc.outpts = loc.out[ y.sc < quantile(y.sc, input$numOutliersPerc * 0.01, na.rm = T)]}
       )
       
-      
+      if (DEB) {
+        cat(file = stdout(), 'selOutliers.dtReturn: Outlier points:\n')
+        print(loc.outpts)
+      }
+        
       if (input$slOutliersGapLen > 1) {
         # remove tracks with gaps longer than the value set in slOutliersGapLen
         # shorter gaps are interpolated linearly
         
         # add index column per trajecory
         loc.out[, (COLIDX) := 1:.N, by = c(COLID)]
-        
+
         # remove single outlier points (anti-join)
         # From: https://stackoverflow.com/a/46333620/1898713
         loc.out = loc.out[!loc.outpts, on = names(loc.outpts)]
-        
+
         # calculate diff on index column to see the length of gaps due to removed points
         # the value of that column corresponds to the gap length (hence the "-1")
         loc.out[, (COLIDXDIFF) := c(1, diff(get(COLIDX))) - 1, by = c(COLID)]
@@ -131,23 +136,50 @@ modSelOutliers = function(input, output, session, in.data) {
         # get track ids where the max gap is equal to or longer than the threshold
         loc.idgaps = loc.out[, max(get(COLIDXDIFF)), by = c(COLID)][V1 >= input$slOutliersGapLen, get(COLID)]
         
+        if (DEB) {
+          cat(file = stdout(), '\nselOutliers.dtReturn: Track IDs with max gap >= threshold:\n')
+          if (length(loc.idgaps) > 0)
+            print(loc.idgaps) else
+              cat("none\n")
+        }
+        
         # remove outlier tracks with gaps longer than the value set in slOutliersGapLen
-        loc.out = loc.out[!(get(COLID) %in% unique(loc.idgaps))]
-        
-        # fill removed outliers with NA's
-        loc.out = loc.out[setkeyv(loc.out[, .(seq(min(get(COLIDX), na.rm = T), max(get(COLIDX), na.rm = T), 1)), by = c(COLGR, COLID)], c(COLGR, COLID, 'V1'))]
+        if (length(loc.idgaps) > 0)
+          loc.out = loc.out[!(get(COLID) %in% unique(loc.idgaps))]
 
-        # interpolate gaps with NAs
-        if( (COLPOSX %in% names(loc.out)) & (COLPOSY %in% names(loc.out)) )
-          s.cols = c(COLY, COLPOSX, COLPOSY)
-        else
-          s.cols = c(COLY)
-        
-        # Here, the missing part in interpolation of mid.in column (for highlighting trajectories)
-        loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = c(COLID), .SDcols = s.cols]
-        
         # clean
         loc.out[, c(COLIDX, COLIDXDIFF) := NULL]
+
+        # interpolate gaps due to outliers
+        if (input$chBtrajInter) {
+          # fill removed outliers with NA's
+          setkeyv(loc.out, c(COLGR, COLID, COLRT))
+          loc.out = loc.out[setkeyv(loc.out[, .(seq(min(get(COLRT), na.rm = T), max(get(COLRT), na.rm = T), 1)), by = c(COLGR, COLID)], c(COLGR, COLID, 'V1'))]
+
+          # x-check: print all rows with NA's
+          if (DEB) {
+            cat(file = stdout(), '\nselOutliers.dtReturn: Rows with NAs due to outliers:\n')
+            print(loc.out[rowSums(is.na(loc.out)) > 0, ])
+          }
+          
+          # NA's may be already present in the dataset'.
+          # Interpolate (linear) them with na.interpolate as well
+          if( (COLPOSX %in% names(loc.out)) & (COLPOSY %in% names(loc.out)) )
+            s.cols = c(COLY, COLPOSX, COLPOSY)
+          else
+            s.cols = c(COLY)
+          
+          
+          # Apparently the loop is faster than lapply+SDcols
+          for(col in s.cols) {
+            # Interpolated columns should be of type numeric (float)
+            # This is to ensure that interpolated columns are of porper type.
+            data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
+            
+            loc.out[, (col) := na.interpolation(get(col)), by = c(COLID)]        
+          }
+        } 
+
         
       } else {
         # remove outlier tracks with gaps of length 1 time point
@@ -156,7 +188,7 @@ modSelOutliers = function(input, output, session, in.data) {
 
       # clean
       loc.out[, y.sc := NULL]
-      
+
       # count number of trajectories after removing outlier tracks
       nCellsCounter[['nCellsAfter']] = length(unique(loc.out[[COLID]]))
       
@@ -169,7 +201,9 @@ modSelOutliers = function(input, output, session, in.data) {
     }
     
     # return cleaned dt
-    return(loc.out)
+    if (nrow(loc.out) < 1)
+      return(NULL) else
+        return(loc.out)
     
   })
   
