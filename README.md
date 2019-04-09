@@ -26,6 +26,7 @@ Following packages need to be installed in order to run the app locally:
 * MASS
 * robust
 * pracma
+* Hmisc
 
 Install packages using `install.packages('name_of_the_package_from_the_list_above')` command in RStudio command line.
 
@@ -36,27 +37,7 @@ install.packages(c("shiny", "shinyjs",
 					"dendextend", "dendextend", "RColorBrewer",
 					"sparcl", "dtw",
 					"imputeTS",
-					"MASS", "robust", "pracma")) 
-```
-
-**Note**
-As of July 2018, *sparcl* has been removed from CRAN. If you don't need sparse hierarchical clustering, you can simply comment the line `library(sparcl)` in `server.R` file or install it from the [archive](https://cran.r-project.org/web/packages/sparcl/index.html):
-
-```
-install_url('https://cran.r-project.org/src/contrib/Archive/sparcl/sparcl_1.0.3.tar.gz')
-```
-
-**Additionally**, a time series analysis package needs to be installed from [GitHub](https://github.com/dmattek/tca-package):
-
-```
-install_github("dmattek/tca-package")
-```
-
-The `install_url` and `install_github` functions are available in *devtools* package:
-
-```
-install.packages("devtools")
-library(devtools)
+					"MASS", "robust", "pracma", "Hmisc")) 
 ```
 
 ## Input file

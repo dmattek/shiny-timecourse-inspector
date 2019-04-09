@@ -1,6 +1,7 @@
 source('modules/auxfunc.R')
+source('modules/selOutliers.R')
 source('modules/downPlot.R')
-source('modules/downCellIDsCls.R')
+source('modules/downCSV.R')
 source('modules/dispStats.R')
 source('modules/dispTrackStats.R')
 source('modules/trajPlot.R')

@@ -53,7 +53,7 @@ shinyUI(fluidPage(
       uiOutput('uiButLoadStim'),
       
       tags$hr(),
-      checkboxInput('chBtrajInter', 'Interpolate NAs and missing data?', value = T),
+      checkboxInput('chBtrajInter', 'Interpolate NAs and missing data?', value = F),
       helpPopup(
         title = 'Interpolation of NAs and missing data',
         content = help.text[3],
@@ -62,7 +62,7 @@ shinyUI(fluidPage(
       ),
       
       uiOutput('varSelTimeFreq'),
-      checkboxInput('chBtrackUni', 'Create unique TrackLabel', T),
+      checkboxInput('chBtrackUni', 'Create unique TrackLabel', F),
       helpPopup(
         title = 'Create unique cell ID',
         content = help.text[2],
@@ -73,7 +73,7 @@ shinyUI(fluidPage(
       uiOutput('varSelTrackLabel'),
       
       tags$hr(),
-      checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', TRUE),                
+      checkboxInput('chBgroup', 'Dataset contains grouping column (e.g. treatment, condition)', F),                
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
       uiOutput('varSelMeas1'),
@@ -101,9 +101,6 @@ shinyUI(fluidPage(
       uiOutput('uiChBnormRobust'),
       uiOutput('uiChBnormGroup'),
       tags$hr(),
-      checkboxInput('chBoutliers', 'Remove outliers', FALSE),
-      uiOutput('uiSlOutliers'),
-      uiOutput("uiTxtOutliers"),
       downloadButton('downloadDataClean', 'Download mod\'d data')
     ),
     
@@ -115,7 +112,7 @@ shinyUI(fluidPage(
             "Plot time series: means per group or individual"
           ),
           br(),
-          
+          modSelOutliersUI('returnOutlierIDs'),
           tabsetPanel(
             tabPanel("Means",
                      br(),
