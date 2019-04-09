@@ -94,23 +94,24 @@ modSelOutliers = function(input, output, session, in.data) {
       return(NULL)
     }
 
+    # store the number of trajectories before prunning
+    nCellsCounter[['nCellsOrig']] = length(unique(loc.out[['id']]))
+    
     # Remove outliers if the field with percentage of data to remove is greater than 0
     if (input$numOutliersPerc > 0) {
       
-      # store the number of trajectories before prunning
-      nCellsCounter[['nCellsOrig']] = length(unique(loc.out[['id']]))
-
       # scale all measurement points      
       loc.out[, y.sc := scale(get(COLY))]  
 
       # Identify outlier points
       # In the UI, user selectes percentage of data to remove from the bottom, middle, or top part.
       # loc.outpts stores outlier points
+      # warning: quantile type = 3: SAS definition: nearest even order statistic.
       switch(input$rbOutliersType,
-        'top' = {loc.outpts = loc.out[ y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.01, na.rm = T)]},
-        'mid' = {loc.outpts = loc.out[ y.sc < quantile(y.sc, input$numOutliersPerc * 0.005, na.rm = T) | 
-                                     y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.005, na.rm = T)]},
-        'bot' = {loc.outpts = loc.out[ y.sc < quantile(y.sc, input$numOutliersPerc * 0.01, na.rm = T)]}
+        'top' = {loc.outpts = loc.out[ y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.01, na.rm = T, type = 3)]},
+        'mid' = {loc.outpts = loc.out[ y.sc < quantile(y.sc, input$numOutliersPerc * 0.005, na.rm = T, type = 3) | 
+                                     y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.005, na.rm = T, type = 3)]},
+        'bot' = {loc.outpts = loc.out[ y.sc < quantile(y.sc, input$numOutliersPerc * 0.01, na.rm = T, type = 3)]}
       )
       
       if (DEB) {
@@ -158,7 +159,7 @@ modSelOutliers = function(input, output, session, in.data) {
 
           # x-check: print all rows with NA's
           if (DEB) {
-            cat(file = stdout(), '\nselOutliers.dtReturn: Rows with NAs due to outliers:\n')
+            cat(file = stdout(), '\nselOutliers.dtReturn: Rows with NAs to interpolate:\n')
             print(loc.out[rowSums(is.na(loc.out)) > 0, ])
           }
           
@@ -179,26 +180,31 @@ modSelOutliers = function(input, output, session, in.data) {
             loc.out[, (col) := na.interpolation(get(col)), by = c(COLID)]        
           }
         } 
-
-        
       } else {
         # remove outlier tracks with gaps of length 1 time point
+        # !(input$slOutliersGapLen > 1)
         loc.out = loc.out[!(get(COLID) %in% unique(loc.outpts[[COLID]]))]
       }
 
       # clean
       loc.out[, y.sc := NULL]
 
-      # count number of trajectories after removing outlier tracks
-      nCellsCounter[['nCellsAfter']] = length(unique(loc.out[[COLID]]))
-      
-      # count number of outlier points
-      nCellsCounter[['nOutlierTpts']] = length(loc.outpts[[COLID]])
-      
       
       # store a vector of outlier timepoints with the corresponding IDs
       vOut[['id']] = loc.outpts
+    } else {
+      # no outlier removal
+      # !(input$numOutliersPerc > 0)
+      loc.outpts = NULL
+      vOut = NULL
     }
+
+    # count number of trajectories after removing outlier tracks
+    nCellsCounter[['nCellsAfter']] = length(unique(loc.out[[COLID]]))
+    
+    # count number of outlier points
+    nCellsCounter[['nOutlierTpts']] = length(loc.outpts[[COLID]])
+    cat(sprintf("%d outlier tpts\n", nCellsCounter[['nOutlierTpts']]))
     
     # return cleaned dt
     if (nrow(loc.out) < 1)

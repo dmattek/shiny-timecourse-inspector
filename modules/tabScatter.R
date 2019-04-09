@@ -29,7 +29,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         4,
         uiOutput(ns('uiSelTptX')),
         uiOutput(ns('uiSelTptY')),
-        checkboxInput(ns('chBfoldChange'), 'Y-axis displays difference between two t-points')
+        checkboxInput(ns('chBfoldChange'), 'Display difference between two t-points on Y-axis')
       ),
       column(
         4, 
