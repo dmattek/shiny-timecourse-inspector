@@ -11,7 +11,7 @@ library(data.table)
 library(ggplot2)
 library(gplots) # for heatmap.2
 library(plotly)
-library(d3heatmap) # for interactive heatmap
+#library(d3heatmap) # for interactive heatmap
 library(dendextend) # for color_branches
 library(colorspace) # for palettes (used to colour dendrogram)
 library(RColorBrewer)
@@ -713,7 +713,8 @@ shinyServer(function(input, output, session) {
       
       # Column with normalized data is renamed to the original name
       # Further code assumes column name y produced by data4trajPlot
-      loc.out[, get(COLY) := NULL]
+      
+      loc.out[, c(COLY) := NULL]
       setnames(loc.out, 'y.norm', COLY)
     }
     

@@ -21,7 +21,7 @@ shinyUI(fluidPage(
       #Selector for file upload
       fileInput(
         'inFileLoadNuc',
-        'Select data file (e.g. tCoursesSelected.csv) and press "Load Data"',
+        'Select data file (e.g. file.csv) and press "Load Data"',
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       ),
       actionButton("inButLoadNuc", "Load Data"),
