@@ -26,7 +26,7 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
       column(2, 
              radioButtons(ns('rbOutliersType'), 
                           label = 'From', 
-                          choices = c('top' = 'top', 'middle' = 'mid', 'bottom' = 'bot'))
+                          choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot'))
              ),
       column(3,
              sliderInput(ns('slOutliersGapLen'),
