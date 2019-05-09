@@ -12,17 +12,17 @@ Following packages need to be installed in order to run the app locally:
 * shiny
 * shinyjs
 * data.table
+* DT
 * ggplot2
 * gplots
-* scales
 * plotly
-* d3heatmap
+* scales
+* grid
 * dendextend
 * RColorBrewer
 * sparcl
-* imputeTS
 * dtw
-* DT
+* imputeTS
 * MASS
 * robust
 * pracma
@@ -33,11 +33,10 @@ Install packages using `install.packages('name_of_the_package_from_the_list_abov
 ```
 install.packages(c("shiny", "shinyjs", 
 					"data.table", "DT",
-					"ggplot2", "gplots", "plotly", "d3heatmap", "scales",
-					"dendextend", "dendextend", "RColorBrewer",
+					"ggplot2", "gplots", "plotly", "scales", "grid",
+					"dendextend", "RColorBrewer",
 					"sparcl", "dtw",
-					"imputeTS",
-					"MASS", "robust", "pracma", "Hmisc")) 
+					"imputeTS", "MASS", "robust", "pracma", "Hmisc")) 
 ```
 
 ## Input file
@@ -45,19 +44,60 @@ The app recognises CSV (comma-separated values) files: data columns separated by
 
 The data file has to be in a so called long format, where individual time-courses (tracks) are arranged one after another. Note a wide-format where individual tracks are arranged in neighbouring columns is NOT supported!
 
-Sample few lines of the input file:
-```
-"Metadata_Series", "TrackObjects_Label", "Intensity_MeanIntensity_Ratio", "RealTime", "Stim_All_Ch", "Stim_All_S"
-0, 2, 1149.00311105531, 0, "Ch01: FGF 250 ng/ml 60min pulse", "S00: FGF 250 ng/ml 60min pulse"
-0, 3, 1160.43905280656, 0, "Ch01: FGF 250 ng/ml 60min pulse", "S00: FGF 250 ng/ml 60min pulse"
-0, 4, 1303.06046656558, 0, "Ch01: FGF 250 ng/ml 60min pulse", "S00: FGF 250 ng/ml 60min pulse"
-```
+The app recognizes CSV (comma-separated values) files where data columns are separated by a comma, and floating point numbers use a dot (full-stop). Data should be arranged in a long format, where time-series (tracks) are arranged one after another. The wide format where individual tracks are arranged in neighboring columns is not supported.
 
-The first row should include column headers. Necessary columns include:
+The first row should include column headers. The input CSV file should contain at least these three columns:
 
-* Unique number of the field of view (FOV), here "Metadata_Series"
-* Unique identifier of track ID within the FOV, here "TrackObjects_Label"
-* Time point, here "RealTime"
-* Measurement column (can be many columns), here "Intensity_MeanIntensity_Ratio"
+* Identifier of a time series, i.e. a track label
+* Time points
+* Time-varying variable
 
-Additionally, columns with condition names can be included. In the example above, "Stim_All_S" identifies condition per FOV, and "Stim_All_Ch" relates to a condition name within the well. These two columns are useful to group and plot time-courses in separate facets per FOV or per well.
+| ID | Time | Meas1 |
+|----|------|-------|
+| 1  |  1   | 3.3   |
+| 1  |  2   | 2.1   |
+| 1  |  4   | 4.3   |
+|----|------|-------|
+| 2  |  1   | 2.8   |
+| 2  |  2   | 1.9   |
+| 2  |  3   | 1.7   |
+| 2  |  4   | 2.2   |
+
+In case of multi-variate time series, additional columns with variables can be added in the input. Then, GUI allows for choosing a single or a combination of two variables to display.
+
+Time series can be grouped by introducing a grouping column:
+
+| Group | ID | Time | Meas1 |
+|-------|----|------|-------|
+| gr1   | 1  |  1   | 3.3   |
+| gr1   | 1  |  2   | 2.1   |
+| gr1   | 1  |  4   | 4.3   |
+|-------|----|------|-------|
+| gr1   | 2  |  1   | 2.8   |
+| gr1   | 2  |  2   | 1.9   |
+| gr1   | 2  |  3   | 1.7   |
+| gr1   | 2  |  4   | 2.2   |
+|-------|----|------|-------|
+| gr2   | 1  |  1   | 5.1   |
+| gr2   | 1  |  2   | 5.4   |
+| gr2   | 1  |  3   | 5.3   |
+
+Introduction of grouping allows for the analysis and displaying data per group.
+
+## Unique track IDs
+
+For the analysis, track labels need to be unique across the entire dataset. If the track label column is not unique in the uploaded dataset, there's an option in the UI to create a unique track ID. Check the *Create unique track label* box on and choose grouping columns that will be added to the existing non-unique track label. 
+
+In the example above, the `ID` column is not unique across the dataset (ID=1 is repeated in group `gr1` and `gr2`), therefore the unique track label has to consist of columns `Group` and `ID`. The resulting track label will be `gr1_1`, `gr2_1`, etc.
+
+
+## Modules
+
+The app opens with a default window that allows to plot population averages and individual time series. 
+
+The following features of time series analysis are available in the app's tabs:
+
+- Calculate area under individual time series and visualise as a dot-, violin-, or a box-plot. The UI allows for selection of the time series range used for AUC calculation.
+- Display a dot-, violin-, box-, or a line-plot for selected time points.
+- Display a scatter-plot to identify correlations between two time points. 
+- Perform hierarchical and sparse-hierarchical clustering of individual time series. In these modules, the dendrogram can be cut at a chosen level to help visualising clusters. Addiitonally available are plots with cluster averages, individual times series per cluster, and contribution of time series from different groupings to clusters. 
