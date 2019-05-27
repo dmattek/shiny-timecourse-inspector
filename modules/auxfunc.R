@@ -19,11 +19,11 @@ require(Hmisc) # for CI calculation
 DEB = T
 
 # font sizes in pts for plots
-PLOTFONTBASE = 12
-PLOTFONTAXISTEXT = 12
-PLOTFONTAXISTITLE = 12
-PLOTFONTFACETSTRIP = 14
-PLOTFONTLEGEND = 12
+PLOTFONTBASE = 8
+PLOTFONTAXISTEXT = 8
+PLOTFONTAXISTITLE = 8
+PLOTFONTFACETSTRIP = 10
+PLOTFONTLEGEND = 8
 
 # default number of facets in plots
 PLOTNFACETDEFAULT = 3
@@ -150,6 +150,18 @@ help.text = c(
   'This option allows to interpolate NAs or missing data. Some rows in the input file might be missing because a particular time point might not had been acquired. 
   This option, interpolates such missing points as well as points with NAs in the measurement column. When this option is checked, the interval of time column must be provided!',
   'Accepts CSV file with 5 columns: grouping (e.g. condition), start and end time points of stimulation, start and end points of y-position, dummy column with id.'
+)
+
+help.text.short = c(
+  'Load CSV file with a column of cell IDs for removal. IDs should correspond to those used for plotting.',
+  'If the track ID is unique only within a group, make it unique globally by combining with the grouping column.',
+  'Interpolate missing tpts and pre-existing NAs. When checked, the interval of time column must be provided!',
+  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with id.',
+  'Select columns to group data according to treatment, condition, etc.',
+  'Select math operation to perform on a single or two columns,',
+  'Select range of time for further processing.',
+  'Normalise data to a selected region.',
+  'Download data after modification in this section.'
 )
 
 # Functions for data processing ----

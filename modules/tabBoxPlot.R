@@ -3,7 +3,7 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
   
   tagList(
     h4(
-      "Box-/dot-/violin plot at selected time points"
+      "Box-/dot-/violin plot at selected t-points"
     ),
     br(),
     
@@ -99,7 +99,7 @@ tabBoxPlot = function(input, output, session, in.data, in.fname) {
     if (!is.null(loc.v)) {
       selectInput(
         ns('inSelTpts'),
-        'Select one or more timepoints:',
+        'Select one or more t-points:',
         loc.v,
         width = '100%',
         selected = 0,

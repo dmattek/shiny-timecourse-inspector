@@ -120,7 +120,7 @@ shinyServer(function(input, output, session) {
     if(input$chBtrajRem) 
       fileInput(
         'inFileLoadTrajRem',
-        'Select data file (e.g. badTraj.csv) and press "Load Data"',
+        'Select file and press "Load Data"',
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       )
   })
@@ -141,7 +141,7 @@ shinyServer(function(input, output, session) {
     if(input$chBstim) 
       fileInput(
         'inFileLoadStim',
-        'Select data file (e.g. stim.csv) and press "Load Data"',
+        'Select file and press "Load Data"',
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       )
   })
@@ -182,7 +182,7 @@ shinyServer(function(input, output, session) {
     
     selectInput(
       'inSelTime',
-      'Select time column (e.g. Metadata_T, RealTime):',
+      'Select time column:',
       locCols,
       width = '100%',
       selected = locColSel
@@ -196,7 +196,7 @@ shinyServer(function(input, output, session) {
     if (input$chBtrajInter) {
       numericInput(
         'inSelTimeFreq',
-        'Provide time frequency:',
+        'Frequency of time units:',
         min = 1,
         step = 1,
         width = '100%',
@@ -265,7 +265,7 @@ shinyServer(function(input, output, session) {
 
       selectInput(
         'inSelMeas1',
-        'Select 1st measurement:',
+        'Select 1st meas.:',
         locCols,
         width = '100%',
         selected = locColSel
@@ -286,7 +286,7 @@ shinyServer(function(input, output, session) {
 
       selectInput(
         'inSelMeas2',
-        'Select 2nd measurement',
+        'Select 2nd meas.',
         locCols,
         width = '100%',
         selected = locColSel

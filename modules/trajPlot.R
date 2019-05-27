@@ -25,7 +25,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
           width = '100px',
           step = 1
         ),
-        checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot?'),
+        checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
       column(
@@ -282,7 +282,7 @@ modTrajPlot = function(input, output, session,
       x.stim.arg = c('tstart', 'tend'),
       y.stim.arg = c('ystart', 'yend'), 
       stim.bar.width.arg = 1,
-      xlab.arg = 'Time (min)',
+      xlab.arg = 'Time',
       line.col.arg = loc.line.col.arg,
       aux.label1 = if (locPos) 'pos.x' else NULL,
       aux.label2 = if (locPos) 'pos.y' else NULL,

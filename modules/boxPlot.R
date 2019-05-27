@@ -16,7 +16,7 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
                                                                 'Violin-plot' = 'viol',
                                                                 'Box-plot' = 'box', 
                                                                 'Line-plot' = 'line'), selected = 'box'),
-        checkboxInput(ns('chBPlotBoxInt'), 'Interactive Plot?'),
+        checkboxInput(ns('chBPlotBoxInt'), 'Interactive Plot'),
         actionButton(ns('butPlotBox'), 'Plot!')
       ),
       column(
@@ -85,7 +85,7 @@ modBoxPlot = function(input, output, session,
     ns <- session$ns
     
     if('box' %in% input$inPlotType)
-      checkboxInput(ns('inPlotBoxNotches'), 'Box plot notches?', FALSE)
+      checkboxInput(ns('inPlotBoxNotches'), 'Box plot notches', FALSE)
   })
   
   output$uiPlotBoxOutliers = renderUI({
@@ -94,7 +94,7 @@ modBoxPlot = function(input, output, session,
     ns <- session$ns
     
     if('box' %in% input$inPlotType)
-      checkboxInput(ns('inPlotBoxOutliers'), 'Box plot outliers?', FALSE)
+      checkboxInput(ns('inPlotBoxOutliers'), 'Box plot outliers', FALSE)
   })
   
   output$uiPlotBoxDodge = renderUI({

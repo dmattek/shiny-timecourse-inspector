@@ -7,7 +7,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
     fluidRow(
       column(
         3,
-        checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot?'),
+        checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
         radioButtons(ns('rBlegendPos'), 'Legend placement:', list('top' = 'top', 'right' = 'right')),
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
@@ -208,7 +208,7 @@ modTrajRibbonPlot = function(input, output, session,
                            dt.stim.arg = loc.dt.stim,
                            x.stim.arg = c('tstart', 'tend'),
                            y.stim.arg = c('ystart', 'yend'),
-                           xlab.arg = 'Time (min)',
+                           xlab.arg = 'Time',
                            ylab.arg = '') +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 

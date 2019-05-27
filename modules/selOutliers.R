@@ -21,7 +21,7 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
                          max = 100,
                          value = 0, 
                          step = 0.05, width = '100px'),
-             checkboxInput(ns('chBtrajInter'), 'Interpolate gaps?', value = F)
+             checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F)
       ),
       column(2, 
              radioButtons(ns('rbOutliersType'), 
@@ -40,7 +40,9 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
              downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
              htmlOutput(ns("txtOutliersPerc"))
       )
-    )
+    ),
+    checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
+    uiOutput(ns('uiDistPlot'))
   )
 }
 
@@ -83,6 +85,117 @@ modSelOutliers = function(input, output, session, in.data) {
         write.csv(unique(loc.dt[, (COLID), with = F]), file, row.names = FALSE, quote = F)
     }
   )
+  
+  # Plot of value distribution
+  output$uiDistPlot <- renderUI({
+    ns <- session$ns
+    
+    if (input$chBplotDist) {
+
+      locDT = in.data()
+      
+      if (is.null(locDT)) {
+        return(NULL)
+      }
+
+      output$densPlot = renderPlot({
+
+        # main density plot
+        locP = ggplot(locDT, aes_string(x = COLY)) +
+          geom_density()
+        
+        # Shade regions of the density plot according to
+        # value set in input$numOutliersPerc.
+        
+        # extract data from density plot
+        locDTtmp = as.data.table(ggplot_build(locP)$data[[1]])
+        
+        # shade region on the right
+        if (input$rbOutliersType == 'top') {
+          
+          # find position of the right boundary
+          locQuantR = quantile(locDT[[COLY]], 
+                               1 - input$numOutliersPerc * 0.01, 
+                               na.rm = T, 
+                               type = 3)
+          
+          # select only those points of the density plot right to the right boundary
+          locDTtmpSub = locDTtmp[x > locQuantR]
+          
+          # add shaded RIGHT region to the plot
+          if (nrow(locDTtmpSub) > 0 )
+            locP = locP + 
+            geom_area(data = locDTtmpSub, aes(x=x, y=y), fill="red") +
+            geom_vline(xintercept = locQuantR, linetype = 'dashed', color = 'red')
+        } else 
+          # shade region on the left
+          if (input$rbOutliersType == 'bot') {
+            
+            # find position of the right boundary
+            locQuantL = quantile(locDT[[COLY]], 
+                                 input$numOutliersPerc * 0.01, 
+                                 na.rm = T, 
+                                 type = 3)
+            
+            # select only those points of the density plot left to the left boundary
+            locDTtmpSub = locDTtmp[x < locQuantL]
+            
+            # add shaded LEFT region to the plot
+            if (nrow(locDTtmpSub) > 0 )
+              locP = locP + 
+              geom_area(data = locDTtmpSub, aes(x=x, y=y), fill="red") +
+              geom_vline(xintercept = locQuantL, linetype = 'dashed', color = 'red')
+            
+          } else 
+            # shade region on the left
+            if (input$rbOutliersType == 'mid') {
+              
+              # find position of the right boundary
+              locQuantR = quantile(locDT[[COLY]], 
+                                   1 - input$numOutliersPerc * 0.005, 
+                                   na.rm = T, 
+                                   type = 3)
+              
+              # find position of the left boundary
+              locQuantL = quantile(locDT[[COLY]], 
+                                   input$numOutliersPerc * 0.005, 
+                                   na.rm = T, 
+                                   type = 3)
+              
+              # select only those points of the density plot left or right of the boundaries
+              locDTtmpSubL = locDTtmp[x < locQuantL]
+              locDTtmpSubR = locDTtmp[x > locQuantR]
+              
+              # add shaded LEFT region to the plot
+              if (nrow(locDTtmpSubL) > 0 )
+                locP = locP + 
+                geom_area(data = locDTtmpSubL, aes(x=x, y=y), fill="red") +
+                geom_vline(xintercept = locQuantL, linetype = 'dashed', color = 'red')
+              
+              
+              if (nrow(locDTtmpSubR) > 0 )
+                locP = locP + 
+                geom_area(data = locDTtmpSubR, aes(x=x, y=y), fill="red") +
+                geom_vline(xintercept = locQuantR, linetype = 'dashed', color = 'red')
+            }
+        
+        locP = locP +
+          xlab('Measurement value') +
+          LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                         in.font.axis.text = PLOTFONTAXISTEXT, 
+                         in.font.axis.title = PLOTFONTAXISTITLE, 
+                         in.font.strip = PLOTFONTFACETSTRIP, 
+                         in.font.legend = PLOTFONTLEGEND)
+        
+        return(locP)
+        
+      })
+      
+    } else
+      return(NULL)
+    
+    plotOutput(ns('densPlot'))
+  })
   
 # Identify outliers and remove them from dt
   dtReturn = reactive({ 

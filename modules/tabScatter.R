@@ -20,7 +20,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
   
   tagList(
     h4(
-      "Scatter plot between two time points"
+      "Scatter plot between two t-points"
     ),
     br(),
     
@@ -90,7 +90,7 @@ output$uiSelTptX = renderUI({
   if (!is.null(loc.v)) {
     selectInput(
       ns('inSelTptX'),
-      'Select timepoint for X-axis:',
+      'Select t-point for X-axis:',
       loc.v,
       width = '100%',
       selected = 0,
@@ -108,7 +108,7 @@ output$uiSelTptY = renderUI({
   if (!is.null(loc.v)) {
     selectInput(
       ns('inSelTptY'),
-      'Select timepoint for Y-axis:',
+      'Select t-point for Y-axis:',
       loc.v,
       width = '100%',
       selected = 0,
