@@ -19,14 +19,21 @@ require(Hmisc) # for CI calculation
 DEB = T
 
 # font sizes in pts for plots
-PLOTFONTBASE = 8
-PLOTFONTAXISTEXT = 8
-PLOTFONTAXISTITLE = 8
-PLOTFONTFACETSTRIP = 10
-PLOTFONTLEGEND = 8
+# PLOTFONTBASE = 8
+# PLOTFONTAXISTEXT = 8
+# PLOTFONTAXISTITLE = 8
+# PLOTFONTFACETSTRIP = 10
+# PLOTFONTLEGEND = 8
+
+PLOTFONTBASE = 12
+PLOTFONTAXISTEXT = 12
+PLOTFONTAXISTITLE = 12
+PLOTFONTFACETSTRIP = 16
+PLOTFONTLEGEND = 12
+
 
 # default number of facets in plots
-PLOTNFACETDEFAULT = 3
+PLOTNFACETDEFAULT = 2
 
 # internal column names
 COLRT   = 'realtime'
@@ -229,20 +236,20 @@ LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 
   # add outliers for testing
   if (!is.null(in.addout)) {
     locTabLen = length(x.rand.1)
-    x.rand.1[round(runif(in.addout) * locTabLen)] = 10
-    x.rand.2[round(runif(in.addout) * locTabLen)] = 10
+    x.rand.1[round(runif(in.addout) * locTabLen)] = 5
+    x.rand.2[round(runif(in.addout) * locTabLen)] = 5
   }
   
   x.arg = rep(seq(1, in.ntpts), in.ntracks * in.nfov)
   
-  dt.nuc = data.table(Metadata_Well = rep(LETTERS[1:in.nwells], each = in.ntpts * in.nfov * in.ntracks / in.nwells),
-                      Metadata_Site = rep(1:in.nfov, each = in.ntpts * in.ntracks),
-                      Metadata_RealTime = x.arg,
-                      objCyto_Intensity_MeanIntensity_imErkCor = x.rand.1,
-                      objNuc_Intensity_MeanIntensity_imErkCor  = x.rand.2,
-                      objNuc_Location_X = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
-                      objNuc_Location_Y = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
-                      TrackLabel = rep(1:(in.ntracks*in.nfov), each = in.ntpts))
+  dt.nuc = data.table(well = rep(LETTERS[1:in.nwells], each = in.ntpts * in.nfov * in.ntracks / in.nwells),
+                      group = rep(1:in.nfov, each = in.ntpts * in.ntracks),
+                      time = x.arg,
+                      y1 = x.rand.1,
+                      y2  = x.rand.2,
+                      posx = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
+                      posy = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
+                      id = rep(1:(in.ntracks*in.nfov), each = in.ntpts))
   
   return(dt.nuc)
 }

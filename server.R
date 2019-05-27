@@ -241,7 +241,7 @@ shinyServer(function(input, output, session) {
     
     if (input$chBtrackUni) {
       locCols = getDataNucCols()
-      locColSel = locCols[grep('(S|s)ite|(S|s)eries|(F|f)ov', locCols)[1]] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[grep('(S|s)ite|(S|s)eries|(F|f)ov|(G|g)roup', locCols)[1]] # index 1 at the end in case more matches; select 1st
       
       selectInput(
         'inSelSite',
@@ -261,7 +261,7 @@ shinyServer(function(input, output, session) {
     locCols = getDataNucCols()
     
     if (!is.null(locCols)) {
-      locColSel = locCols[grep('(R|r)atio|(I|i)ntensity|y|Meas', locCols)[1]] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[grep('(R|r)atio|(I|i)ntensity|(Y|y)|(M|m)eas', locCols)[1]] # index 1 at the end in case more matches; select 1st
 
       selectInput(
         'inSelMeas1',
@@ -282,7 +282,7 @@ shinyServer(function(input, output, session) {
     
     if (!is.null(locCols) &&
         !(input$inSelMath %in% c('', '1 / '))) {
-      locColSel = locCols[grep('(R|r)atio|(I|i)ntensity|y|Meas', locCols)[1]] # index 1 at the end in case more matches; select 1st
+      locColSel = locCols[grep('(R|r)atio|(I|i)ntensity|(Y|y)|(M|m)eas', locCols)[1]] # index 1 at the end in case more matches; select 1st
 
       selectInput(
         'inSelMeas2',

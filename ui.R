@@ -64,7 +64,7 @@ shinyUI(fluidPage(
       uiOutput('varSelTime'),
       uiOutput('varSelMeas1'),
       radioButtons(
-        'inSelMath', width = '25%',
+        'inSelMath', width = '50%',
         'Math on 1st and 2nd meas.:',
         c(
           'None' = '',
