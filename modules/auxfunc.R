@@ -683,6 +683,22 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
 }
 
 # Plot average power spectrum density per facet
+LOCplotPSD <- function(dt.arg, # input data table
+                    x.arg, # string with column name for x-axis
+                    y.arg, # string with column name for y-axis
+                    group.arg=NULL, # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
+                    xlab.arg = x.arg,
+                    ylab.arg = y.arg){
+  require(ggplot2)
+  if(length(setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))) > 0){
+    stop(paste("Missing columns in dt.arg: ", setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))))
+  }
+  p.tmp <- ggplot(dt.arg, aes_string(x=x.arg, y=y.arg)) +
+    geom_line() +
+    facet_wrap(group.arg) +
+    labs(x = xlab.arg, y = ylab.arg)
+  return(p.tmp)
+}
 
 # Plots a scatter plot with marginal histograms
 # Points are connected by a line (grouping by cellID)
