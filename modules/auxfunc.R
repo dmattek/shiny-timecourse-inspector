@@ -206,6 +206,44 @@ LOCcalcTrajCI = function(in.dt, in.col.meas, in.col.by = NULL, in.type = c('norm
     return(loc.dt)
 }
 
+
+#' Calculate the power spectrum density for time-series
+#'
+#' @param in.dt Data table in long format
+#' @param in.col.meas Name of the column with the measurement
+#' @param in.col.id Name of the column with the unique series identifier
+#' @param in.col.by Column names for grouping (default NULL - no grouping). PSD of individual trajectories will be averaged within a group.
+#' @param in.method Name of the method for PSD estimation, must be one of c("pgram", "ar"). Default to "pgram*.
+#' @param in.return.period Wheter to return densities though periods (1/frequencies) instead of frequencies.
+#' @param ... Other paramters to pass to stats::spectrum()
+#'
+#' @return Datatable with columns: (frequency or period), spec (the density) and grouping column
+#' @export
+#' @import data.table
+#'
+#' @examples
+LOCcalcPSD <- function(in.dt,
+                    in.col.meas,
+                    in.col.id,
+                    in.col.by,
+                    in.method = "pgram",
+                    in.return.period = TRUE,
+                    ...){
+  require(data.table)
+  if(!in.method %in% c("pgram", "ar")){
+    stop('Method should be one of: c("pgram", "ar"')
+  }
+  dt_spec <- copy(in.dt)
+  dt_spec[, c("frequency", "spec") := (spectrum(get(in.col.meas), plot = FALSE, method = in.method, ...)[c("freq", "spec")]), by = in.col.id]
+  dt_agg <- dt_spec[, .(spec = mean(spec)), by = c(in.col.by, "frequency")]
+  if(in.return.period){
+    dt_agg[, period := 1/frequency]
+    dt_agg[, frequency := NULL]
+  }
+  return(dt_agg)
+}
+
+
 #' Generate synthetic CellProfiler output with single cell time series
 #'
 #'
@@ -644,7 +682,7 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
   return(p.tmp)
 }
 
-
+# Plot average power spectrum density per facet
 
 # Plots a scatter plot with marginal histograms
 # Points are connected by a line (grouping by cellID)
