@@ -13,6 +13,7 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
       ),
       column(
         3,
+        selectInput(ns('inPSDxchoice'), 'Xaxis:', list('Period'= TRUE, 'Frequency'= FALSE)),
         radioButtons(ns('rBPSDmethod'), 'Method for PSD estimation:', list('Smoothed Fourier' = 'pgram', 'AR Fit' = 'ar'))
       ),
       column(
@@ -186,7 +187,7 @@ modPSDPlot = function(input, output, session,
                               in.col.id = 'id',
                               in.col.by = in.facet,
                               in.method = input$rBPSDmethod,
-                              in.return.period = TRUE
+                              in.return.period = input$inPSDxchoice
                               )
     loc.dt.aggr[, (in.facet) := as.factor(get(in.facet))]
     
