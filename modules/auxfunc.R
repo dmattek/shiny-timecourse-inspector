@@ -231,15 +231,28 @@ LOCcalcPSD <- function(in.dt,
                     in.return.period = TRUE,
                     ...){
   require(data.table)
+  # Method "ar" returns $spec as matrix whereas "pgram" returns a vector, custom function to homogenze output format
+  mySpectrum <- function(x, ...){
+    args_spec <- list(x=x, plot=FALSE)
+    inargs <- list(...)
+    args_spec[names(inargs)] <- inargs
+    out <- do.call(spectrum, args_spec)
+    out$spec <- as.vector(out$spec)
+    return(out)
+  }
   if(!in.method %in% c("pgram", "ar")){
     stop('Method should be one of: c("pgram", "ar"')
   }
-  dt_spec <- copy(in.dt)
-  dt_spec[, c("frequency", "spec") := (spectrum(get(in.col.meas), plot = FALSE, method = in.method, ...)[c("freq", "spec")]), by = in.col.id]
-  dt_agg <- dt_spec[, .(spec = mean(spec)), by = c(in.col.by, "frequency")]
+  dt_spec <-  in.dt[, (mySpectrum(get(in.col.meas), plot = FALSE, method = in.method)[c("freq", "spec")]), by = in.col.id]
+  dt_group <- in.dt[, .SD[1, get(in.col.by)], by = in.col.id]
+  setnames(dt_group, "V1", in.col.by)
+  dt_spec <- merge(dt_spec, dt_group, by = in.col.id)
+  dt_agg <- dt_spec[, .(spec = mean(spec)), by = c(in.col.by, "freq")]
   if(in.return.period){
-    dt_agg[, period := 1/frequency]
+    dt_agg[, period := 1/freq]
     dt_agg[, frequency := NULL]
+  } else {
+    setnames(dt_agg, "freq", "frequency")
   }
   return(dt_agg)
 }
@@ -689,15 +702,26 @@ LOCplotPSD <- function(dt.arg, # input data table
                     y.arg, # string with column name for y-axis
                     group.arg=NULL, # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
                     xlab.arg = x.arg,
-                    ylab.arg = y.arg){
+                    ylab.arg = y.arg,
+                    col.arg = NULL){
   require(ggplot2)
   if(length(setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))) > 0){
     stop(paste("Missing columns in dt.arg: ", setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))))
   }
   p.tmp <- ggplot(dt.arg, aes_string(x=x.arg, y=y.arg)) +
     geom_line() +
+    geom_rug(sides="b", alpha = 1, color = "lightblue") +
     facet_wrap(group.arg) +
     labs(x = xlab.arg, y = ylab.arg)
+  
+  if (is.null(col.arg)) {
+    p.tmp = p.tmp +
+      scale_color_discrete(name = '')
+  } else {
+    p.tmp = p.tmp +
+      scale_colour_manual(values = col.arg, name = '')
+  }
+  
   return(p.tmp)
 }
 

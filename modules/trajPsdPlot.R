@@ -9,12 +9,16 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
       column(
         3,
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
-        radioButtons(ns('rBlegendPos'), 'Legend placement:', list('top' = 'top', 'right' = 'right')),
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
       column(
         3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1)
+        radioButtons(ns('rBPSDmethod'), 'Method for PSD estimation:', list('Smoothed Fourier' = 'pgram', 'AR Fit' = 'ar'))
+      ),
+      column(
+        3,
+        selectInput(ns('inPSDlogtype'), 'Log function:', list('log2'= 'log2', 'log10'= 'log10', 'ln'= 'log')),
+        checkboxGroupInput(ns('chBGPSDlogaxis'), 'Log the axis:', list('x' = 'x', 'y' = 'y'), inline = TRUE)
       ),
       column(
         3,
@@ -105,7 +109,7 @@ modPSDPlot = function(input, output, session,
   
   # PSD plot - download pdf
   callModule(downPlot, "downPlotTraj", 
-             in.fname = in.fname, 
+             in.fname = in.fname,
              plotTraj, TRUE)
   
   plotTraj <- function() {
@@ -139,9 +143,9 @@ modPSDPlot = function(input, output, session,
     else
       loc.line.col.arg = NULL
     
-    # select every other point for plotting
-    loc.dt = loc.dt[, .SD[seq(1, .N, input$sliPlotTrajSkip)], by = id]
-    
+    # select every other point for plotting (fixed for PSD because lead to false interpretation of PSD)
+    loc.dt = loc.dt[, .SD[seq(1, .N, 1)], by = id]
+
     # check if columns with XY positions are present
     if (sum(names(loc.dt) %like% 'pos') == 2)
       locPos = TRUE
@@ -153,7 +157,6 @@ modPSDPlot = function(input, output, session,
       locObjNum = TRUE
     else
       locObjNum = FALSE
-    
     
     
     # If in.facet.color present,
@@ -182,25 +185,31 @@ modPSDPlot = function(input, output, session,
                               in.col.meas = 'y',
                               in.col.id = 'id',
                               in.col.by = in.facet,
-                              in.method = 'pgram',
+                              in.method = input$rBPSDmethod,
                               in.return.period = TRUE
                               )
     loc.dt.aggr[, (in.facet) := as.factor(get(in.facet))]
     
     x_arg <- ifelse('period' %in% colnames(loc.dt.aggr), 'period', 'frequency')
+    x_arg_str <- paste0(toupper(substr(x_arg, 1, 1)), tolower(substring(x_arg, 2)))  # capitalized
     p.out <- LOCplotPSD(dt.arg = loc.dt.aggr,
                         x.arg = x_arg,
                         y.arg = 'spec',
                         group.arg = in.facet,
-                        xlab.arg = x_arg,
+                        col.arg = loc.facet.col,
+                        xlab.arg = x_arg_str,
                         ylab.arg = '') +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
-                     in.font.legend = PLOTFONTLEGEND) + 
-      theme(legend.position = input$rBlegendPos)
-    
+                     in.font.legend = PLOTFONTLEGEND)
+    if("x" %in% input$chBGPSDlogaxis){
+      p.out <- p.out + scale_x_continuous(trans = input$inPSDlogtype) + xlab(paste0(input$inPSDlogtype, "(", x_arg_str, ")"))
+    }
+    if("y" %in% input$chBGPSDlogaxis){
+      p.out <- p.out + scale_y_continuous(trans = input$inPSDlogtype)
+    }
     return(p.out)
   }
 }
