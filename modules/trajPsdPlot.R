@@ -1,5 +1,6 @@
 require(DT)
 
+ # UI ----
 modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
   ns <- NS(id)
   
@@ -44,12 +45,14 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
   )
 }
 
+# Server ----
 
 modPSDPlot = function(input, output, session, 
-                             in.data, 
+                             in.data,
+                             in.fname,
                              in.facet = 'group', 
-                             in.facet.color = NULL, 
-                             in.fname) {
+                             in.facet.color = NULL
+                             ) {
   
   ns <- session$ns
   
@@ -105,7 +108,7 @@ modPSDPlot = function(input, output, session,
              in.fname = in.fname, 
              plotTraj, TRUE)
   
-  plotPSD <- function() {
+  plotTraj <- function() {
     cat(file = stderr(), 'plotPSD: in\n')
     locBut = input$butPlotTraj
     

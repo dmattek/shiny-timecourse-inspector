@@ -823,6 +823,11 @@ shinyServer(function(input, output, session) {
              in.data.stim = data4stimPlot,
              in.fname = function() {return(FPDFTCSINGLE)})
   
+  # Trajectory plotting - PSD
+  callModule(modPSDPlot, 'modPSDPlot',
+             in.data = data4trajPlotNoOut,
+             in.fname = function() {return(FPDFTCPSD)})
+  
   
   # Tabs ----
   ###### AUC calculation and plotting

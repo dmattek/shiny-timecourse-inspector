@@ -118,6 +118,12 @@ shinyUI(fluidPage(
               uiOutput('varSelHighlight'),
               br(),
               modTrajPlotUI('modTrajPlot')
+            ),
+            
+            tabPanel(
+              "Power Spectral Density",
+              br(),
+              modPSDPlotUI('modPSDPlot')
             )
           )
         ),

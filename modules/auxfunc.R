@@ -53,6 +53,7 @@ FCSVOUTLIERS = 'outliers.csv'
 FCSVTCCLEAN  = 'tCoursesSelected_clean.csv'
 FPDFTCMEAN   = "tCoursesMeans.pdf"
 FPDFTCSINGLE = "tCourses.pdf"
+FPDFTCPSD    = 'tCoursesPsd.pdf'
 FPDFBOXAUC   = 'boxplotAUC.pdf'
 FPDFBOXTP    = 'boxplotTP.pdf'
 FPDFSCATTER  = 'scatter.pdf'
