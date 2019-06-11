@@ -205,7 +205,7 @@ modPSDPlot = function(input, output, session,
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND)
     if("x" %in% input$chBGPSDlogaxis){
-      p.out <- p.out + scale_x_continuous(trans = input$inPSDlogtype) + xlab(paste0(input$inPSDlogtype, "(", x_arg_str, ")"))
+      p.out <- p.out + scale_x_continuous(trans = input$inPSDlogtype)
     }
     if("y" %in% input$chBGPSDlogaxis){
       p.out <- p.out + scale_y_continuous(trans = input$inPSDlogtype)
