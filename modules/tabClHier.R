@@ -172,6 +172,9 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
       tabPanel('Time-courses',
                modTrajPlotUI(ns('modPlotHierTraj'))),
       
+      tabPanel('PSD',
+               modPSDPlotUI(ns('modPlotHierPsd'))),
+      
       tabPanel('Cluster dist.',
                modClDistPlotUI(ns('hierClDistPlot'), 'xxx'))
       
@@ -528,13 +531,22 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
            '.pdf')
   })
   
+  createFnamePsdPlot = reactive({
+    
+    paste0('clust_hierch_tCoursesPsd_',
+           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           '_',
+           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], 
+           '.pdf')
+  })
+  
   createFnameDistPlot = reactive({
     
     paste0('clust_hierch_clDist_',
            s.cl.diss[as.numeric(input$selectPlotHierDiss)],
            '_',
-           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf')  })
-  
+           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf')  
+  })
   
   
   #  Hierarchical - Heat Map - download pdf
@@ -556,6 +568,13 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
              in.facet.color = getClColHier,
              in.fname = createFnameRibbonPlot)
   
+  # plot cluster PSD
+  callModule(modPSDPlot, 'modPlotHierPsd',
+             in.data = data4trajPlotCl,
+             in.facet = 'cl',
+             in.facet.color = getClColHier,
+             in.fname = createFnamePsdPlot)
+
   # plot distribution barplot
   callModule(modClDistPlot, 'hierClDistPlot', 
              in.data = data4clDistPlot,

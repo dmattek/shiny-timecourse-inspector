@@ -53,6 +53,7 @@ FCSVOUTLIERS = 'outliers.csv'
 FCSVTCCLEAN  = 'tCoursesSelected_clean.csv'
 FPDFTCMEAN   = "tCoursesMeans.pdf"
 FPDFTCSINGLE = "tCourses.pdf"
+FPDFTCPSD    = 'tCoursesPsd.pdf'
 FPDFBOXAUC   = 'boxplotAUC.pdf'
 FPDFBOXTP    = 'boxplotTP.pdf'
 FPDFSCATTER  = 'scatter.pdf'
@@ -205,6 +206,57 @@ LOCcalcTrajCI = function(in.dt, in.col.meas, in.col.by = NULL, in.type = c('norm
     
     return(loc.dt)
 }
+
+
+#' Calculate the power spectrum density for time-series
+#'
+#' @param in.dt Data table in long format
+#' @param in.col.meas Name of the column with the measurement
+#' @param in.col.id Name of the column with the unique series identifier
+#' @param in.col.by Column names for grouping (default NULL - no grouping). PSD of individual trajectories will be averaged within a group.
+#' @param in.method Name of the method for PSD estimation, must be one of c("pgram", "ar"). Default to "pgram*.
+#' @param in.return.period Wheter to return densities though periods (1/frequencies) instead of frequencies.
+#' @param ... Other paramters to pass to stats::spectrum()
+#'
+#' @return Datatable with columns: (frequency or period), spec (the density) and grouping column
+#' @export
+#' @import data.table
+#'
+#' @examples
+LOCcalcPSD <- function(in.dt,
+                    in.col.meas,
+                    in.col.id,
+                    in.col.by,
+                    in.method = "pgram",
+                    in.return.period = TRUE,
+                    ...){
+  require(data.table)
+  # Method "ar" returns $spec as matrix whereas "pgram" returns a vector, custom function to homogenze output format
+  mySpectrum <- function(x, ...){
+    args_spec <- list(x=x, plot=FALSE)
+    inargs <- list(...)
+    args_spec[names(inargs)] <- inargs
+    out <- do.call(spectrum, args_spec)
+    out$spec <- as.vector(out$spec)
+    return(out)
+  }
+  if(!in.method %in% c("pgram", "ar")){
+    stop('Method should be one of: c("pgram", "ar"')
+  }
+  dt_spec <-  in.dt[, (mySpectrum(get(in.col.meas), plot = FALSE, method = in.method)[c("freq", "spec")]), by = in.col.id]
+  dt_group <- in.dt[, .SD[1, get(in.col.by)], by = in.col.id]
+  setnames(dt_group, "V1", in.col.by)
+  dt_spec <- merge(dt_spec, dt_group, by = in.col.id)
+  dt_agg <- dt_spec[, .(spec = mean(spec)), by = c(in.col.by, "freq")]
+  if(in.return.period){
+    dt_agg[, period := 1/freq]
+    dt_agg[, frequency := NULL]
+  } else {
+    setnames(dt_agg, "freq", "frequency")
+  }
+  return(dt_agg)
+}
+
 
 #' Generate synthetic CellProfiler output with single cell time series
 #'
@@ -644,7 +696,34 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
   return(p.tmp)
 }
 
-
+# Plot average power spectrum density per facet
+LOCplotPSD <- function(dt.arg, # input data table
+                    x.arg, # string with column name for x-axis
+                    y.arg, # string with column name for y-axis
+                    group.arg=NULL, # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
+                    xlab.arg = x.arg,
+                    ylab.arg = y.arg,
+                    col.arg = NULL){
+  require(ggplot2)
+  if(length(setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))) > 0){
+    stop(paste("Missing columns in dt.arg: ", setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))))
+  }
+  p.tmp <- ggplot(dt.arg, aes_string(x=x.arg, y=y.arg)) +
+    geom_line() +
+    geom_rug(sides="b", alpha = 1, color = "lightblue") +
+    facet_wrap(group.arg) +
+    labs(x = xlab.arg, y = ylab.arg)
+  
+  if (is.null(col.arg)) {
+    p.tmp = p.tmp +
+      scale_color_discrete(name = '')
+  } else {
+    p.tmp = p.tmp +
+      scale_colour_manual(values = col.arg, name = '')
+  }
+  
+  return(p.tmp)
+}
 
 # Plots a scatter plot with marginal histograms
 # Points are connected by a line (grouping by cellID)
