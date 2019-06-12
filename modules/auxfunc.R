@@ -229,6 +229,7 @@ LOCcalcPSD <- function(in.dt,
                     in.col.by,
                     in.method = "pgram",
                     in.return.period = TRUE,
+                    in.time.btwPoints = 1,
                     ...){
   require(data.table)
   # Method "ar" returns $spec as matrix whereas "pgram" returns a vector, custom function to homogenze output format
@@ -250,8 +251,11 @@ LOCcalcPSD <- function(in.dt,
   dt_agg <- dt_spec[, .(spec = mean(spec)), by = c(in.col.by, "freq")]
   if(in.return.period){
     dt_agg[, period := 1/freq]
-    dt_agg[, frequency := NULL]
+    dt_agg[, freq := NULL]
+    # Adjust period unit to go from frame unit  to time unit
+    dt_agg[, period := period * in.time.btwPoints]
   } else {
+    dt_agg[, freq := freq * (1/in.time.btwPoints)]
     setnames(dt_agg, "freq", "frequency")
   }
   return(dt_agg)
@@ -703,7 +707,7 @@ LOCplotPSD <- function(dt.arg, # input data table
                     group.arg=NULL, # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
                     xlab.arg = x.arg,
                     ylab.arg = y.arg,
-                    col.arg = NULL){
+                    facet.color.arg = NULL){
   require(ggplot2)
   if(length(setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))) > 0){
     stop(paste("Missing columns in dt.arg: ", setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))))
@@ -714,12 +718,18 @@ LOCplotPSD <- function(dt.arg, # input data table
     facet_wrap(group.arg) +
     labs(x = xlab.arg, y = ylab.arg)
   
-  if (is.null(col.arg)) {
+  if (!is.null(facet.color.arg)) {
+    
+    loc.y.max = max(dt.arg[, c(y.arg), with = FALSE])
+    loc.dt.cl = data.table(xx = 1:length(facet.color.arg), yy = loc.y.max)
+    setnames(loc.dt.cl, 'xx', group.arg)
+    
+    # adjust facet.color.arg to plot
+    
     p.tmp = p.tmp +
-      scale_color_discrete(name = '')
-  } else {
-    p.tmp = p.tmp +
-      scale_colour_manual(values = col.arg, name = '')
+      geom_hline(data = loc.dt.cl, colour = facet.color.arg, yintercept = loc.y.max, size = 4) +
+      scale_colour_manual(values = facet.color.arg,
+                          name = '')
   }
   
   return(p.tmp)

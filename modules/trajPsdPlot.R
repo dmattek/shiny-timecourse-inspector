@@ -1,4 +1,5 @@
 require(DT)
+require(scales)
 
  # UI ----
 modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
@@ -8,18 +9,19 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
     fluidRow(
       column(
         3,
+        radioButtons(ns('rBPSDmethod'), 'Method for PSD estimation:', list('Smoothed Fourier' = 'pgram', 'AR Fit' = 'ar')),
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
       column(
         3,
-        selectInput(ns('inPSDxchoice'), 'Xaxis:', list('Period'= TRUE, 'Frequency'= FALSE)),
-        radioButtons(ns('rBPSDmethod'), 'Method for PSD estimation:', list('Smoothed Fourier' = 'pgram', 'AR Fit' = 'ar'))
+        selectInput(ns('inPSDxchoice'), 'X-axis:', list('Period'= TRUE, 'Frequency'= FALSE)),
+        numericInput(ns('ninPSDsamplFreq'), '# time units between 2 points:', value = 1, min = 0, step = 1)
       ),
       column(
         3,
-        selectInput(ns('inPSDlogtype'), 'Log function:', list('log2'= 'log2', 'log10'= 'log10', 'ln'= 'log')),
-        checkboxGroupInput(ns('chBGPSDlogaxis'), 'Log the axis:', list('x' = 'x', 'y' = 'y'), inline = TRUE)
+        selectInput(ns('inPSDlogtype'), 'Transformation:', list('1/x'='inverse_trans', 'log2'= 'log2', 'log10'= 'log10', 'ln'= 'log')),
+        checkboxGroupInput(ns('chBGPSDlogaxis'), 'Transform the axis:', list('x' = 'x', 'y' = 'y'), inline = TRUE)
       ),
       column(
         3,
@@ -43,9 +45,6 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
       )
     ),
     uiOutput(ns('uiPlotTraj')),
-    br(),
-    modTrackStatsUI(ns('dispTrackStats')),
-    
     downPlotUI(ns('downPlotTraj'), "Download PDF")
   )
 }
@@ -187,7 +186,8 @@ modPSDPlot = function(input, output, session,
                               in.col.id = 'id',
                               in.col.by = in.facet,
                               in.method = input$rBPSDmethod,
-                              in.return.period = input$inPSDxchoice
+                              in.return.period = input$inPSDxchoice,
+                              in.time.btwPoints = input$ninPSDsamplFreq
                               )
     loc.dt.aggr[, (in.facet) := as.factor(get(in.facet))]
     
@@ -197,7 +197,7 @@ modPSDPlot = function(input, output, session,
                         x.arg = x_arg,
                         y.arg = 'spec',
                         group.arg = in.facet,
-                        col.arg = loc.facet.col,
+                        facet.color.arg = loc.facet.col,
                         xlab.arg = x_arg_str,
                         ylab.arg = '') +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
@@ -205,11 +205,23 @@ modPSDPlot = function(input, output, session,
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND)
+    # TODO: Restore tick labels when using inverse transformation
+    # See: https://stackoverflow.com/questions/56130614/ggplot2-missing-labels-after-custom-scaling-of-axis
+    inverse_trans <- scales::trans_new("myinverse", transform = function(x) 1/x,
+                                       inverse = function(x) 1/(1/x))
     if("x" %in% input$chBGPSDlogaxis){
-      p.out <- p.out + scale_x_continuous(trans = input$inPSDlogtype)
+      if(input$inPSDlogtype == "inverse_trans"){
+        p.out <- p.out + scale_x_continuous(trans = inverse_trans)
+      } else {
+        p.out <- p.out + scale_x_continuous(trans = input$inPSDlogtype)
+      }
     }
     if("y" %in% input$chBGPSDlogaxis){
+      if(input$inPSDlogtype == "inverse_trans"){
+        p.out <- p.out + scale_y_continuous(trans = inverse_trans)
+      } else {
       p.out <- p.out + scale_y_continuous(trans = input$inPSDlogtype)
+      }
     }
     return(p.out)
   }
