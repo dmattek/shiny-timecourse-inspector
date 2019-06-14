@@ -43,7 +43,7 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
         numericInput(
           ns('inPlotBoxWidth'),
           'Width [%]:',
-          value = 100,
+          value = PLOTWIDTH,
           min = 10,
           width = '100px',
           step = 10
@@ -51,7 +51,7 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
         numericInput(
           ns('inPlotBoxHeight'),
           'Height [px]:',
-          value = 800,
+          value = PLOTBOXHEIGHT,
           min = 100,
           width = '100px',
           step = 50

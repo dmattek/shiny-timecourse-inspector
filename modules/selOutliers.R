@@ -67,7 +67,7 @@ modSelOutliers = function(input, output, session, in.data) {
   output$txtOutliersPerc <- renderText({ 
     cat(file = stdout(), 'modSelOutliers: txtOutliersPerc\n')
     
-      sprintf('<b>%d total track(s)<br>%d outlier track(s)<br>%d outlier point(s)</b><br>', 
+      sprintf('<b>%d total track(s)<br>%d removed track(s)<br>%d removed point(s)</b><br>', 
             nCellsCounter[['nCellsOrig']], 
             nCellsCounter[['nCellsOrig']] - nCellsCounter[['nCellsAfter']],
             nCellsCounter[['nOutlierTpts']])

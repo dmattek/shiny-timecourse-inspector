@@ -6,7 +6,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
   tagList(
     fluidRow(
       column(
-        3,
+        2,
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
         radioButtons(ns('rBlegendPos'), 'Legend placement:', list('top' = 'top', 'right' = 'right')),
         actionButton(ns('butPlotTraj'), 'Plot!')
@@ -16,20 +16,19 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
         sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1)
       ),
       column(
-        3,
+        2,
         numericInput(
           ns('inPlotTrajWidth'),
           'Width [%]:',
-          value = 100,
+          value = PLOTWIDTH,
           min = 10,
-          max = 100,
           width = '100px',
           step = 10
         ),
         numericInput(
           ns('inPlotTrajHeight'),
           'Height [px]:',
-          value = 800,
+          value = PLOTRIBBONHEIGHT,
           min = 100,
           width = '100px',
           step = 50

@@ -18,7 +18,7 @@ shinyUI(fluidPage(
   title = "Timecourse Inspector",
   
   sidebarLayout(
-    sidebarPanel(
+    sidebarPanel(width = 3,
       #Selector for file upload
       fileInput(
         'inFileLoadNuc',

@@ -25,15 +25,22 @@ DEB = T
 # PLOTFONTFACETSTRIP = 10
 # PLOTFONTLEGEND = 8
 
-PLOTFONTBASE = 12
-PLOTFONTAXISTEXT = 12
-PLOTFONTAXISTITLE = 12
-PLOTFONTFACETSTRIP = 16
-PLOTFONTLEGEND = 12
+PLOTFONTBASE = 16
+PLOTFONTAXISTEXT = 16
+PLOTFONTAXISTITLE = 16
+PLOTFONTFACETSTRIP = 20
+PLOTFONTLEGEND = 16
 
+# height (in pixels) of ribbon and single traj. plots
+PLOTRIBBONHEIGHT = 500 # in pixels
+PLOTTRAJHEIGHT = 500 # in pixels
+PLOTPSDHEIGHT = 500 # in pixels
+PLOTBOXHEIGHT = 500 # in pixels
+PLOTSCATTERHEIGHT = 500 # in pixels
+PLOTWIDTH = 85 # in percent
 
 # default number of facets in plots
-PLOTNFACETDEFAULT = 2
+PLOTNFACETDEFAULT = 3
 
 # internal column names
 COLRT   = 'realtime'
@@ -499,7 +506,7 @@ LOCrotatedAxisElementText = function(angle, position='x', size = 12){
   rads = (-angle - positions[[ position ]])*pi/180
   hjust = round((1 - sin(rads)))/2
   vjust = round((1 + cos(rads)))/2
-  element_text(size = 12, angle = angle, vjust = vjust, hjust = hjust)
+  element_text(size = size, angle = angle, vjust = vjust, hjust = hjust)
 }
 
 # Plot individual time series

@@ -7,7 +7,7 @@ modClDistPlotUI =  function(id, label = "Plot Fractions WIthin Clusters") {
                    "45 deg" = 45,
                    "90 deg" = 90)),
     actionButton(ns('butPlotClDist'), 'Plot!'),
-    plotOutput(ns('outPlotClDist'), height = '800px', width = 'auto'),
+    plotOutput(ns('outPlotClDist'), height = PLOTBOXHEIGHT, width = 'auto'),
     downPlotUI(ns('downPlotClDist'), "Download PDF")
   )
 }
@@ -63,7 +63,7 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) + 
       theme(
-        axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate))
+        axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), size = PLOTFONTAXISTEXT)
     )
 
     return(p.out)

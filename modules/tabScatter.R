@@ -41,7 +41,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         numericInput(
           ns('inPlotHeight'),
           'Display plot height [px]',
-          value = 1000,
+          value = PLOTSCATTERHEIGHT,
           min = 100,
           step = 100
         ),

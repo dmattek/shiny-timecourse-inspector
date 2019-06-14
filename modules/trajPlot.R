@@ -16,7 +16,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
   tagList(
     fluidRow(
       column(
-        3,
+        2,
         numericInput(
           ns('inPlotTrajFacetNcol'),
           '#Columns:',
@@ -29,7 +29,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
       column(
-        3,
+        2,
         checkboxGroupInput(ns('chBPlotTrajStat'), 'Stats:', list('Mean' = 'mean', '95% conf. interv.' = 'CI', 'Std. error' = 'SE'))
       ),
       column(
@@ -48,20 +48,19 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         
       ),
       column(
-        3,
+        2,
         numericInput(
           ns('inPlotTrajWidth'),
           'Width [%]:',
-          value = 100,
+          value = PLOTWIDTH,
           min = 10,
-          max = 100,
           width = '100px',
           step = 10
         ),
         numericInput(
           ns('inPlotTrajHeight'),
           'Height [px]:',
-          value = 800,
+          value = PLOTTRAJHEIGHT,
           min = 100,
           width = '100px',
           step = 50
