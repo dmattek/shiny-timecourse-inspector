@@ -18,7 +18,7 @@ require(Hmisc) # for CI calculation
 # if true, additional output printed to R console
 DEB = T
 
-# font sizes in pts for plots
+# font sizes in pts for plots in the manuscript
 # PLOTFONTBASE = 8
 # PLOTFONTAXISTEXT = 8
 # PLOTFONTAXISTITLE = 8

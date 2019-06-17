@@ -63,7 +63,8 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) + 
       theme(
-        axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), size = PLOTFONTAXISTEXT)
+        axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), 
+                                                size = PLOTFONTAXISTEXT)
     )
 
     return(p.out)

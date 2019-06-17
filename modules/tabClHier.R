@@ -51,8 +51,9 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                ticks = TRUE,
                round = TRUE
              ),
-             checkboxInput(ns('chBPlotHierClAss'), 'Manually assign cluster colours'),
-             uiOutput(ns('uiPlotHierClAss')),
+             # These two lines are to manually assign colours to clusters; it doesn't really work well, so skip
+             #checkboxInput(ns('chBPlotHierClAss'), 'Manually assign cluster colours'),
+             #uiOutput(ns('uiPlotHierClAss')),
              checkboxInput(ns('chBPlotHierClSel'), 'Manually select clusters to display'),
              uiOutput(ns('uiPlotHierClSel')),
              downloadButton(ns('downCellCl'), 'Download CSV with cell IDs and cluster no.')

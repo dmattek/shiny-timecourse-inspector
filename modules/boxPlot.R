@@ -245,7 +245,8 @@ modBoxPlot = function(input, output, session,
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) + 
       theme(legend.position = input$selPlotBoxLegendPos,
-            axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate)))
+            axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), 
+                                                    size = PLOTFONTAXISTEXT))
 
     
     return(p.out)
