@@ -1,6 +1,15 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for displaying time series statistics
+#
+
 require(DT)
 require(data.table)
 
+
+# UI ----
 modTrackStatsUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
@@ -10,7 +19,7 @@ modTrackStatsUI =  function(id, label = "Comparing t-points") {
   )
 }
 
-
+# SERVER ----
 modTrackStats = function(input, output, session, 
                          in.data) {
   
@@ -61,7 +70,7 @@ modTrackStats = function(input, output, session,
     if (is.null(loc.dt))
       return(NULL)
     
-    sprintf('<b>Number of tracks: %d <br>Average track length: %.2f time units</b>', 
+    sprintf('<b>Number of time-series: %d <br>Average length: %.2f time units</b>', 
             length(unique(loc.dt[['id']])), 
             loc.dt[, .(trackLength = .N), by = 'id'][, mean(trackLength)])
     

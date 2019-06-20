@@ -1,5 +1,11 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for sparse hierarchical clustering using sparcl package
+#
 
-# UI
+# UI ----
 clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
   ns <- NS(id)
   
@@ -183,7 +189,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
   )
 }
 
-# SERVER
+# SERVER ----
 clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
 
   # UI for advanced options

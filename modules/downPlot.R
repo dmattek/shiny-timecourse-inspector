@@ -1,4 +1,8 @@
-# RShiny module for downloading pdf of the plot
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for downloading pdf of the plot
 # Use:
 # in ui.R
 # downPlotUI('uniqueID', "your_label")
@@ -6,7 +10,7 @@
 # in server.R
 # callModule(downPlot, "uniqueID", 'fname.pdf', input_plot_to_save)
 
-
+# UI ----
 downPlotUI <- function(id, label = "Download Plot") {
   ns <- NS(id)
   
@@ -40,6 +44,8 @@ downPlotUI <- function(id, label = "Download Plot") {
     )
   )
 }
+
+# SERVER ----
 
 downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
 

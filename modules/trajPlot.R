@@ -2,7 +2,7 @@
 # Time Course Inspector: Shiny app for plotting time series data
 # Author: Maciej Dobrzynski
 #
-# This is the module for plotting individual time series
+# This module is for plotting individual time series
 #
 
 

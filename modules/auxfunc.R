@@ -2,7 +2,7 @@
 # Time Course Inspector: Shiny app for plotting time series data
 # Author: Maciej Dobrzynski
 #
-# These are auxilary functions
+# Auxilary functions & definitions of global constants
 #
 
 
@@ -25,6 +25,7 @@ DEB = T
 # PLOTFONTFACETSTRIP = 10
 # PLOTFONTLEGEND = 8
 
+# font sizes in pts for screen display
 PLOTFONTBASE = 16
 PLOTFONTAXISTEXT = 16
 PLOTFONTAXISTITLE = 16
@@ -155,28 +156,16 @@ helpPopup <- function(title, content,
   )
 }
 
-help.text = c(
-  'Accepts CSV file with a column of cell IDs for removal. 
-                   IDs should correspond to those used for plotting. 
-  Say, the main data file contains columns Metadata_Site and TrackLabel. 
-  These two columns should be then selected in UI to form a unique cell ID, e.g. 001_0001 where former part corresponds to Metadata_Site and the latter to TrackLabel.',
-  'Plotting and data processing requires a unique cell ID across entire dataset. A typical dataset from CellProfiler assigns unique cell ID (TrackLabel) within each field of view (Metadata_Site).
-                   Therefore, a unique ID is created by concatenating these two columns. If the dataset already contains a unique ID, UNcheck this box and select a single column only.',
-  'This option allows to interpolate NAs or missing data. Some rows in the input file might be missing because a particular time point might not had been acquired. 
-  This option, interpolates such missing points as well as points with NAs in the measurement column. When this option is checked, the interval of time column must be provided!',
-  'Accepts CSV file with 5 columns: grouping (e.g. condition), start and end time points of stimulation, start and end points of y-position, dummy column with id.'
-)
-
 help.text.short = c(
-  'Load CSV file with a column of cell IDs for removal. IDs should correspond to those used for plotting.',
+  'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',
   'If the track ID is unique only within a group, make it unique globally by combining with the grouping column.',
-  'Interpolate missing tpts and pre-existing NAs. When checked, the interval of time column must be provided!',
-  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with id.',
+  'Interpolate missing time points and pre-existing NAs. The interval of the time column must be provided!',
+  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with ID.',
   'Select columns to group data according to treatment, condition, etc.',
   'Select math operation to perform on a single or two columns,',
   'Select range of time for further processing.',
-  'Normalise data to a selected region.',
-  'Download data after modification in this section.'
+  'Normalise time series to a selected region.',
+  'Download time series after modification in this section.'
 )
 
 # Functions for data processing ----

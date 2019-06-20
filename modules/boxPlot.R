@@ -1,10 +1,15 @@
-# Module for plotting a choice of box/violin/dot-plots
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for plotting a choice of box/violin/dot-plots
 # Assumes in.data contains columns:
 # realtime
 # y
 # group
 # id
 
+# UI ----
 modBoxPlotUI =  function(id, label = "Plot Box-plots") {
   ns <- NS(id)
   
@@ -68,7 +73,7 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
   )
 }
 
-
+# SERVER ----
 modBoxPlot = function(input, output, session, 
                       in.data, 
                       in.cols = list(meas.x = 'realtime',

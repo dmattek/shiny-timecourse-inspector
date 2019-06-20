@@ -1,3 +1,10 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for plotting group averages as ribbon plots (mean + 95%CI)
+#
+
 require(DT)
 
 modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {

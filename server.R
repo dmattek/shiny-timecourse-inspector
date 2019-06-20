@@ -166,7 +166,7 @@ shinyServer(function(input, output, session) {
     
     selectInput(
       'inSelTrackLabel',
-      'Select Track Label:',
+      'Select ID:',
       locCols,
       width = '100%',
       selected = locColSel

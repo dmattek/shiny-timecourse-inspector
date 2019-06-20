@@ -1,3 +1,10 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Marc-Antoine Jacques
+#
+# This module is for plotting Power Spectral Analysis
+#
+
 require(DT)
 require(scales)
 
@@ -80,10 +87,6 @@ modPSDPlot = function(input, output, session,
           height = paste0(input$inPlotTrajHeight, 'px')
         )
   })
-  
-  
-  callModule(modTrackStats, 'dispTrackStats',
-             in.data = in.data)
   
   
   output$outPlotTraj <- renderPlot({

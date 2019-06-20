@@ -1,3 +1,11 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is a tab for plotting box-plots at selected time points
+#
+
+# UI ----
 tabBoxPlotUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
@@ -19,8 +27,7 @@ tabBoxPlotUI =  function(id, label = "Comparing t-points") {
   )
 }
 
-####
-## server box-plot
+# SERVER ----
 tabBoxPlot = function(input, output, session, in.data, in.fname) {
   
   callModule(modStats, 'dispStats',

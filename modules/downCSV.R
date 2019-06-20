@@ -2,8 +2,7 @@
 # Time Course Inspector: Shiny app for plotting time series data
 # Author: Maciej Dobrzynski
 #
-# This is the module of a Shiny web application.
-# Download CSV with data
+# This module is for downloading CSV with data
 #
 # Usage:
 # in ui.R

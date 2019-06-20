@@ -1,4 +1,12 @@
-modClDistPlotUI =  function(id, label = "Plot Fractions WIthin Clusters") {
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for plotting stacked bar plot with percentages of time series in clusters
+#
+
+# UI ----
+modClDistPlotUI =  function(id, label = "Plot Fractions Within Clusters") {
   ns <- NS(id)
   
   tagList(
@@ -13,6 +21,8 @@ modClDistPlotUI =  function(id, label = "Plot Fractions WIthin Clusters") {
 }
 
 
+
+# SERVER ----
 
 # Params:
 # in.data - data prepared with data4clDistPlot f-n
@@ -55,7 +65,7 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
     
     p.out = p.out + 
       scale_y_continuous(labels = percent) +
-      ylab("percentage of cells\n") +  
+      ylab("Percentage of time-series\n") +  
       xlab("") +  
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 

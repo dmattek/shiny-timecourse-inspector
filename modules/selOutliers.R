@@ -2,7 +2,7 @@
 # Time Course Inspector: Shiny app for plotting time series data
 # Author: Maciej Dobrzynski
 #
-# This is the module of a Shiny web application.
+# This is a module of a Shiny web application.
 # Outlier identification, selection
 
 # UI-remove-outliers ----

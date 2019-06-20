@@ -1,4 +1,9 @@
-# RShiny module for the scatter plot
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is a tab for plotting scatter plots between two time points
+#
 # Use:
 # in ui.R
 # tabPanel(
@@ -14,7 +19,7 @@ require(plotly) # interactive plot
 require(robust)
 require(MASS)
 
-# UI
+# UI ----
 tabScatterPlotUI <- function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
@@ -65,7 +70,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
   )
 }
 
-# SERVER
+# SERVER ----
 tabScatterPlot <- function(input, output, session, in.data, in.fname) {
   
 # return all unique time points (real time)

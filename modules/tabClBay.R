@@ -1,4 +1,10 @@
-# RShiny module for performing Bayesian  clustering using bclust
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for Bayesian clustering using bclust package
+# NOT USED AT THE MOMENT!!!
+#
 # Use:
 # in ui.R
 # tabPanel(
@@ -27,7 +33,7 @@ l.col.pal = list(
   "Blues" = "Blues"
 )
 
-# UI
+# UI ----
 clustBayUI <- function(id, label = "Sparse Hierarchical CLustering") {
   ns <- NS(id)
   
@@ -142,7 +148,7 @@ clustBayUI <- function(id, label = "Sparse Hierarchical CLustering") {
   )
 }
 
-# SERVER
+# SERVER ----
 clustBay <- function(input, output, session, dataMod) {
   userFitBclus <- reactive({
     cat(file = stderr(), 'userFitBclus \n')

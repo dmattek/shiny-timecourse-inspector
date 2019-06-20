@@ -49,7 +49,7 @@ shinyUI(fluidPage(
       
       uiOutput('varSelTimeFreq'),
 
-      checkboxInput('chBtrackUni', 'Create unique track ID', F),
+      checkboxInput('chBtrackUni', 'Create unique ID', F),
       bsTooltip('chBtrackUni', help.text.short[2], placement = "right", trigger = "hover", options = NULL),
       
       tags$hr(),

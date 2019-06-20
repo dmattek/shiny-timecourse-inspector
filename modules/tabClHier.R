@@ -2,8 +2,7 @@
 # Time Course Inspector: Shiny app for plotting time series data
 # Author: Maciej Dobrzynski
 #
-# This is the module of a Shiny web application.
-# Hierarchical clustering
+# This module is a tab for hierarchical clustering (base R hclust + dist)
 
 # UI ----
 clustHierUI <- function(id, label = "Hierarchical CLustering") {
@@ -51,9 +50,12 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                ticks = TRUE,
                round = TRUE
              ),
+             
              # These two lines are to manually assign colours to clusters; it doesn't really work well, so skip
+             # NOT USED AT THE MOMENT!
              #checkboxInput(ns('chBPlotHierClAss'), 'Manually assign cluster colours'),
              #uiOutput(ns('uiPlotHierClAss')),
+             
              checkboxInput(ns('chBPlotHierClSel'), 'Manually select clusters to display'),
              uiOutput(ns('uiPlotHierClSel')),
              downloadButton(ns('downCellCl'), 'Download CSV with cell IDs and cluster no.')
@@ -279,9 +281,10 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     loc.col = get(input$selectPlotHierPaletteDend)(n = loc.k)
 
     # take into account manual assignment of cluster numbers
-    if (input$chBPlotHierClAss) {
-      loc.col = loc.col[as.numeric(input$inPlotHierClAss)]
-    }
+    # NOT USED AT THE MOMENT
+    #if (input$chBPlotHierClAss) {
+    #  loc.col = loc.col[as.numeric(input$inPlotHierClAss)]
+    #}
     
     dend <- as.dendrogram(cl.hc)
     dend <- color_branches(dend, 

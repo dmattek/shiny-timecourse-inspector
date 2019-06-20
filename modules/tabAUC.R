@@ -1,7 +1,14 @@
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is a tab for plotting Area Under Curve
+#
 # Calculates area under curve (AUC) for every single time course provided in the input
 
 require(pracma) # for trapz
 
+# UI ----
 modAUCplotUI =  function(id, label = "Plot Area Under Curves") {
   ns <- NS(id)
   
@@ -19,6 +26,7 @@ modAUCplotUI =  function(id, label = "Plot Area Under Curves") {
   )
 }
 
+# SERVER ----
 modAUCplot = function(input, output, session, in.data, in.fname) {
   
   ns <- session$ns
