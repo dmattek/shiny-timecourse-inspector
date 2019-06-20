@@ -1,11 +1,10 @@
 # Time-course analysis web-app
 
 ## Running the app from the server
-The app can be accessed here:
-http://pertzlab.unibe.ch:3838/shiny-timecourse-inspector/ (UniBe VPN only!)
+The app can be deployed on R/Shiny server. Follow instruction [here](https://shiny.rstudio.com/deploy/ Shiny - Hosting).
 
 ## Running the app locally
-Alternatively, after downloading the code, the app can be run within RStudio. Open `server.R` or `ui.R` file, then click "Run App" button with green triangle in the upper right corner of the window with code open.
+Alternatively, after downloading the code, the app can run within RStudio. Open `server.R` or `ui.R` file, then click "Run App" button with green triangle in the upper right corner of the window with code open.
 
 Following packages need to be installed in order to run the app locally:
 
@@ -94,11 +93,16 @@ In the example above, the `ID` column is not unique across the dataset (ID=1 is 
 
 ## Modules
 
-The app opens with a default window that allows to plot population averages and individual time series. 
+The app opens with a default window that allows to plot population averages, individual time series, and power spectral density. 
 
-The following features of time series analysis are available in the app's tabs:
+The following features of time series analysis are available in the app:
 
-- Calculate area under individual time series and visualise as a dot-, violin-, or a box-plot. The UI allows for selection of the time series range used for AUC calculation.
+- Perform simple **math calculations** on an individual variable (inversion 1/X), or on two variables (division, sum, multiplication, subtraction).
+- **Trim** the time axis of the data.
+- **Normalise** to the average of data points in a selected interval. Time series can be normalised with respect to the entire dataset, a group, or a single time series. The latter would normalise every time course to the mean of its own selected interval.
+- **Remove outlier time points** by removing a percentage of data from the top, bottom, or both tails of pooled data points. Gaps in time series due to outlier removal can be then linearly interpolated or tracks can be removed entirely from the set. The UI allows for selecting the size of gaps above which the track is removed.
+- **Highlight** individual time series by selecting a unique series identifier.
+- Calculate area under individual time series and visualise as a dot-, violin-, or a box-plot. The UI allows for selection of the time series range used for **AUC** calculation.
 - Display a dot-, violin-, box-, or a line-plot for selected time points.
-- Display a scatter-plot to identify correlations between two time points. 
-- Perform hierarchical and sparse-hierarchical clustering of individual time series. In these modules, the dendrogram can be cut at a chosen level to help visualising clusters. Addiitonally available are plots with cluster averages, individual times series per cluster, and contribution of time series from different groupings to clusters. 
+- Display a scatter-plot to identify **correlations** between two time points. 
+- Perform **hierarchical and sparse-hierarchical clustering** of individual time series. In these modules, the dendrogram can be cut at a chosen level to help visualising clusters. Addiitonally available are plots with cluster averages, individual times series per cluster, and contribution of time series from different groupings to clusters. 
