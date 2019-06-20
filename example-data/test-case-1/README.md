@@ -2,7 +2,7 @@
 
 This dataset contains around 234 time-series with 121 time points each. The set comes from a microfluidic time-lapse microscopy experiment. In this experiment, PC-12 cells were stimulated with 3 dosages of fibroblast growth factor 2 (FGF2): 2.5 ng/ml, 25 ng/ml, and 250 ng/ml. The stimulation was performed with 3' pulses of FGF2 at 20' intervals. The readout is the measurement of ERK activity using a FRET biosensor.
 
-The set comes from a publication Blum *et al.* (2019) *Temporal perturbation of Erk dynamics reveals network architecture of FGF2-MAPK signaling* (**preprint**), available in [bioRxiv](https://www.biorxiv.org/content/10.1101/629287v1"bioRxiv")].
+The set comes from a publication Blum *et al.* (2019) *Temporal perturbation of Erk dynamics reveals network architecture of FGF2-MAPK signaling* (**preprint**), available in [bioRxiv](https://www.biorxiv.org/content/10.1101/629287v1 "bioRxiv").
 
 Files in this set:
 
