@@ -5,9 +5,6 @@
 # This module is for plotting Power Spectral Analysis
 #
 
-require(DT)
-require(scales)
-
  # UI ----
 modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
   ns <- NS(id)

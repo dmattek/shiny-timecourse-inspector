@@ -6,11 +6,11 @@
 #
 
 
-require(ggplot2)
-require(RColorBrewer)
-require(gplots) # for heatmap.2
-require(grid) # for modifying grob
-require(Hmisc) # for CI calculation
+library(ggplot2)
+library(RColorBrewer)
+library(gplots) # for heatmap.2
+library(grid) # for modifying grob
+library(Hmisc) # for CI calculation
 
 
 # Global parameters ----

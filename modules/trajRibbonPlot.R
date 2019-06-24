@@ -5,7 +5,6 @@
 # This module is for plotting group averages as ribbon plots (mean + 95%CI)
 #
 
-require(DT)
 
 modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)

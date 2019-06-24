@@ -6,8 +6,6 @@
 #
 
 
-require(DT)
-
 # UI ----
 
 modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {

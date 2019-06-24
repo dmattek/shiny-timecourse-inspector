@@ -10,15 +10,21 @@ library(shinyjs) #http://deanattali.com/shinyjs/
 library(data.table)
 library(ggplot2)
 library(gplots) # for heatmap.2
-library(plotly)
-#library(d3heatmap) # for interactive heatmap
+library(plotly) # interactive plot
+library(DT) # interactive tables
+
 library(dendextend) # for color_branches
 library(colorspace) # for palettes (used to colour dendrogram)
 library(RColorBrewer)
-library(sparcl) # sparse hierarchical and k-means
 library(scales) # for percentages on y scale
+
+library(sparcl) # sparse hierarchical and k-means
 library(dtw) # for dynamic time warping
 library(imputeTS) # for interpolating NAs
+library(robust) # for robust linear regression
+library(MASS)
+library(pracma) # for trapz
+
 
 # Global parameters ----
 # change to increase the limit of the upload file size

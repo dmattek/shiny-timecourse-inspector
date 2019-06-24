@@ -1,6 +1,11 @@
-require(DT)
-require(data.table)
+#
+# Time Course Inspector: Shiny app for plotting time series data
+# Author: Maciej Dobrzynski
+#
+# This module is for displaying stats in an interactive table using DT package
+#
 
+# UI ----
 modStatsUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
@@ -11,7 +16,7 @@ modStatsUI =  function(id, label = "Comparing t-points") {
   )
 }
 
-
+# SERVER ----
 modStats = function(input, output, session, 
                    in.data, 
                    in.meascol = 'meas.y', 

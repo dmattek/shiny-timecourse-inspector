@@ -14,11 +14,6 @@
 # callModule(clustHier, 'TabClustHier', dataMod)
 # where dataMod is the output from a reactive function that returns dataset ready for clustering
 
-
-require(plotly) # interactive plot
-require(robust)
-require(MASS)
-
 # UI ----
 tabScatterPlotUI <- function(id, label = "Comparing t-points") {
   ns <- NS(id)

@@ -6,8 +6,6 @@
 #
 # Calculates area under curve (AUC) for every single time course provided in the input
 
-require(pracma) # for trapz
-
 # UI ----
 modAUCplotUI =  function(id, label = "Plot Area Under Curves") {
   ns <- NS(id)

@@ -5,10 +5,6 @@
 # This module is for displaying time series statistics
 #
 
-require(DT)
-require(data.table)
-
-
 # UI ----
 modTrackStatsUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
