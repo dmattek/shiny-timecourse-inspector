@@ -1,5 +1,8 @@
 # Time-course analysis web-app
 
+## Runnning instance
+Access the running instance of the app on [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector")
+
 ## Running the app on the server
 The app can be deployed on RStudio/Shiny server. Follow instruction [here](https://shiny.rstudio.com/deploy/ "Shiny - Hosting").
 
