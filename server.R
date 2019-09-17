@@ -741,9 +741,9 @@ shinyServer(function(input, output, session) {
       return(NULL)
     
     #print(loc.dt)
-    loc.out = dcast(loc.dt, id ~ realtime, value.var = 'y')
+    loc.out = dcast(loc.dt, as.formula(paste0(COLID, "~", COLRT)), value.var = COLY)
     #print(loc.out)
-    loc.rownames = loc.out$id
+    loc.rownames = loc.out[[COLID]]
     
     
     loc.out = as.matrix(loc.out[, -1])
