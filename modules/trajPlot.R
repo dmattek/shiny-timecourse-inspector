@@ -28,21 +28,33 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       ),
       column(
         2,
-        checkboxGroupInput(ns('chBPlotTrajStat'), 'Stats:', list('Mean' = 'mean', '95% conf. interv.' = 'CI', 'Std. error' = 'SE'))
+        checkboxGroupInput(ns('chBPlotTrajStat'), 'Stats:', list('Mean' = 'mean', 
+                                                                 '95% conf. interv.' = 'CI', 
+                                                                 'Std. error' = 'SE'))
       ),
       column(
         3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1),
-        checkboxInput(ns('chBsetColBounds'), 'Set bounds for y-axis', FALSE),
+        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', 
+                    min = 1, max = 10, value = 1, step = 1),
         
+        checkboxInput(ns('chBsetXbounds'), 'Set bounds for x-axis', FALSE),
         fluidRow(
           column(6,
-                 uiOutput(ns('uiSetColBoundsLow'))
+                 uiOutput(ns('uiSetXboundsLow'))
           ),
           column(6,
-                 uiOutput(ns('uiSetColBoundsHigh'))
-          )
-        )
+                 uiOutput(ns('uiSetXboundsHigh'))
+          )),
+        
+        checkboxInput(ns('chBsetYbounds'), 'Set bounds for y-axis', FALSE),
+        fluidRow(
+          column(6,
+                 uiOutput(ns('uiSetYboundsLow'))
+          ),
+          column(6,
+                 uiOutput(ns('uiSetYboundsHigh'))
+          ))
+        
         
       ),
       column(
@@ -97,60 +109,76 @@ modTrajPlot = function(input, output, session,
         )
   })
   
-
-  # UI for trimming y-axis
-  output$uiSetColBoundsLow = renderUI({
+  # UI for bounding the x-axis ====
+  output$uiSetXboundsLow = renderUI({
     ns <- session$ns
     
-    if(input$chBsetColBounds) {
+    if(input$chBsetXbounds) {
       
       loc.dt = in.data()
       
       numericInput(
-        ns('inSetColBoundsLow'),
+        ns('inSetXboundsLow'),
         label = 'Lower',
         step = 0.1, 
-        value = floor(min(loc.dt[['y']], na.rm = T))
+        value = floor(min(loc.dt[[COLRT]], na.rm = T))
       )
     }
   })
   
   
-  output$uiSetColBoundsHigh = renderUI({
+  output$uiSetXboundsHigh = renderUI({
     ns <- session$ns
     
-    if(input$chBsetColBounds) {
+    if(input$chBsetXbounds) {
       
       loc.dt = in.data()
       
       numericInput(
-        ns('inSetColBoundsHigh'),
+        ns('inSetXboundsHigh'),
         label = 'Upper',
         step = 0.1, 
-        value = ceil(max(loc.dt[['y']], na.rm = T))
+        value = ceil(max(loc.dt[[COLRT]], na.rm = T))
       )
     }
   })
-
-    output$uiSlYTrim = renderUI({
-    cat(file = stderr(), 'UI uiSlYTrim\n')
+  
+  
+  # UI for bounding the y-axis ====
+  output$uiSetYboundsLow = renderUI({
+    ns <- session$ns
     
-    loc.dt = in.data()
-    
-      locYmin = signif(min(loc.dt$y, na.rm = T), 4)
-      locYmax = signif(max(loc.dt$y, na.rm = T), 4)
-
-      sliderInput(
-        ns('slYTrim'),
-        label = 'Trim y-axis',
-        min = locYmin,
-        max = locYmax,
-        value = c(locYmin, locYmax)
-      )
+    if(input$chBsetYbounds) {
       
+      loc.dt = in.data()
+      
+      numericInput(
+        ns('inSetYboundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = floor(min(loc.dt[[COLY]], na.rm = T))
+      )
+    }
   })
   
   
+  output$uiSetYboundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetYbounds) {
+      
+      loc.dt = in.data()
+      
+      numericInput(
+        ns('inSetYboundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = ceil(max(loc.dt[[COLY]], na.rm = T))
+      )
+    }
+  })
+  
+  # Plotting ====
   
   callModule(modTrackStats, 'dispTrackStats',
              in.data = in.data)
@@ -187,6 +215,7 @@ modTrajPlot = function(input, output, session,
   # Trajectory plot - download pdf
   callModule(downPlot, "downPlotTraj", in.fname, plotTraj, TRUE)
   
+  
   plotTraj <- function() {
     cat(file = stderr(), 'plotTraj: in\n')
     locBut = input$butPlotTraj
@@ -207,17 +236,17 @@ modTrajPlot = function(input, output, session,
     }
     
     cat(file = stderr(), 'plotTraj: dt not NULL\n')
-
-
+    
+    
     # check if stim data exists
     loc.dt.stim = isolate(in.data.stim())
-
+    
     if (is.null(loc.dt.stim)) {
       cat(file = stderr(), 'plotTraj: dt.stim is NULL\n')
     } else {
       cat(file = stderr(), 'plotTraj: dt.stim not NULL\n')
     }
-
+    
     
     
     # Future: change such that a column with colouring status is chosen by the user
@@ -258,14 +287,24 @@ modTrajPlot = function(input, output, session,
       # loc.dt[, c(in.facet), with = FALSE] returns a data table with a single column
       # [[1]] at the end extracts the first column and returns as a vector
       loc.groups = unique(loc.dt[, c(in.facet), with = FALSE][[1]])
-
+      
       # get colour palette
       # the length is equal to the number of groups in the original dt.
       # When plotting time series within clusters, the length equals the number of clusters.
       loc.facet.col = in.facet.color()$cl.col
       loc.facet.col = loc.facet.col[loc.groups]
     }
-
+    
+    
+    loc.ylim.arg = NULL
+    if(input$chBsetYbounds) {
+      loc.ylim.arg = c(input$inSetYboundsLow, input$inSetYboundsHigh)
+    } 
+    
+    loc.xlim.arg = NULL
+    if(input$chBsetXbounds) {
+      loc.xlim.arg = c(input$inSetXboundsLow, input$inSetXboundsHigh)
+    } 
     
     p.out = LOCplotTraj(
       dt.arg = loc.dt,
@@ -285,7 +324,8 @@ modTrajPlot = function(input, output, session,
       aux.label2 = if (locPos) 'pos.y' else NULL,
       aux.label3 = if (locObjNum) 'obj.num' else NULL,
       stat.arg = input$chBPlotTrajStat,
-      ylim.arg = c(input$inSetColBoundsLow, input$inSetColBoundsHigh)
+      ylim.arg = loc.ylim.arg,
+      xlim.arg = loc.xlim.arg
     )
     
     return(p.out)
