@@ -17,48 +17,34 @@ modTrackStatsUI =  function(id, label = "Comparing t-points") {
 
 # SERVER ----
 modTrackStats = function(input, output, session, 
-                         in.data) {
+                         in.data,
+                         in.bycols = COLGR) {
   
   ns <- session$ns
   
+  # UI for displaying various stats
   output$uiTabStats = renderUI({
-    cat(file = stderr(), 'modTrackStats: uiTabStats\n')
+    cat(file = stderr(), 'modTrackStats:uiTabStats\n')
     ns <- session$ns
     
     if(input$chbTabStats) {
       tagList(
         htmlOutput(ns('txtNtracks')),
-        #br(),
-        #p("Track IDs with duplicated objects in a frame"),
         br(),
-        DT::dataTableOutput(ns('outTabStats'))
-      )
+        tabsetPanel(
+          tabPanel("Tracks stats", 
+                   DT::dataTableOutput(ns('outTabStatsTracks'))),
+          tabPanel("Measurement stats", 
+                   DT::dataTableOutput(ns('outTabStatsMeas'))),
+          tabPanel("Duplicated IDs",         
+                   DT::dataTableOutput(ns('outTabStatsDup')))
+      ))
     }
-  })
-  
-  # unused at the moment
-  calcStats = reactive({
-    cat(file = stderr(), 'modTrackStats: calsStats\n')
-    loc.dt = in.data()
-    
-    if (is.null(loc.dt))
-      return(NULL)
-    
-    loc.dt.aggr = loc.dt[, sapply(.SD, function(x) list('N' = .N, 
-                                                        'Mean' = mean(x), 
-                                                        'CV' = sd(x)/mean(x), 
-                                                        'Median' = median(x), 
-                                                        'rCV (IQR)' = IQR(x)/median(x), 
-                                                        'rCV (MAD)'= mad(x)/median(x))), .SDcols = in.meascol, by = in.bycols]
-    
-    setnames(loc.dt.aggr, c(in.bycols, 'N', 'Mean', 'CV', 'Median', 'rCV IQR', 'rCV MAD'))
-    
-    return(loc.dt.aggr)
   })
   
   # Print number of tracks
   output$txtNtracks = renderText({
-    cat(file = stderr(), 'modTrackStats: txtNtracks\n')
+    cat(file = stderr(), 'modTrackStats:txtNtracks\n')
     loc.dt = in.data()
     
     loc.dt = in.data()
@@ -66,15 +52,116 @@ modTrackStats = function(input, output, session,
     if (is.null(loc.dt))
       return(NULL)
     
-    sprintf('<b>Number of time-series: %d <br>Average length: %.2f time units</b>', 
-            length(unique(loc.dt[['id']])), 
-            loc.dt[, .(trackLength = .N), by = 'id'][, mean(trackLength)])
+    sprintf('<b>Total #time-series: %d <br>Average length: %.2f time units</b>', 
+            length(unique(loc.dt[[COLID]])), 
+            loc.dt[, .(trackLength = .N), by = COLID][, mean(trackLength)])
     
   })
   
-  # Print a table with Track IDs assigned to multiple objects in a frame
-  output$outTabStats = DT::renderDataTable(server = FALSE, {
-    cat(file = stderr(), 'modTrackStats: outTabStats\n')
+  
+  # caclulate stats of the measurement (column Y) per group
+  calcStatsMeas = reactive({
+    cat(file = stderr(), 'modTrackStats:calsStats\n')
+    loc.dt = in.data()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    
+    loc.dt.aggr = loc.dt[, sapply(.SD, function(x) list('measMean' = mean(x),
+                                                        'measSD' = sd(x),
+                                                        'measCV' = sd(x)/mean(x), 
+                                                        'measMedian' = median(x),
+                                                        'measIQR' = IQR(x),
+                                                        'meas_rCV_IQR' = IQR(x)/median(x))), .SDcols = COLY, by = c(in.bycols)]
+    
+    setnames(loc.dt.aggr, c(in.bycols, 'Mean Meas.', 'SD', 'CV', 'Median Meas.', 'IQR', 'rCV IQR'))
+    
+    return(loc.dt.aggr)
+  })
+  
+  # caclulate stats of tracks per group
+  calcStatsTracks = reactive({
+    cat(file = stderr(), 'modTrackStats:calsStats\n')
+    loc.dt = in.data()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    
+    loc.dt.aggr = loc.dt[, 
+                         .(nTpts = .N), 
+                         by = c(in.bycols, COLID)][, .(tracksN = .N,
+                                                   tracksLenMean = mean(nTpts),
+                                                   tracksLenSD = sd(nTpts),
+                                                   tracksLenMedian = median(nTpts),
+                                                   tracksLenIQR = IQR(nTpts)), by = c(in.bycols)]
+    
+    setnames(loc.dt.aggr, c(in.bycols, '#tracks', 'Mean Length', 'SD', 'Median Length', 'IQR'))
+    
+    return(loc.dt.aggr)
+  })
+  
+  # Render a table with track stats
+  output$outTabStatsTracks = DT::renderDataTable(server = FALSE, {
+    cat(file = stderr(), 'modTrackStats:outTabStats\n')
+    loc.dt = calcStatsTracks()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    
+    if (nrow(loc.dt))
+      datatable(loc.dt, 
+                caption = 'Track statistics',
+                rownames = TRUE,
+                extensions = 'Buttons', 
+                options = list(
+                  dom = 'Bfrtip',
+                  buttons = list('copy', 
+                                 'print', 
+                                 list(extend = 'collection',
+                                      buttons = list(list(extend='csv',
+                                                          filename = 'hitStats'),
+                                                     list(extend='excel',
+                                                          filename = 'hitStats'),
+                                                     list(extend='pdf',
+                                                          filename= 'hitStats')),
+                                      text = 'Download'))))
+    else
+      return(NULL)
+  })
+  
+  
+  # Render a table with measurement stats
+  output$outTabStatsMeas = DT::renderDataTable(server = FALSE, {
+    cat(file = stderr(), 'modTrackStats:outTabMeas\n')
+    loc.dt = calcStatsMeas()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    
+    if (nrow(loc.dt))
+      datatable(loc.dt, 
+                caption = 'Measurement statistics',
+                rownames = TRUE,
+                extensions = 'Buttons', 
+                options = list(
+                  dom = 'Bfrtip',
+                  buttons = list('copy', 
+                                 'print', 
+                                 list(extend = 'collection',
+                                      buttons = list(list(extend='csv',
+                                                          filename = 'hitStats'),
+                                                     list(extend='excel',
+                                                          filename = 'hitStats'),
+                                                     list(extend='pdf',
+                                                          filename= 'hitStats')),
+                                      text = 'Download')))) %>% formatRound(2:7)
+    else
+      return(NULL)
+  })
+  
+  # Render a table with Track IDs assigned to multiple objects in a frame
+  output$outTabStatsDup = DT::renderDataTable(server = FALSE, {
+    cat(file = stderr(), 'modTrackStats:outTabStatsDup\n')
     loc.dt = in.data()
     
     if (is.null(loc.dt))
@@ -83,7 +170,7 @@ modTrackStats = function(input, output, session,
     # Look whether there were more objects with the same track ID in the frame
     # Such track IDs will have TRUE assigned in 'dup' column
     # Keep only s.track column with dup=TRUE
-    loc.duptracks = loc.dt[, .(dup = (sum(duplicated(get('realtime'))) > 0)), by = 'id'][dup == TRUE, 'id', with = FALSE]
+    loc.duptracks = loc.dt[, .(dup = (sum(duplicated(get(COLRT))) > 0)), by = COLID][dup == TRUE, COLID, with = FALSE]
     
     if (nrow(loc.duptracks))
       datatable(loc.duptracks, 
@@ -101,7 +188,7 @@ modTrackStats = function(input, output, session,
                                                           filename = 'hitStats'),
                                                      list(extend='pdf',
                                                           filename= 'hitStats')),
-                                      text = 'Download'))))
+                                      text = 'Download')))) %>% formatRound(3:6)
     else
       return(NULL)
   })
