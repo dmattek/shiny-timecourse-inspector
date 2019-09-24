@@ -13,7 +13,7 @@ Following packages need to be installed in order to run the app locally:
 
 * shiny
 * shinyjs
-* shinybs
+* shinyBS
 * data.table
 * DT
 * ggplot2
@@ -34,7 +34,7 @@ Following packages need to be installed in order to run the app locally:
 Install packages using `install.packages('name_of_the_package_from_the_list_above')` command in RStudio command line.
 
 ```
-install.packages(c("shiny", "shinyjs", "shinybs",
+install.packages(c("shiny", "shinyjs", "shinyBS",
 					"data.table", "DT",
 					"ggplot2", "gplots", "plotly", "scales", "grid",
 					"dendextend", "RColorBrewer",
