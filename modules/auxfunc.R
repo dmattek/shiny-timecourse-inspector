@@ -15,6 +15,7 @@ library(Hmisc) # for CI calculation
 
 # Global parameters ----
 
+
 # if true, additional output printed to R console
 DEB = T
 

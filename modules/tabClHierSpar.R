@@ -174,7 +174,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
                downPlotUI(ns('downPlotHierSparHM'), "Download PNG"),
                
                actionButton(ns('butPlotHierSparHeatMap'), 'Plot!'),
-               plotOutput(ns('outPlotHierSpar'))
+               withSpinner(plotOutput(ns('outPlotHierSpar')))
       ),
 
       tabPanel('Averages',

@@ -97,15 +97,15 @@ modTrajPlot = function(input, output, session,
   
   output$uiPlotTraj = renderUI({
     if (input$chBplotTrajInt)
-      plotlyOutput(
+      withSpinner(plotlyOutput(
         ns("outPlotTrajInt"),
         width = paste0(input$inPlotTrajWidth, '%'),
-        height = paste0(input$inPlotTrajHeight, 'px')
+        height = paste0(input$inPlotTrajHeight, 'px'))
       ) else
-        plotOutput(
+        withSpinner(plotOutput(
           ns("outPlotTraj"),
           width = paste0(input$inPlotTrajWidth, '%'),
-          height = paste0(input$inPlotTrajHeight, 'px')
+          height = paste0(input$inPlotTrajHeight, 'px'))
         )
   })
   

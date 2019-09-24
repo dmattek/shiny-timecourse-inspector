@@ -7,8 +7,8 @@
 
 
 library(shiny)
-library(shinyjs) #http://deanattali.com/shinyjs/
-library(shinyBS)
+library(shinyjs) # http://deanattali.com/shinyjs/
+library(shinyBS) # for tooltips
 
 shinyUI(fluidPage(
   useShinyjs(),

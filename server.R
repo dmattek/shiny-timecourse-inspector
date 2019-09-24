@@ -7,6 +7,8 @@
 
 library(shiny)
 library(shinyjs) #http://deanattali.com/shinyjs/
+library(shinyBS) # for tooltips
+library(shinycssloaders) # for loader animations
 library(data.table)
 library(ggplot2)
 library(gplots) # for heatmap.2
@@ -29,6 +31,9 @@ library(pracma) # for trapz
 # Global parameters ----
 # change to increase the limit of the upload file size
 options(shiny.maxRequestSize = 200 * 1024 ^ 2)
+
+# colour of loader spinner (shinycssloaders)
+options(spinner.color="#00A8AA")
 
 # Server logic ----
 shinyServer(function(input, output, session) {
