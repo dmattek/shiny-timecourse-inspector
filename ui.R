@@ -25,6 +25,8 @@ shinyUI(fluidPage(
         'Select main data file and press "Load Data"',
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       ),
+      radioButtons("inRbutLongWide", "Data format:", c("Long" = 0, "Wide" = 1), width = "40%"),
+      bsTooltip('inRbutLongWide', help.text.short[10], placement = "right", trigger = "hover", options = NULL),
       actionButton("inButLoadNuc", "Load Data"),
       actionButton("butReset", "Reset file input"),
       actionButton('inDataGen1', 'Synthetic data'),
