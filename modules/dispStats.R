@@ -21,12 +21,12 @@ modStats = function(input, output, session,
                    in.data, 
                    in.meascol = 'meas.y', 
                    in.bycols = c('meas.x', 'group'),
-                   in.fname = 'data4boxplot.csv') {
+                   in.fname = 'data.csv') {
   
   ns <- session$ns
   
   output$uiTabStats = renderUI({
-    cat(file = stderr(), 'UI uiTabStats\n')
+    cat(file = stderr(), 'modStats:uiTabStats\n')
     ns <- session$ns
     
     if(input$chbTabStats) {
@@ -35,7 +35,7 @@ modStats = function(input, output, session,
   })
   
   output$uiDownSingleCellData = renderUI({
-    cat(file = stderr(), 'UI uiDownSingleCellData\n')
+    cat(file = stderr(), 'modStats:uiDownSingleCellData\n')
     ns <- session$ns
     
     if(input$chbTabStats) {
@@ -46,7 +46,7 @@ modStats = function(input, output, session,
   
   
   calcStats = reactive({
-    cat(file = stderr(), 'tabBoxPlot: calsStats\n')
+    cat(file = stderr(), 'modStats:calsStats\n')
     loc.dt = in.data()
     
     if (is.null(loc.dt))
@@ -77,7 +77,7 @@ modStats = function(input, output, session,
   )
   
   output$outTabStats = DT::renderDataTable(server = FALSE, {
-    cat(file = stderr(), 'tabBoxPlot: outTabStats\n')
+    cat(file = stderr(), 'modStats:outTabStats\n')
     loc.dt = calcStats()
     
     if (is.null(loc.dt))
