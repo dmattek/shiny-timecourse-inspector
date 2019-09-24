@@ -164,7 +164,7 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                ),
                br(),
                
-               downPlotUI(ns('downPlotHier'), "Download PDF"),
+               downPlotUI(ns('downPlotHier'), "Download PNG"),
                actionButton(ns('butPlotHierHeatMap'), 'Plot!'),
                plotOutput(ns('outPlotHier'))
       ),
