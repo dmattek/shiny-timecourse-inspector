@@ -10,39 +10,8 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
   ns <- NS(id)
   
   tagList(
-    h4(
-      "Remove outliers"
-    ),
-    fluidRow(
-      column(2, 
-             numericInput(ns('numOutliersPerc'),
-                         label = '% of data',
-                         min = 0,
-                         max = 100,
-                         value = 0, 
-                         step = 0.05, width = '100px'),
-             checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F)
-      ),
-      column(2, 
-             radioButtons(ns('rbOutliersType'), 
-                          label = 'From', 
-                          choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot'))
-             ),
-      column(3,
-             sliderInput(ns('slOutliersGapLen'),
-                         label = 'Remove tracks with gaps equal to or longer than',
-                         min = 1,
-                         max = 10,
-                         value = 1, 
-                         step = 1)
-      ),
-      column(3,
-             downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
-             htmlOutput(ns("txtOutliersPerc"))
-      )
-    ),
-    checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
-    uiOutput(ns('uiDistPlot'))
+    checkboxInput(ns('chbRemoveOut'), 'Remove otliers', value = F),
+    uiOutput(ns('uiSelOutliers'))
   )
 }
 
@@ -61,6 +30,46 @@ modSelOutliers = function(input, output, session, in.data) {
     id = NULL
   )
 
+  # UI for the entire module
+  output$uiSelOutliers = renderUI({
+    cat(file = stderr(), 'modSelOutliers:uiSelOutliers\n')
+    ns <- session$ns
+    
+    if(input$chbRemoveOut) {
+      tagList(
+      fluidRow(
+        column(2, 
+               numericInput(ns('numOutliersPerc'),
+                            label = '% of data',
+                            min = 0,
+                            max = 100,
+                            value = 0, 
+                            step = 0.05, width = '100px'),
+               checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F)
+        ),
+        column(2, 
+               radioButtons(ns('rbOutliersType'), 
+                            label = 'From', 
+                            choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot'))
+        ),
+        column(3,
+               sliderInput(ns('slOutliersGapLen'),
+                           label = 'Remove tracks with gaps equal to or longer than',
+                           min = 1,
+                           max = 10,
+                           value = 1, 
+                           step = 1)
+        ),
+        column(3,
+               downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
+               htmlOutput(ns("txtOutliersPerc"))
+        )
+      ),
+      checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
+      uiOutput(ns('uiDistPlot'))
+      )
+    }
+  })
   
   
   # Display number of tracks and outliers  
@@ -207,6 +216,10 @@ modSelOutliers = function(input, output, session, in.data) {
       return(NULL)
     }
 
+    if (!input$chbRemoveOut) {
+      return(loc.out)
+    }
+    
     # store the number of trajectories before prunning
     nCellsCounter[['nCellsOrig']] = length(unique(loc.out[['id']]))
     
