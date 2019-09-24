@@ -55,6 +55,7 @@ COLPOSX = 'pos.x'
 COLPOSY = 'pos.y'
 COLIDX = 'IDX'
 COLIDXDIFF = 'IDXdiff'
+COLCL = 'cl'
 
 # file names
 FCSVOUTLIERS = 'outliers.csv'
@@ -165,7 +166,8 @@ help.text.short = c(
   'Select math operation to perform on a single or two columns,',
   'Select range of time for further processing.',
   'Normalise time series to a selected region.',
-  'Download time series after modification in this section.'
+  'Download time series after modification in this section.',
+  'Long format: a row is a single data point. Wide format: a row contains entire time series with columns as time points.'
 )
 
 # Functions for data processing ----
@@ -389,17 +391,18 @@ LOCnormTraj = function(in.dt,
 getDataCl = function(in.dend, in.k) {
   cat(file = stderr(), 'getDataCl \n')
   
-  loc.m = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE)
+  loc.clAssign = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE, )
   #print(loc.m)
   
   # The result of cutree containes named vector with names being cell id's
   # THIS WON'T WORK with sparse hierarchical clustering because there, the dendrogram doesn't have original id's
-  loc.dt.cl = data.table(id = names(loc.m),
-                         cl = loc.m)
+  loc.dt.clAssign = as.data.table(loc.clAssign, keep.rownames = T)
+  setnames(loc.dt.clAssign, c(COLID, COLCL))
+  
   
   #cat('===============\ndataCl:\n')
   #print(loc.dt.cl)
-  return(loc.dt.cl)
+  return(loc.dt.clAssign)
 }
 
 
@@ -513,9 +516,10 @@ LOCplotTraj = function(dt.arg, # input data table
                         dt.stim.arg = NULL, # plotting additional dataset; typically to indicate stimulations (not fully implemented yet, not tested!)
                         x.stim.arg = c('tstart', 'tend'), # column names in stimulation dt with x and xend parameters
                         y.stim.arg = c('ystart', 'yend'), # column names in stimulation dt with y and yend parameters
-                        tfreq.arg = 1,
-                        ylim.arg = NULL,
-                        stim.bar.width.arg = 0.5,
+                        tfreq.arg = 1, # unused
+                        xlim.arg = NULL, # limits of x-axis; for visualisation only, not trimmimng data
+                        ylim.arg = NULL, # limits of y-axis; for visualisation only, not trimmimng data
+                        stim.bar.width.arg = 0.5, # width of the stimulation line; plotted under time series
                         aux.label1 = NULL, # 1st point label; used for interactive plotting; displayed in the tooltip; typically used to display values of column holding x & y coordinates
                         aux.label2 = NULL,
                         aux.label3 = NULL,
@@ -571,7 +575,8 @@ LOCplotTraj = function(dt.arg, # input data table
     p.tmp = p.tmp + 
     stat_summary(
       aes_string(y = y.arg, group = 1),
-      fun.y = mean,
+      fun.y = mean, 
+      na.rm = T,
       colour = 'red',
       linetype = 'solid',
       size = 1,
@@ -584,6 +589,7 @@ LOCplotTraj = function(dt.arg, # input data table
     stat_summary(
       aes_string(y = y.arg, group = 1),
       fun.data = mean_cl_normal,
+      na.rm = T,
       colour = 'red',
       alpha = 0.25,
       geom = "ribbon",
@@ -595,6 +601,7 @@ LOCplotTraj = function(dt.arg, # input data table
     stat_summary(
       aes_string(y = y.arg, group = 1),
       fun.data = mean_se,
+      na.rm = T,
       colour = 'red',
       alpha = 0.25,
       geom = "ribbon",
@@ -622,8 +629,7 @@ LOCplotTraj = function(dt.arg, # input data table
                                  size = stim.bar.width.arg) 
   }
   
-  if (!is.null(ylim.arg)) 
-    p.tmp = p.tmp + coord_cartesian(ylim = ylim.arg)
+  p.tmp = p.tmp + coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
   
   p.tmp = p.tmp + 
     xlab(paste0(xlab.arg, "\n")) +
@@ -649,6 +655,8 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
                           x.stim.arg = c('tstart', 'tend'), # column names in stimulation dt with x and xend parameters
                           y.stim.arg = c('ystart', 'yend'), # column names in stimulation dt with y and yend parameters
                           stim.bar.width.arg = 0.5,
+                          xlim.arg = NULL, # limits of x-axis; for visualisation only, not trimmimng data
+                          ylim.arg = NULL, # limits of y-axis; for visualisation only, not trimmimng data
                           ribbon.lohi.arg = c('Lower', 'Upper'),
                           ribbon.fill.arg = 'grey50',
                           ribbon.alpha.arg = 0.5,
@@ -677,6 +685,7 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
                                  group = 1) 
   }
 
+  p.tmp = p.tmp + coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
   
   if (is.null(col.arg)) {
     p.tmp = p.tmp +

@@ -90,7 +90,7 @@ modTrajPlot = function(input, output, session,
                        in.data, 
                        in.data.stim,
                        in.fname,
-                       in.facet = 'group', 
+                       in.facet = COLGR, 
                        in.facet.color = NULL) {
   
   ns <- session$ns
@@ -117,6 +117,11 @@ modTrajPlot = function(input, output, session,
       
       loc.dt = in.data()
       
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetXboundsLow: dt is NULL\n')
+        return(NULL)
+      }
+      
       numericInput(
         ns('inSetXboundsLow'),
         label = 'Lower',
@@ -133,6 +138,11 @@ modTrajPlot = function(input, output, session,
     if(input$chBsetXbounds) {
       
       loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetXboundsHigh: dt is NULL\n')
+        return(NULL)
+      }
       
       numericInput(
         ns('inSetXboundsHigh'),
@@ -152,6 +162,11 @@ modTrajPlot = function(input, output, session,
       
       loc.dt = in.data()
       
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsLow: dt is NULL\n')
+        return(NULL)
+      }
+      
       numericInput(
         ns('inSetYboundsLow'),
         label = 'Lower',
@@ -169,6 +184,11 @@ modTrajPlot = function(input, output, session,
       
       loc.dt = in.data()
       
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsHigh: dt is NULL\n')
+        return(NULL)
+      }
+      
       numericInput(
         ns('inSetYboundsHigh'),
         label = 'Upper',
@@ -181,7 +201,8 @@ modTrajPlot = function(input, output, session,
   # Plotting ====
   
   callModule(modTrackStats, 'dispTrackStats',
-             in.data = in.data)
+             in.data = in.data,
+             in.bycols = in.facet)
   
   
   output$outPlotTraj <- renderPlot({
@@ -296,14 +317,14 @@ modTrajPlot = function(input, output, session,
     }
     
     
-    loc.ylim.arg = NULL
-    if(input$chBsetYbounds) {
-      loc.ylim.arg = c(input$inSetYboundsLow, input$inSetYboundsHigh)
-    } 
-    
     loc.xlim.arg = NULL
     if(input$chBsetXbounds) {
       loc.xlim.arg = c(input$inSetXboundsLow, input$inSetXboundsHigh)
+    } 
+    
+    loc.ylim.arg = NULL
+    if(input$chBsetYbounds) {
+      loc.ylim.arg = c(input$inSetYboundsLow, input$inSetYboundsHigh)
     } 
     
     p.out = LOCplotTraj(

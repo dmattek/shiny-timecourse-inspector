@@ -19,7 +19,25 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
       ),
       column(
         3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1)
+        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1),
+        
+        checkboxInput(ns('chBsetXbounds'), 'Set bounds for x-axis', FALSE),
+        fluidRow(
+          column(6,
+                 uiOutput(ns('uiSetXboundsLow'))
+          ),
+          column(6,
+                 uiOutput(ns('uiSetXboundsHigh'))
+          )),
+        
+        checkboxInput(ns('chBsetYbounds'), 'Set bounds for y-axis', FALSE),
+        fluidRow(
+          column(6,
+                 uiOutput(ns('uiSetYboundsLow'))
+          ),
+          column(6,
+                 uiOutput(ns('uiSetYboundsHigh'))
+          ))
       ),
       column(
         2,
@@ -59,6 +77,98 @@ modTrajRibbonPlot = function(input, output, session,
   
   ns <- session$ns
   
+  
+  # UI for bounding the x-axis ====
+  output$uiSetXboundsLow = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetXbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetXboundsLow: dt is NULL\n')
+        return(NULL)
+      }
+      
+      numericInput(
+        ns('inSetXboundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = floor(min(loc.dt[[COLRT]], na.rm = T))
+      )
+    }
+  })
+  
+  
+  output$uiSetXboundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetXbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetXboundsHigh: dt is NULL\n')
+        return(NULL)
+      }
+      
+      numericInput(
+        ns('inSetXboundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = ceil(max(loc.dt[[COLRT]], na.rm = T))
+      )
+    }
+  })
+  
+  
+  # UI for bounding the y-axis ====
+  output$uiSetYboundsLow = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetYbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsLow: dt is NULL\n')
+        return(NULL)
+      }
+      
+      numericInput(
+        ns('inSetYboundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = floor(min(loc.dt[[COLY]], na.rm = T))
+      )
+    }
+  })
+  
+  
+  output$uiSetYboundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetYbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsHigh: dt is NULL\n')
+        return(NULL)
+      }
+      
+      numericInput(
+        ns('inSetYboundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = ceil(max(loc.dt[[COLY]], na.rm = T))
+      )
+    }
+  })
+  
+  # Plotting ====
+  
   output$uiPlotTraj = renderUI({
     if (input$chBplotTrajInt)
       plotlyOutput(
@@ -75,7 +185,8 @@ modTrajRibbonPlot = function(input, output, session,
   
   
   callModule(modTrackStats, 'dispTrackStats',
-             in.data = in.data)
+             in.data = in.data,
+             in.bycols = in.facet)
   
   
   output$outPlotTraj <- renderPlot({
@@ -204,6 +315,15 @@ modTrajRibbonPlot = function(input, output, session,
                              in.type = 'normal')
     loc.dt.aggr[, (in.facet) := as.factor(get(in.facet))]
 
+    loc.xlim.arg = NULL
+    if(input$chBsetXbounds) {
+      loc.xlim.arg = c(input$inSetXboundsLow, input$inSetXboundsHigh)
+    } 
+    
+    loc.ylim.arg = NULL
+    if(input$chBsetYbounds) {
+      loc.ylim.arg = c(input$inSetYboundsLow, input$inSetYboundsHigh)
+    } 
     
     p.out = LOCplotTrajRibbon(dt.arg = loc.dt.aggr, 
                            x.arg = 'realtime', 
@@ -213,6 +333,8 @@ modTrajRibbonPlot = function(input, output, session,
                            dt.stim.arg = loc.dt.stim,
                            x.stim.arg = c('tstart', 'tend'),
                            y.stim.arg = c('ystart', 'yend'),
+                           xlim.arg = loc.xlim.arg,
+                           ylim.arg = loc.ylim.arg,
                            xlab.arg = 'Time',
                            ylab.arg = '') +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
