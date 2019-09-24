@@ -199,7 +199,7 @@ modSelOutliers = function(input, output, session, in.data) {
   
 # Identify outliers and remove them from dt
   dtReturn = reactive({ 
-    cat(file = stdout(), 'modSelOutliers: dtReturn\n')
+    cat(file = stdout(), 'modSelOutliers:dtReturn\n')
     
     loc.out = in.data()
     
@@ -228,7 +228,7 @@ modSelOutliers = function(input, output, session, in.data) {
       )
       
       if (DEB) {
-        cat(file = stdout(), 'selOutliers.dtReturn: Outlier points:\n')
+        cat(file = stdout(), '\nmodSelOutliers:dtReturn: Outlier points:\n')
         print(loc.outpts)
       }
         
@@ -251,7 +251,7 @@ modSelOutliers = function(input, output, session, in.data) {
         loc.idgaps = loc.out[, max(get(COLIDXDIFF)), by = c(COLID)][V1 >= input$slOutliersGapLen, get(COLID)]
         
         if (DEB) {
-          cat(file = stdout(), '\nselOutliers.dtReturn: Track IDs with max gap >= threshold:\n')
+          cat(file = stdout(), '\nmodSelOutliers:dtReturn: Track IDs with max gap >= threshold:\n')
           if (length(loc.idgaps) > 0)
             print(loc.idgaps) else
               cat("none\n")
@@ -272,7 +272,7 @@ modSelOutliers = function(input, output, session, in.data) {
 
           # x-check: print all rows with NA's
           if (DEB) {
-            cat(file = stdout(), '\nselOutliers.dtReturn: Rows with NAs to interpolate:\n')
+            cat(file = stdout(), '\nmodSelOutliers:dtReturn: Rows with NAs to interpolate:\n')
             print(loc.out[rowSums(is.na(loc.out)) > 0, ])
           }
           
