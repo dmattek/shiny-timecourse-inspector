@@ -59,7 +59,7 @@ shinyServer(function(input, output, session) {
   # Generate random dataset
   dataGen1 <- eventReactive(input$inDataGen1, {
     if (DEB)
-      cat("dataGen1\n")
+      cat("server:dataGen1\n")
     
     return(LOCgenTraj(in.nwells = 3, in.addout = 3))
   })
@@ -67,7 +67,7 @@ shinyServer(function(input, output, session) {
   # Load main data file
   dataLoadNuc <- eventReactive(input$inButLoadNuc, {
     if (DEB)
-      cat("dataLoadNuc\n")
+      cat("server:dataLoadNuc\n")
 
     locFilePath = input$inFileLoadNuc$datapath
     
@@ -76,7 +76,7 @@ shinyServer(function(input, output, session) {
     if (is.null(locFilePath) || locFilePath == '')
       return(NULL)
     else {
-      return(fread(locFilePath))
+      return(fread(locFilePath, strip.white = T))
     }
   })
   
@@ -88,7 +88,7 @@ shinyServer(function(input, output, session) {
   # Load data with trajectories to remove
   dataLoadTrajRem <- eventReactive(input$inButLoadTrajRem, {
     if (DEB)
-      cat(file = stdout(), "dataLoadTrajRem\n")
+      cat(file = stdout(), "server:dataLoadTrajRem\n")
     
     locFilePath = input$inFileLoadTrajRem$datapath
     
@@ -104,7 +104,7 @@ shinyServer(function(input, output, session) {
   # Load data with stimulation pattern
   dataLoadStim <- eventReactive(input$inButLoadStim, {
     if (DEB)
-      cat(file = stdout(), "dataLoadStim\n")
+      cat(file = stdout(), "server:dataLoadStim\n")
     
     locFilePath = input$inFileLoadStim$datapath
     
@@ -121,7 +121,7 @@ shinyServer(function(input, output, session) {
   # UI for loading csv with cell IDs for trajectory removal
   output$uiFileLoadTrajRem = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiFileLoadTrajRem\n')
+      cat(file = stdout(), 'server:uiFileLoadTrajRem\n')
     
     if(input$chBtrajRem) 
       fileInput(
@@ -133,7 +133,7 @@ shinyServer(function(input, output, session) {
   
   output$uiButLoadTrajRem = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiButLoadTrajRem\n')
+      cat(file = stdout(), 'server:uiButLoadTrajRem\n')
     
     if(input$chBtrajRem)
       actionButton("inButLoadTrajRem", "Load Data")
@@ -142,7 +142,7 @@ shinyServer(function(input, output, session) {
   # UI for loading csv with stimulation pattern
   output$uiFileLoadStim = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiFileLoadStim\n')
+      cat(file = stdout(), 'server:uiFileLoadStim\n')
     
     if(input$chBstim) 
       fileInput(
@@ -154,7 +154,7 @@ shinyServer(function(input, output, session) {
   
   output$uiButLoadStim = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiButLoadStim\n')
+      cat(file = stdout(), 'server:uiButLoadStim\n')
     
     if(input$chBstim)
       actionButton("inButLoadStim", "Load Data")
@@ -165,7 +165,7 @@ shinyServer(function(input, output, session) {
   # UI-side-panel-column-selection ----
   output$varSelTrackLabel = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI varSelTrackLabel\n')
+      cat(file = stdout(), 'server:varSelTrackLabel\n')
     
     locCols = getDataNucCols()
     locColSel = locCols[grep('(T|t)rack|ID|id', locCols)[1]] # index 1 at the end in case more matches; select 1st; matches TrackLabel, tracklabel, Track Label etc
@@ -181,7 +181,7 @@ shinyServer(function(input, output, session) {
   
   output$varSelTime = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI varSelTime\n')
+      cat(file = stdout(), 'server:varSelTime\n')
     
     locCols = getDataNucCols()
     locColSel = locCols[grep('(T|t)ime|Metadata_T', locCols)[1]] # index 1 at the end in case more matches; select 1st; matches RealTime, realtime, real time, etc.
@@ -197,7 +197,7 @@ shinyServer(function(input, output, session) {
 
   output$varSelTimeFreq = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI varSelTimeFreq\n')
+      cat(file = stdout(), 'server:varSelTimeFreq\n')
     
     if (input$chBtrajInter) {
       numericInput(
@@ -217,7 +217,7 @@ shinyServer(function(input, output, session) {
   # e.g.2 a combination of 3 columns called Stimulation_...
   output$varSelGroup = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI varSelGroup\n')
+      cat(file = stdout(), 'server:varSelGroup\n')
     
     if (input$chBgroup) {
       
@@ -243,7 +243,7 @@ shinyServer(function(input, output, session) {
   # the track ID unique across entire dataset
   output$varSelSite = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI varSelSite\n')
+      cat(file = stdout(), 'server:varSelSite\n')
     
     if (input$chBtrackUni) {
       locCols = getDataNucCols()
@@ -263,7 +263,7 @@ shinyServer(function(input, output, session) {
   
   output$varSelMeas1 = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI varSelMeas1\n')
+      cat(file = stdout(), 'server:varSelMeas1\n')
     locCols = getDataNucCols()
     
     if (!is.null(locCols)) {
@@ -282,7 +282,7 @@ shinyServer(function(input, output, session) {
   
   output$varSelMeas2 = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI varSelMeas2\n')
+      cat(file = stdout(), 'server:varSelMeas2\n')
     
     locCols = getDataNucCols()
     
@@ -303,7 +303,7 @@ shinyServer(function(input, output, session) {
   # UI-side-panel-trim x-axis (time) ----
   output$uiSlTimeTrim = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiSlTimeTrim\n')
+      cat(file = stdout(), 'server:uiSlTimeTrim\n')
     
     if (input$chBtimeTrim) {
       locTpts  = getDataTpts()
@@ -329,7 +329,7 @@ shinyServer(function(input, output, session) {
   # UI-side-panel-normalization ----
   output$uiChBnorm = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiChBnorm\n')
+      cat(file = stdout(), 'server:uiChBnorm\n')
     
     if (input$chBnorm) {
       radioButtons(
@@ -342,7 +342,7 @@ shinyServer(function(input, output, session) {
   
   output$uiSlNorm = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiSlNorm\n')
+      cat(file = stdout(), 'server:uiSlNorm\n')
     
     if (input$chBnorm) {
       locTpts  = getDataTpts()
@@ -366,7 +366,7 @@ shinyServer(function(input, output, session) {
   
   output$uiChBnormRobust = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiChBnormRobust\n')
+      cat(file = stdout(), 'server:uiChBnormRobust\n')
     
     if (input$chBnorm) {
       checkboxInput('chBnormRobust',
@@ -377,7 +377,7 @@ shinyServer(function(input, output, session) {
   
   output$uiChBnormGroup = renderUI({
     if (DEB)
-      cat(file = stdout(), 'UI uiChBnormGroup\n')
+      cat(file = stdout(), 'server:uiChBnormGroup\n')
     
     if (input$chBnorm) {
       radioButtons('chBnormGroup',
@@ -403,13 +403,13 @@ shinyServer(function(input, output, session) {
     locInLoadNuc = input$inButLoadNuc
     #locInLoadStim = input$inButLoadStim
     
-    # Don't wrap around if(DEB)
+    # Don't wrap around if(DEB) !!!
     cat(
-      "dataInBoth\ninGen1: ",
+      "server:dataInBoth\n   inGen1: ",
       locInGen1,
-      "   prev=",
+      "      prev=",
       isolate(counter$dataGen1),
-      "\ninDataNuc: ",
+      "\n   inDataNuc: ",
       locInLoadNuc,
       "   prev=",
       isolate(counter$dataLoadNuc),
@@ -420,20 +420,33 @@ shinyServer(function(input, output, session) {
       "\n"
     )
     
-    # isolate the checks of counter reactiveValues
+    # isolate the checks of the counter reactiveValues
     # as we set the values in this same reactive
     if (locInGen1 != isolate(counter$dataGen1)) {
-      cat("dataInBoth if inDataGen1\n")
+      cat("server:dataInBoth if inDataGen1\n")
       dm = dataGen1()
       # no need to isolate updating the counter reactive values!
       counter$dataGen1 <- locInGen1
     } else if (locInLoadNuc != isolate(counter$dataLoadNuc)) {
-      cat("dataInBoth if inDataLoadNuc\n")
+      cat("server:dataInBoth if inDataLoadNuc\n")
       dm = dataLoadNuc()
+      
+      # convert to long format if radio box set to "wide"
+      # the input data in long format should contain:
+      # - the first row with a header: ID, 1, 2, 3...
+      # - consecutive rows with time series, where columns are time points
+      if (input$inRbutLongWide == 1) {
+        # long to wide
+        dm = melt(dm, id.vars = names(dm)[1], variable.name = COLRT, value.name = COLY)
+
+        # convert column names with time points to a number
+        dm[, (COLRT) := as.numeric(levels(get(COLRT)))[get(COLRT)]]
+      }
+      
       # no need to isolate updating the counter reactive values!
       counter$dataLoadNuc <- locInLoadNuc
     } else {
-      cat("dataInBoth else\n")
+      cat("server:dataInBoth else\n")
       dm = NULL
     }
     return(dm)
@@ -442,7 +455,7 @@ shinyServer(function(input, output, session) {
   # return column names of the main dt
   getDataNucCols <- reactive({
     if (DEB)
-      cat(file = stdout(), 'getDataNucCols: in\n')
+      cat(file = stdout(), 'server:getDataNucCols: in\n')
     
     loc.dt = dataInBoth()
     
@@ -455,7 +468,7 @@ shinyServer(function(input, output, session) {
   # return dt with an added column with unique track object label
   dataMod <- reactive({
     if (DEB)
-      cat(file = stdout(), 'dataMod\n')
+      cat(file = stdout(), 'server:dataMod\n')
     
     loc.dt = dataInBoth()
     
@@ -475,7 +488,7 @@ shinyServer(function(input, output, session) {
 
     if (input$chBtrajRem) {
       if (DEB)
-        cat(file = stdout(), 'dataMod: trajRem not NULL\n')
+        cat(file = stdout(), 'server:dataMod: trajRem not NULL\n')
       
       loc.dt.rem = dataLoadTrajRem()
       loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem[[1]])]
@@ -488,7 +501,7 @@ shinyServer(function(input, output, session) {
   # This will be used to display in UI for trajectory highlighting
   getDataTrackObjLabUni <- reactive({
     if (DEB)
-      cat(file = stdout(), 'getDataTrackObjLabUni\n')
+      cat(file = stdout(), 'server:getDataTrackObjLabUni\n')
     
     loc.dt = dataMod()
     
@@ -504,7 +517,7 @@ shinyServer(function(input, output, session) {
   # These timepoints are from the original dt and aren't affected by trimming of x-axis
   getDataTpts <- reactive({
     if (DEB)
-      cat(file = stdout(), 'getDataTpts\n')
+      cat(file = stdout(), 'server:getDataTpts\n')
     
     loc.dt = dataMod()
     
@@ -531,7 +544,7 @@ shinyServer(function(input, output, session) {
   #    pos.x,y  - created if columns with x and y positions present in the input data
   data4trajPlot <- reactive({
     if (DEB)
-      cat(file = stdout(), 'data4trajPlot\n')
+      cat(file = stdout(), 'server:data4trajPlot\n')
     
     loc.dt = dataMod()
     if (is.null(loc.dt))
@@ -574,7 +587,7 @@ shinyServer(function(input, output, session) {
     loc.s.pos.y = names(loc.dt)[grep('(L|l)ocation.*Y|(P|p)os.y|(P|p)osy', names(loc.dt))[1]]
     
     if (DEB)
-      cat('Position columns: ', loc.s.pos.x, loc.s.pos.y, '\n')
+      cat('server:data4trajPlot:\n   Position columns: ', loc.s.pos.x, loc.s.pos.y, '\n')
     
     if (!is.na(loc.s.pos.x) & !is.na(loc.s.pos.y))
       locPos = TRUE
@@ -632,6 +645,11 @@ shinyServer(function(input, output, session) {
     # create final dt for output based on columns selected above
     loc.out = loc.dt[, eval(parse(text = s.colexpr))]
     
+    # Convert track ID to a factor.
+    # This is necessary for, e.g. merging data with cluster assignments.
+    # If input dataset has track ID as a number, such a merge would fail.
+    loc.out[, (COLID) := as.factor(get(COLID))]
+    
     
     # if track selection ON
     if (locButHighlight){
@@ -660,7 +678,7 @@ shinyServer(function(input, output, session) {
       
       # x-check: print all rows with NA's
       if (DEB) {
-        cat(file = stdout(), 'Rows with NAs:\n')
+        cat(file = stdout(), 'server:data4trajPlot: Rows with NAs:\n')
         print(loc.out[rowSums(is.na(loc.out)) > 0, ])
       }
       
@@ -734,30 +752,27 @@ shinyServer(function(input, output, session) {
   # time points as rows
   data4clust <- reactive({
     if (DEB)  
-      cat(file = stdout(), 'data4clust\n')
+      cat(file = stdout(), 'server:data4clust\n')
     
     loc.dt = data4trajPlotNoOut()
     if (is.null(loc.dt))
       return(NULL)
     
-    #print(loc.dt)
-    loc.out = dcast(loc.dt, as.formula(paste0(COLID, "~", COLRT)), value.var = COLY)
-    #print(loc.out)
-    loc.rownames = loc.out[[COLID]]
+    # convert from long to wide format
+    loc.dt.wide = dcast(loc.dt, 
+                    reformulate(response = COLID, termlabels = COLRT), 
+                    value.var = COLY)
     
+    # store row names for later
+    loc.rownames = loc.dt.wide[[COLID]]
     
-    loc.out = as.matrix(loc.out[, -1])
-    rownames(loc.out) = loc.rownames
+    # omit first column that contains row names
+    loc.m.out = as.matrix(loc.dt.wide[, -1])
     
-    # This might be removed entirely because all NA treatment happens in data4trajPlot
-    # Clustering should work with NAs present. These might result from data itself or from missing time point rows that were turned into NAs when dcast-ing from long format.
-    # Remove NA's
-    # na.interpolation from package imputeTS works with multidimensional data
-    # but imputation is performed for each column independently
-    # The matrix for clustering contains time series in rows, hence transposing it twice
-    # loc.out = t(na.interpolation(t(loc.out)))
+    # assign row names to the matrix
+    rownames(loc.m.out) = loc.rownames
     
-    return(loc.out)
+    return(loc.m.out)
   }) 
   
   
@@ -765,17 +780,17 @@ shinyServer(function(input, output, session) {
   # this dataset is displayed underneath of trajectory plot (modules/trajPlot.R) as geom_segment
   data4stimPlot <- reactive({
     if (DEB)  
-      cat(file = stdout(), 'data4stimPlot\n')
+      cat(file = stdout(), 'server:data4stimPlot\n')
     
     if (input$chBstim) {
       if (DEB)  
-        cat(file = stdout(), 'data4stimPlot: stim not NULL\n')
+        cat(file = stdout(), 'server:data4stimPlot: stim not NULL\n')
       
       loc.dt.stim = dataLoadStim()
       return(loc.dt.stim)
     } else {
       if (DEB)  
-        cat(file = stdout(), 'data4stimPlot: stim is NULL\n')
+        cat(file = stdout(), 'server:data4stimPlot: stim is NULL\n')
       
       return(NULL)
     }
@@ -796,7 +811,7 @@ shinyServer(function(input, output, session) {
   # The output data table of data4trajPlot is modified based on inSelHighlight field
   output$varSelHighlight = renderUI({
     if (DEB)  
-      cat(file = stdout(), 'UI varSelHighlight\n')
+      cat(file = stdout(), 'server:varSelHighlight\n')
     
     locBut = input$chBhighlightTraj
     if (!locBut)
@@ -806,7 +821,7 @@ shinyServer(function(input, output, session) {
     if (!is.null(loc.v)) {
       selectInput(
         'inSelHighlight',
-        'Select one or more rajectories:',
+        'Select one or more trajectories:',
         loc.v,
         width = '100%',
         multiple = TRUE
