@@ -327,19 +327,28 @@ shinyServer(function(input, output, session) {
   })
   
   # UI-side-panel-normalization ----
+  
+  # select normalisation method
+  # - fold-change calculates fold change with respect to the mean
+  # - z-score calculates z-score of the selected regione of the time series
   output$uiChBnorm = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:uiChBnorm\n')
     
     if (input$chBnorm) {
+      tagList(
       radioButtons(
         'rBnormMeth',
         label = 'Select method',
-        choices = list('fold-change' = 'mean', 'z-score' = 'z.score')
+        choices = list('fold-change' = 'mean', 'z-score' = 'z.score'),
+        width = "40%"
+      ),
+      bsTooltip('rBnormMeth', help.text.short[11], placement = "right", trigger = "hover", options = NULL)
       )
     }
   })
   
+  # select the region of the time series for normalisation
   output$uiSlNorm = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:uiSlNorm\n')
@@ -353,36 +362,49 @@ shinyServer(function(input, output, session) {
       locRTmin = min(locTpts)
       locRTmax = max(locTpts)
       
+      tagList(
       sliderInput(
         'slNormRtMinMax',
-        label = 'Time range for norm.',
+        label = 'Time span',
         min = locRTmin,
         max = locRTmax,
         value = c(locRTmin, 0.1 * locRTmax), 
         step = 1
+      ),
+      bsTooltip('slNormRtMinMax', help.text.short[12], placement = "right", trigger = "hover", options = NULL)
       )
     }
   })
   
+  # use robust stats (median instead of mean, mad instead of sd)
   output$uiChBnormRobust = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:uiChBnormRobust\n')
     
     if (input$chBnorm) {
+      tagList(
       checkboxInput('chBnormRobust',
                     label = 'Robust stats',
-                    FALSE)
+                    FALSE, 
+                    width = "40%"),
+      bsTooltip('chBnormRobust', help.text.short[13], placement = "right", trigger = "hover", options = NULL)
+      )
     }
   })
   
+  # choose whether normalisation should be calculated for the entire dataset, group, or trajectory
   output$uiChBnormGroup = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:uiChBnormGroup\n')
     
     if (input$chBnorm) {
+      tagList(
       radioButtons('chBnormGroup',
                    label = 'Normalisation grouping',
-                   choices = list('Entire dataset' = 'none', 'Per facet' = 'group', 'Per trajectory' = 'id'))
+                   choices = list('Entire dataset' = 'none', 'Per group' = 'group', 'Per trajectory' = 'id'), 
+                   width = "40%"),
+      bsTooltip('chBnormGroup', help.text.short[14], placement = "right", trigger = "hover", options = NULL)
+      )
     }
   })
   

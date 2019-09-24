@@ -165,9 +165,13 @@ help.text.short = c(
   'Select columns to group data according to treatment, condition, etc.',
   'Select math operation to perform on a single or two columns,',
   'Select range of time for further processing.',
-  'Normalise time series to a selected region.',
+  'Divide measurments by the mean/median or calculate z-score with respect to selected time span.',
   'Download time series after modification in this section.',
-  'Long format: a row is a single data point. Wide format: a row contains entire time series with columns as time points.'
+  'Long format: a row is a single data point. Wide format: a row is a time series with columns as time points.',
+  'Fold-change or z-score with respect to selected time span.',
+  'Normalise with respect to this time span.',
+  'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and sd.',
+  'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.'
 )
 
 # Functions for data processing ----
