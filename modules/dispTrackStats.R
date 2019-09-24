@@ -38,7 +38,8 @@ modTrackStats = function(input, output, session,
                    DT::dataTableOutput(ns('outTabStatsMeas'))),
           tabPanel("Duplicated IDs",         
                    DT::dataTableOutput(ns('outTabStatsDup')))
-      ))
+          )
+        )
     }
   })
   
