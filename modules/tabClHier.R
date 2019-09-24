@@ -361,7 +361,9 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
     # get cellIDs with cluster assignments based on dendrogram cut
     loc.dt.cl = getDataCl(userFitDendHier(), input$inPlotHierNclust)
-    loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
+    
+    # add the column with cluster assignemnt to the main dataset
+    loc.dt = merge(loc.dt, loc.dt.cl, by = COLID)
     
     # Display clusters specified in the inPlotHierClSel field
     # Data is ordered according to the order of clusters specified in this field
@@ -423,7 +425,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
       return(NULL)
     }
     
-    loc.dt = merge(loc.dt.cl, loc.dt.gr, by = 'id')
+    loc.dt = merge(loc.dt.cl, loc.dt.gr, by = COLID)
     
       
     loc.dt.aggr = loc.dt[, .(nCells = .N), by = .(group, cl)]
