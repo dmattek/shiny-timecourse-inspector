@@ -9,6 +9,7 @@
 library(shiny)
 library(shinyjs) # http://deanattali.com/shinyjs/
 library(shinyBS) # for tooltips
+library(shinycssloaders) # for loader animations
 
 shinyUI(fluidPage(
   useShinyjs(),
