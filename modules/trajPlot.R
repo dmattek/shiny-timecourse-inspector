@@ -20,7 +20,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
           '#Columns:',
           value = PLOTNFACETDEFAULT,
           min = 1,
-          width = '100px',
+          width = '80px',
           step = 1
         ),
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
@@ -28,9 +28,9 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       ),
       column(
         2,
-        checkboxGroupInput(ns('chBPlotTrajStat'), 'Stats:', list('Mean' = 'mean', 
-                                                                 '95% conf. interv.' = 'CI', 
-                                                                 'Std. error' = 'SE'))
+        checkboxGroupInput(ns('chBPlotTrajStat'), 'Display:', list('Mean' = 'mean', 
+                                                                   '95% conf. interv.' = 'CI', 
+                                                                   'Std. error' = 'SE'))
       ),
       column(
         3,
