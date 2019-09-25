@@ -211,6 +211,22 @@ LOCcalcTrajCI = function(in.dt, in.col.meas, in.col.by = NULL, in.type = c('norm
 }
 
 
+#' Calculate standard error of the mean
+#'
+#' @param x Vector
+#' @param na.rm Remove NAs; default = FALSE
+#'
+#' @return A scalar with the result
+#' @export
+#'
+#' @examples
+LOCstderr = function(x, na.rm=FALSE) {
+  if (na.rm) 
+    x = na.omit(x)
+  
+  return(sqrt(var(x)/length(x)))
+}
+
 #' Calculate the power spectrum density for time-series
 #'
 #' @param in.dt Data table in long format
@@ -662,18 +678,22 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
                           stim.bar.width.arg = 0.5,
                           xlim.arg = NULL, # limits of x-axis; for visualisation only, not trimmimng data
                           ylim.arg = NULL, # limits of y-axis; for visualisation only, not trimmimng data
-                          ribbon.lohi.arg = c('Lower', 'Upper'),
+                          ribbon.lohi.arg = c('Lower', 'Upper'), # column names containing lower and upper bound for plotting the ribbon, e.g. for CI; set to NULL to avoid plotting the ribbon
                           ribbon.fill.arg = 'grey50',
                           ribbon.alpha.arg = 0.5,
                           xlab.arg = NULL,
                           ylab.arg = NULL,
                           plotlab.arg = NULL) {
   
-  p.tmp = ggplot(dt.arg, aes_string(x = x.arg, group = group.arg)) +
-    geom_ribbon(aes_string(ymin = ribbon.lohi.arg[1], ymax = ribbon.lohi.arg[2]),
+  p.tmp = ggplot(dt.arg, aes_string(x = x.arg, group = group.arg))
+  
+  if (!is.null(ribbon.lohi.arg))
+    p.tmp = p.tmp + 
+      geom_ribbon(aes_string(ymin = ribbon.lohi.arg[1], ymax = ribbon.lohi.arg[2]),
                 fill = ribbon.fill.arg,
-                alpha = ribbon.alpha.arg) +
-    geom_line(aes_string(y = y.arg, colour = group.arg))
+                alpha = ribbon.alpha.arg)
+  
+  p.tmp = p.tmp + geom_line(aes_string(y = y.arg, colour = group.arg))
   
 
   # plot stimulation bars underneath time series
