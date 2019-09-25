@@ -13,9 +13,15 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
     fluidRow(
       column(
         2,
+        radioButtons(ns('rBlegendPos'), 'Legend:', list('top' = 'top', 'right' = 'right')),
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
-        radioButtons(ns('rBlegendPos'), 'Legend placement:', list('top' = 'top', 'right' = 'right')),
         actionButton(ns('butPlotTraj'), 'Plot!')
+      ),
+      column(
+        2,
+        radioButtons(ns('rBPlotTrajStat'), 'Display:', list('Mean only' = 'Mean',
+                                                            'Add 95% CI' = 'CI', 
+                                                            'Add SE' = 'SE'))
       ),
       column(
         3,
@@ -171,11 +177,11 @@ modTrajRibbonPlot = function(input, output, session,
   
   output$uiPlotTraj = renderUI({
     if (input$chBplotTrajInt)
-      plotlyOutput(
-        ns("outPlotTrajInt"),
-        width = paste0(input$inPlotTrajWidth, '%'),
-        height = paste0(input$inPlotTrajHeight, 'px')
-      ) else
+       plotlyOutput(
+       ns("outPlotTrajInt"),
+       width = paste0(input$inPlotTrajWidth, '%'),
+       height = paste0(input$inPlotTrajHeight, 'px')
+    ) else
         plotOutput(
           ns("outPlotTraj"),
           width = paste0(input$inPlotTrajWidth, '%'),
@@ -309,12 +315,38 @@ modTrajRibbonPlot = function(input, output, session,
       loc.facet.col = loc.facet.col[loc.groups]
     }
     
-    loc.dt.aggr = LOCcalcTrajCI(in.dt = loc.dt, 
-                             in.col.meas = 'y', 
-                             in.col.by = c(in.facet, 'realtime'), 
-                             in.type = 'normal')
+    
+    # aggregate data; calculate Mean, CI or SE
+    loc.ribbon.lohi = NULL
+    
+    if(input$rBPlotTrajStat == "Mean") {
+      # calculate the mean
+      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY))), by = c(in.facet, COLRT)]
+      
+    } else if(input$rBPlotTrajStat == "CI") {
+      # calculate the mean and the confidence intervals
+      loc.dt.aggr = LOCcalcTrajCI(in.dt = loc.dt, 
+                                  in.col.meas = COLY, 
+                                  in.col.by = c(in.facet, COLRT), 
+                                  in.type = 'normal')
+      
+      loc.ribbon.lohi = c('Lower', 'Upper')
+      
+    } else if(input$rBPlotTrajStat == "SE") {
+      # calculate the mean and the standard error of the mean
+      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY)),
+                               Lower = mean(get(COLY)) - LOCstderr(get(COLY)),
+                               Upper = mean(get(COLY)) + LOCstderr(get(COLY))), by = c(in.facet, COLRT)]
+      
+      loc.ribbon.lohi = c('Lower', 'Upper')
+    }
+    
+    
+    
+    # set the grouing column to a factor (for plotting)
     loc.dt.aggr[, (in.facet) := as.factor(get(in.facet))]
 
+    # setting bounds for displaying of x and y axes
     loc.xlim.arg = NULL
     if(input$chBsetXbounds) {
       loc.xlim.arg = c(input$inSetXboundsLow, input$inSetXboundsHigh)
@@ -326,13 +358,14 @@ modTrajRibbonPlot = function(input, output, session,
     } 
     
     p.out = LOCplotTrajRibbon(dt.arg = loc.dt.aggr, 
-                           x.arg = 'realtime', 
+                           x.arg = COLRT, 
                            y.arg = 'Mean',
                            col.arg = loc.facet.col,
                            group.arg = in.facet,
                            dt.stim.arg = loc.dt.stim,
                            x.stim.arg = c('tstart', 'tend'),
-                           y.stim.arg = c('ystart', 'yend'),
+                           y.stim.arg = c('ystart', 'yend'), 
+                           ribbon.lohi.arg = loc.ribbon.lohi,
                            xlim.arg = loc.xlim.arg,
                            ylim.arg = loc.ylim.arg,
                            xlab.arg = 'Time',
