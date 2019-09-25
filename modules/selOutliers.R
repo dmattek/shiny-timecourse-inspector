@@ -10,7 +10,7 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
   ns <- NS(id)
   
   tagList(
-    checkboxInput(ns('chbRemoveOut'), 'Remove otliers', value = F),
+    checkboxInput(ns('chbRemoveOut'), 'Remove outliers', value = F),
     uiOutput(ns('uiSelOutliers'))
   )
 }
