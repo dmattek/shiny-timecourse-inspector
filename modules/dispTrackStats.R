@@ -53,7 +53,7 @@ modTrackStats = function(input, output, session,
     if (is.null(loc.dt))
       return(NULL)
     
-    sprintf('<b>Total #time-series: %d <br>Average length: %.2f time units</b>', 
+    sprintf('<b>Total number of time-series: %d <br>Average length: %.2f time units</b>', 
             length(unique(loc.dt[[COLID]])), 
             loc.dt[, .(trackLength = .N), by = COLID][, mean(trackLength)])
     
@@ -68,14 +68,17 @@ modTrackStats = function(input, output, session,
     if (is.null(loc.dt))
       return(NULL)
     
-    loc.dt.aggr = loc.dt[, sapply(.SD, function(x) list('measMean' = mean(x),
-                                                        'measSD' = sd(x),
-                                                        'measCV' = sd(x)/mean(x), 
-                                                        'measMedian' = median(x),
-                                                        'measIQR' = IQR(x),
-                                                        'meas_rCV_IQR' = IQR(x)/median(x))), .SDcols = COLY, by = c(in.bycols)]
+    loc.dt.aggr = loc.dt[, sapply(.SD, function(x) list('nas' = sum(is.na(x)),
+                                                        'min' = min(x, na.rm = T),
+                                                        'max' = max(x, na.rm = T),
+                                                        'measMean' = mean(x, na.rm = T),
+                                                        'measSD' = sd(x, na.rm = T),
+                                                        'measCV' = sd(x, na.rm = T)/mean(x, na.rm = T), 
+                                                        'measMedian' = median(x, na.rm = T),
+                                                        'measIQR' = IQR(x, na.rm = T),
+                                                        'meas_rCV_IQR' = IQR(x, na.rm = T)/median(x, na.rm = T))), .SDcols = COLY, by = c(in.bycols)]
     
-    setnames(loc.dt.aggr, c(in.bycols, 'Mean Meas.', 'SD', 'CV', 'Median Meas.', 'IQR', 'rCV IQR'))
+    setnames(loc.dt.aggr, c(in.bycols, '#NAs', 'Min', 'Max', 'Mean', 'SD', 'CV', 'Median', 'IQR', 'rCV'))
     
     return(loc.dt.aggr)
   })
@@ -96,7 +99,7 @@ modTrackStats = function(input, output, session,
                                                    tracksLenMedian = median(nTpts),
                                                    tracksLenIQR = IQR(nTpts)), by = c(in.bycols)]
     
-    setnames(loc.dt.aggr, c(in.bycols, '#tracks', 'Mean Length', 'SD', 'Median Length', 'IQR'))
+    setnames(loc.dt.aggr, c(in.bycols, '#Tracks', 'Mean', 'SD', 'Median', 'IQR'))
     
     return(loc.dt.aggr)
   })
@@ -111,7 +114,7 @@ modTrackStats = function(input, output, session,
     
     if (nrow(loc.dt))
       datatable(loc.dt, 
-                caption = 'Track statistics',
+                caption = 'Statistics of time series: number of time series, mean/median and the spread of track lengths, SD - standard deviation, IQR - interquartile range.',
                 rownames = TRUE,
                 extensions = 'Buttons', 
                 options = list(
@@ -141,7 +144,7 @@ modTrackStats = function(input, output, session,
     
     if (nrow(loc.dt))
       datatable(loc.dt, 
-                caption = 'Measurement statistics',
+                caption = 'Statistics of measurements: number of NA time points, min/max/mean/median and the spread of the y-axis value. SD - standard deviation, CV - coefficient of variation, SD/mean; IQR - interquartile range, rCV - robust CV, IQR/median.',
                 rownames = TRUE,
                 extensions = 'Buttons', 
                 options = list(
@@ -155,7 +158,7 @@ modTrackStats = function(input, output, session,
                                                           filename = 'hitStats'),
                                                      list(extend='pdf',
                                                           filename= 'hitStats')),
-                                      text = 'Download')))) %>% formatRound(2:7)
+                                      text = 'Download')))) %>% formatRound(3:10)
     else
       return(NULL)
   })
@@ -175,7 +178,7 @@ modTrackStats = function(input, output, session,
     
     if (nrow(loc.duptracks))
       datatable(loc.duptracks, 
-                caption = 'Track IDs with duplicated objects in a frame',
+                caption = 'Track IDs with duplicated objects in a group. To avoid, create a data-wide unique track ID in the panel on the left or in your input data.',
                 rownames = TRUE,
                 extensions = 'Buttons', 
                 options = list(
