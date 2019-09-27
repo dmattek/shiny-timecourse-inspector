@@ -24,6 +24,7 @@ Following packages need to be installed in order to run the app locally:
 * grid
 * dendextend
 * RColorBrewer
+* ggthemes
 * sparcl
 * dtw
 * imputeTS
@@ -38,7 +39,7 @@ Install packages using `install.packages('name_of_the_package_from_the_list_abov
 install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 					"data.table", "DT",
 					"ggplot2", "gplots", "plotly", "scales", "grid",
-					"dendextend", "RColorBrewer",
+					"dendextend", "RColorBrewer", "ggthemes",
 					"sparcl", "dtw",
 					"imputeTS", "MASS", "robust", "pracma", "Hmisc")) 
 ```
