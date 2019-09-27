@@ -6,14 +6,14 @@
 #
 
 # UI ----
-modClDistPlotUI =  function(id, label = "Plot Fractions Within Clusters") {
+modClDistPlotUI =  function(id, label = "Plot distribution of clusters per groupd") {
   ns <- NS(id)
   
   tagList(
     radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels:",
                  c("horizontal" = 0,
                    "45 deg" = 45,
-                   "90 deg" = 90)),
+                   "90 deg" = 90), inline = T),
     actionButton(ns('butPlotClDist'), 'Plot!'),
     plotOutput(ns('outPlotClDist'), height = PLOTBOXHEIGHT, width = 'auto'),
     downPlotUI(ns('downPlotClDist'), "Download PDF")
@@ -66,7 +66,7 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
     p.out = p.out + 
       scale_y_continuous(labels = percent) +
       ylab("Percentage of time-series\n") +  
-      xlab("") +  
+      xlab("Groups") +  
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 

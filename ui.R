@@ -104,12 +104,12 @@ shinyUI(fluidPage(
         tabPanel(
           "Time series",
           h4(
-            "Plot time series: means per group or individual"
+            "Plot time series: averages per group or individual"
           ),
           br(),
           modSelOutliersUI('returnOutlierIDs'),
           tabsetPanel(
-            tabPanel("Means",
+            tabPanel("Averages",
                      br(),
                      modTrajRibbonPlotUI('modTrajRibbon')
             ),
@@ -137,7 +137,7 @@ shinyUI(fluidPage(
         ),
         
         tabPanel(
-          "Box-plots",
+          "Distributions",
           tabBoxPlotUI('tabBoxPlot')
         ),
         

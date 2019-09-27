@@ -45,7 +45,7 @@ PLOTWIDTH = 85 # in percent
 PLOTNFACETDEFAULT = 3
 
 # internal column names
-COLRT   = 'realtime'
+COLRT   = 'time'
 COLY    = 'y'
 COLID   = 'id'
 COLIDUNI = 'trackObjectsLabelUni'
@@ -96,13 +96,14 @@ md_cols <- c(
 
 # list of palettes for the heatmap
 l.col.pal = list(
-  "White-Orange-Red" = 'OrRd',
-  "Yellow-Orange-Red" = 'YlOrRd',
+  "Spectral" = 'Spectral',
+  "Red-Yellow-Green" = 'RdYlGn',
+  "Red-Yellow-Blue" = 'RdYlBu',
+  "Greys" = "Greys",
   "Reds" = "Reds",
   "Oranges" = "Oranges",
   "Greens" = "Greens",
-  "Blues" = "Blues",
-  "Spectral" = 'Spectral'
+  "Blues" = "Blues"
 )
 
 # list of palettes for the dendrogram
@@ -115,23 +116,40 @@ l.col.pal.dend = list(
   "Diverge HSV" = 'diverge_hsv'
 )
 
+# list of palettes for the dendrogram
+l.col.pal.dend.2 = list(
+  "Colorblind 10" = 'Color Blind',
+  "Tableau 10" = 'Tableau 10',
+  "Tableau 20" = 'Tableau 20',
+  "Classic 10" = "Classic 10",
+  "Classic 20" = "Classic 20",
+  "Traffic 9" = 'Traffic',
+  "Seattle Grays 5" = 'Seattle Grays'
+)
+
 # Clustering algorithms ----
 
-s.cl.linkage = c("ward.D",
-                 "ward.D2",
-                 "single",
+s.cl.linkage = c("average",
                  "complete",
-                 "average",
-                 "mcquitty",
-                 "centroid")
+                 "single",
+                 "centroid",
+                 "ward.D",
+                 "ward.D2",
+                 "mcquitty")
 
 s.cl.spar.linkage = c("average",
                       "complete", 
                       "single",
                       "centroid")
 
-s.cl.diss = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "DTW")
-s.cl.spar.diss = c("squared.distance","absolute.value")
+s.cl.diss = c("euclidean", 
+              "maximum", 
+              "manhattan", 
+              "canberra", 
+              "DTW")
+
+s.cl.spar.diss = c("squared.distance",
+                   "absolute.value")
 
 
 # Help text ----
@@ -159,20 +177,24 @@ helpPopup <- function(title, content,
 }
 
 help.text.short = c(
-  'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',
-  'If the track ID is unique only within a group, make it unique globally by combining with the grouping column.',
-  'Interpolate missing time points and pre-existing NAs. The interval of the time column must be provided!',
-  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with ID.',
-  'Select columns to group data according to treatment, condition, etc.',
-  'Select math operation to perform on a single or two columns,',
-  'Select range of time for further processing.',
-  'Divide measurments by the mean/median or calculate z-score with respect to selected time span.',
-  'Download time series after modification in this section.',
-  'Long format: a row is a single data point. Wide format: a row is a time series with columns as time points.',
-  'Fold-change or z-score with respect to selected time span.',
-  'Normalise with respect to this time span.',
-  'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and sd.',
-  'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.'
+  'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',                       #1
+  'If the track ID is unique only within a group, make it unique globally by combining with the grouping column.',                 #2
+  'Interpolate missing time points and pre-existing NAs. The interval of the time column must be provided!',                       #3
+  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with ID.', #4
+  'Select columns to group data according to treatment, condition, etc.',                                                          #5
+  'Select math operation to perform on a single or two columns,',                                                                  #6
+  'Select range of time for further processing.',                                                                                  #7
+  'Divide measurments by the mean/median or calculate z-score with respect to selected time span.',                                #8
+  'Download time series after modification in this section.',                                                                      #9
+  'Long format: a row is a single data point. Wide format: a row is a time series with columns as time points.',                   #10
+  'Fold-change or z-score with respect to selected time span.',                                                                    #11
+  'Normalise with respect to this time span.',                                                                                     #12
+  'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and sd.',                 #13
+  'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.',                      #14
+  'Instead of the value at a selected time point, y-axis can display a difference between values at time points on y- and x-axis.',#15
+  'Add a line with linear regression and regions of 95% confidence interval.',                                                     #16
+  'A number of time points left & right of selected time points; use the mean/min/max of values from these time points for the scatterplot.', #17
+  'Operations to perform on values at time points selected in the field above.'                                                    #18
 )
 
 # Functions for data processing ----
@@ -765,67 +787,47 @@ LOCplotPSD <- function(dt.arg, # input data table
   return(p.tmp)
 }
 
-# Plots a scatter plot with marginal histograms
-# Points are connected by a line (grouping by cellID)
-#
-# Assumes an input of data.table with
-# x, y - columns with x and y coordinates
-# id - a unique point identifier (here corresponds to cellID)
-# mid - a (0,1) column by which points are coloured (here corresponds to whether cells are within bounds)
+#' Plot a scatter plot with an optional linear regression
+#'
+#' @param dt.arg input of data.table with 2 columns with x and y coordinates
+#' @param facet.arg 
+#' @param facet.ncol.arg 
+#' @param xlab.arg 
+#' @param ylab.arg 
+#' @param plotlab.arg 
+#' @param alpha.arg 
+#' @param trend.arg 
+#' @param ci.arg 
 
-LOCggplotScat = function(dt.arg,
-                        band.arg = NULL,
+LOCggplotScat = function(dt.arg, 
                         facet.arg = NULL,
                         facet.ncol.arg = 2,
                         xlab.arg = NULL,
                         ylab.arg = NULL,
                         plotlab.arg = NULL,
                         alpha.arg = 1,
-                        group.col.arg = NULL) {
-  p.tmp = ggplot(dt.arg, aes(x = x, y = y))
+                        trend.arg = T,
+                        ci.arg = 0.95) {
   
-  if (is.null(group.col.arg)) {
-    p.tmp = p.tmp +
-      geom_point(alpha = alpha.arg, aes(group = id))
-  } else {
-    p.tmp = p.tmp +
-      geom_point(aes(colour = as.factor(get(group.col.arg)), group = id), alpha = alpha.arg) +
-      geom_path(aes(colour = as.factor(get(group.col.arg)), group = id), alpha = alpha.arg) +
-      scale_color_manual(name = group.col.arg, values =c("FALSE" = rhg_cols[7], "TRUE" = rhg_cols[3], "SELECTED" = 'green'))
-  }
-  
-  if (is.null(band.arg))
+  p.tmp = ggplot(dt.arg, aes(x = x, y = y)) +
+    geom_point(alpha = alpha.arg)
+
+  if (trend.arg) {
     p.tmp = p.tmp +
       stat_smooth(
-        # method = function(formula, data, weights = weight)
-        #   rlm(formula, data, weights = weight, method = 'MM'),
         method = "lm",
         fullrange = FALSE,
-        level = 0.95,
+        level = ci.arg,
         colour = 'blue'
       )
-  else {
-    p.tmp = p.tmp +
-      geom_abline(slope = band.arg$a, intercept = band.arg$b) +
-      geom_abline(
-        slope = band.arg$a,
-        intercept =  band.arg$b + abs(band.arg$b)*band.arg$width,
-        linetype = 'dashed'
-      ) +
-      geom_abline(
-        slope = band.arg$a,
-        intercept = band.arg$b - abs(band.arg$b)*band.arg$width,
-        linetype = 'dashed'
-      )
   }
-  
+
   if (!is.null(facet.arg)) {
     p.tmp = p.tmp +
       facet_wrap(as.formula(paste("~", facet.arg)),
                  ncol = facet.ncol.arg)
     
   }
-  
   
   if (!is.null(xlab.arg))
     p.tmp = p.tmp +
@@ -839,8 +841,6 @@ LOCggplotScat = function(dt.arg,
     p.tmp = p.tmp +
       ggtitle(paste0(plotlab.arg, "\n"))
   
-  
-  
   p.tmp = p.tmp +
     LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                    in.font.axis.text = PLOTFONTAXISTEXT, 
@@ -849,10 +849,6 @@ LOCggplotScat = function(dt.arg,
                    in.font.legend = PLOTFONTLEGEND) + 
     theme(legend.position = "none")
 
-  # Marginal distributions don;t work with plotly...
-  # if (is.null(facet.arg))
-  #   ggExtra::ggMarginal(p.scat, type = "histogram",  bins = 100)
-  # else
   return(p.tmp)
 }
 

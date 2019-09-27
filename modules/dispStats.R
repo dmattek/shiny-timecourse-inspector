@@ -10,7 +10,7 @@ modStatsUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
   tagList(
-    checkboxInput(ns('chbTabStats'), 'Show stats', FALSE),
+    checkboxInput(ns('chbTabStats'), 'Show statistics', FALSE),
     uiOutput(ns('uiTabStats')),
     uiOutput(ns('uiDownSingleCellData'))
   )
@@ -25,6 +25,8 @@ modStats = function(input, output, session,
   
   ns <- session$ns
   
+  
+  
   output$uiTabStats = renderUI({
     cat(file = stderr(), 'modStats:uiTabStats\n')
     ns <- session$ns
@@ -34,12 +36,13 @@ modStats = function(input, output, session,
     }
   })
   
+  
   output$uiDownSingleCellData = renderUI({
     cat(file = stderr(), 'modStats:uiDownSingleCellData\n')
     ns <- session$ns
     
     if(input$chbTabStats) {
-      downloadButton(ns('downloadData4BoxPlot'), 'Download single-cell data')
+      downloadButton(ns('downloadData4BoxPlot'), 'Download stats for individual time series')
     }
   })
   
@@ -56,10 +59,9 @@ modStats = function(input, output, session,
                                                         'Mean' = mean(x), 
                                                         'CV' = sd(x)/mean(x), 
                                                         'Median' = median(x), 
-                                                        'rCV (IQR)' = IQR(x)/median(x), 
-                                                        'rCV (MAD)'= mad(x)/median(x))), .SDcols = in.meascol, by = in.bycols]
+                                                        'rCV' = IQR(x)/median(x))), .SDcols = in.meascol, by = in.bycols]
     
-    setnames(loc.dt.aggr, c(in.bycols, 'N', 'Mean', 'CV', 'Median', 'rCV IQR', 'rCV MAD'))
+    setnames(loc.dt.aggr, c(in.bycols, 'nPoints', 'Mean', 'CV', 'Median', 'rCV'))
     
     return(loc.dt.aggr)
   })

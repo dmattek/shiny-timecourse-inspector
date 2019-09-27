@@ -9,23 +9,10 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
   ns <- NS(id)
   
   tagList(
+    h4('Hierarchical clustering'),
     br(),
     fluidRow(
       column(4,
-             selectInput(
-               ns("selectPlotHierLinkage"),
-               label = ("Select linkage method:"),
-               choices = list(
-                 "Ward" = 1,
-                 "Ward D2" = 2,
-                 "Single" = 3,
-                 "Complete" = 4,
-                 "Average" = 5,
-                 "McQuitty" = 6,
-                 "Centroid" = 7
-               ),
-               selected = 2
-             ),
              selectInput(
                ns("selectPlotHierDiss"),
                label = ("Select type of dissimilarity measure:"),
@@ -33,10 +20,22 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                               "Maximum" = 2,
                               "Manhattan" = 3,
                               "Canberra" = 4,
-                              "Binary" = 5,
-                              "Minkowski" = 6,
-                              "DTW" = 7),
+                              "DTW" = 5),
                selected = 1
+             ),
+             selectInput(
+               ns("selectPlotHierLinkage"),
+               label = ("Select linkage method:"),
+               choices = list(
+                 "Average" = 1,
+                 "Complete" = 2,
+                 "Single" = 3,
+                 "Centroid" = 4,
+                 "Ward" = 5,
+                 "Ward D2" = 6,
+                 "McQuitty" = 7
+               ),
+               selected = 5
              )
       ),
       column(4,
@@ -58,24 +57,24 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
              
              checkboxInput(ns('chBPlotHierClSel'), 'Manually select clusters to display'),
              uiOutput(ns('uiPlotHierClSel')),
-             downloadButton(ns('downCellCl'), 'Download CSV with cell IDs and cluster no.')
+             downloadButton(ns('downCellCl'), 'Download CSV with cluster assignments')
       )
     ),
     
     br(),
-
+    
     tabsetPanel(
-      tabPanel('Heat-map',
+      tabPanel('Heatmap',
+               br(),
                fluidRow(
                  column(3,
-                        checkboxInput(ns('selectPlotHierDend'), 'Plot dendrogram and re-order samples', TRUE),
                         selectInput(
-                          ns("selectPlotHierPaletteDend"),
-                          label = "Dendrogram\'s colour palette:",
-                          choices = l.col.pal.dend,
-                          selected = 'Rainbow'
+                          ns("selectPlotHierPalette"),
+                          label = "Heatmap\'s colour palette",
+                          choices = l.col.pal,
+                          selected = 'Spectral'
                         ),
-
+                        checkboxInput(ns('inPlotHierRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
                         checkboxInput(ns('selectPlotHierKey'), 'Plot colour key', TRUE),
                         checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
                         
@@ -90,95 +89,85 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                  ),
                  column(3,
                         selectInput(
-                          ns("selectPlotHierPalette"),
-                          label = "Heatmap\'s colour palette:",
-                          choices = l.col.pal,
-                          selected = 'Spectral'
+                          ns("selectPlotHierPaletteDend"),
+                          label = "Dendrogram\'s colour palette",
+                          choices = l.col.pal.dend.2,
+                          selected = 'Color Blind'
                         ),
-                        checkboxInput(ns('inPlotHierRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
+                        checkboxInput(ns('selectPlotHierDend'), 'Plot dendrogram and re-order samples', TRUE),
                         sliderInput(
                           ns('inPlotHierNAcolor'),
-                          'Shade of grey for NA values (0 - black, 1 - white)',
+                          'Shade of grey for NA values',
                           min = 0,
                           max = 1,
                           value = 0.8,
                           step = .1,
                           ticks = TRUE
                         )
+                        
                  ),
-                 column(6,
-                        h4('Classic hierarchical clustering'),
-                        br(),
+                 column(3,
+                        numericInput(
+                          ns('inPlotHierMarginX'),
+                          'Bottom margin',
+                          5,
+                          min = 1,
+                          width = "120px"
+                        ),
+                        numericInput(
+                          ns('inPlotHierFontY'),
+                          'Font size column labels',
+                          1,
+                          min = 0,
+                          width = "180px",
+                          step = 0.1
+                        ),
                         numericInput(ns('inPlotHierHeatMapHeight'), 
                                      'Display plot height [px]', 
                                      value = 600, 
                                      min = 100,
-                                     step = 100)
+                                     step = 100,
+                                     width = "180px")
                         
+                 ),
+                 column(3,
+                        numericInput(
+                          ns('inPlotHierMarginY'),
+                          'Right margin',
+                          20,
+                          min = 1,
+                          width = "120px"
+                        ),
+                        numericInput(
+                          ns('inPlotHierFontX'),
+                          'Font size row labels',
+                          1,
+                          min = 0,
+                          width = "180px",
+                          step = 0.1
+                        )
                  )
                ),
-               
-               fluidRow(
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierMarginX'),
-                     'Margin below x-axis',
-                     5,
-                     min = 1,
-                     width = 100
-                   )
-                 ),
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierMarginY'),
-                     'Margin right of y-axis',
-                     20,
-                     min = 1,
-                     width = 100
-                   )
-                 ),
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierFontX'),
-                     'Font size row labels',
-                     1,
-                     min = 0,
-                     width = 100,
-                     step = 0.1
-                   )
-                 ),
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierFontY'),
-                     'Font size column labels',
-                     1,
-                     min = 0,
-                     width = 100,
-                     step = 0.1
-                   )
-                 )
-               ),
-               br(),
                
                downPlotUI(ns('downPlotHier'), "Download PNG"),
                actionButton(ns('butPlotHierHeatMap'), 'Plot!'),
                withSpinner(plotOutput(ns('outPlotHier')))
       ),
-
+      
       tabPanel('Averages',
+               br(),
                modTrajRibbonPlotUI(ns('modPlotHierTrajRibbon'))),
       
-      tabPanel('Time-courses',
+      tabPanel('Time series',
+               br(),
                modTrajPlotUI(ns('modPlotHierTraj'))),
       
       tabPanel('PSD',
+               br(),
                modPSDPlotUI(ns('modPlotHierPsd'))),
       
-      tabPanel('Cluster dist.',
+      tabPanel('Cluster distribution',
+               br(),
                modClDistPlotUI(ns('hierClDistPlot'), 'xxx'))
       
     )
@@ -209,15 +198,15 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
                   selected = 1)
     }
   })
-
+  
   # UI for setting lower and upper bounds for heat map colour scale  
   output$uiSetColBoundsLow = renderUI({
     ns <- session$ns
     
     if(input$chBsetColBounds) {
-
+      
       loc.dt = in.data4trajPlot()
-
+      
       numericInput(
         ns('inSetColBoundsLow'),
         label = 'Lower',
@@ -232,7 +221,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     ns <- session$ns
     
     if(input$chBsetColBounds) {
-
+      
       loc.dt = in.data4trajPlot()
       
       numericInput(
@@ -250,7 +239,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     cat(file = stderr(), 'userFitDistHier \n')
     
     dm.t = in.data4clust()
-
+    
     if (is.null(dm.t)) {
       return(NULL)
     }
@@ -273,13 +262,14 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     }
     
     cl.hc = hclust(dm.dist, method = s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
-
+    
     # number of clusters at which dendrigram is cut
     loc.k = input$inPlotHierNclust
     
     # make a palette with the amount of colours equal to the number of clusters
-    loc.col = get(input$selectPlotHierPaletteDend)(n = loc.k)
-
+    #loc.col = get(input$selectPlotHierPaletteDend)(n = loc.k)
+    loc.col = ggthemes::tableau_color_pal(input$selectPlotHierPaletteDend)(n = loc.k)
+    
     # take into account manual assignment of cluster numbers
     # NOT USED AT THE MOMENT
     #if (input$chBPlotHierClAss) {
@@ -294,7 +284,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     return(dend)
   })
   
-
+  
   # returns table prepared with f-n getClCol
   # for hierarchical clustering
   getClColHier <- reactive({
@@ -427,7 +417,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
     loc.dt = merge(loc.dt.cl, loc.dt.gr, by = COLID)
     
-      
+    
     loc.dt.aggr = loc.dt[, .(nCells = .N), by = .(group, cl)]
     
     # Display clusters specified in the inPlotHierClSel field
@@ -442,10 +432,10 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   })
   
   createMethodStr = reactive({
-
+    
     paste0(s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-    '_',
-    s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
+           '_',
+           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
     
   })
   
@@ -470,34 +460,34 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
     
     loc.p = LOCplotHeatmap(loc.dm,
-                          loc.dend, 
-                          palette.arg = input$selectPlotHierPalette, 
-                          palette.rev.arg = input$inPlotHierRevPalette, 
-                          dend.show.arg = input$selectPlotHierDend, 
-                          key.show.arg = input$selectPlotHierKey, 
-                          margin.x.arg = input$inPlotHierMarginX, 
-                          margin.y.arg = input$inPlotHierMarginY, 
-                          nacol.arg = input$inPlotHierNAcolor, 
-                          font.row.arg = input$inPlotHierFontX, 
-                          font.col.arg = input$inPlotHierFontY, 
-                          breaks.arg = loc.col.bounds,
-                          title.arg = paste0(
-                            "Distance measure: ",
-                            s.cl.diss[as.numeric(input$selectPlotHierDiss)],
-                            "\nLinkage method: ",
-                            s.cl.linkage[as.numeric(input$selectPlotHierLinkage)]
-                          ))
+                           loc.dend, 
+                           palette.arg = input$selectPlotHierPalette, 
+                           palette.rev.arg = input$inPlotHierRevPalette, 
+                           dend.show.arg = input$selectPlotHierDend, 
+                           key.show.arg = input$selectPlotHierKey, 
+                           margin.x.arg = input$inPlotHierMarginX, 
+                           margin.y.arg = input$inPlotHierMarginY, 
+                           nacol.arg = input$inPlotHierNAcolor, 
+                           font.row.arg = input$inPlotHierFontX, 
+                           font.col.arg = input$inPlotHierFontY, 
+                           breaks.arg = loc.col.bounds,
+                           title.arg = paste0(
+                             "Distance measure: ",
+                             s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                             "\nLinkage method: ",
+                             s.cl.linkage[as.numeric(input$selectPlotHierLinkage)]
+                           ))
     
     return(loc.p)
   }
   
   
-   
+  
   #  Hierarchical - display heatmap
   getPlotHierHeatMapHeight <- function() {
     return (input$inPlotHierHeatMapHeight)
   }
- 
+  
   output$outPlotHier <- renderPlot({
     locBut = input$butPlotHierHeatMap
     
@@ -557,7 +547,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   
   #  Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHier", createFnameHeatMap, plotHier)
-
+  
   # plot individual trajectories withina cluster  
   callModule(modTrajPlot, 'modPlotHierTraj', 
              in.data = data4trajPlotCl, 
@@ -580,12 +570,12 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
              in.facet = 'cl',
              in.facet.color = getClColHier,
              in.fname = createFnamePsdPlot)
-
+  
   # plot distribution barplot
   callModule(modClDistPlot, 'hierClDistPlot', 
              in.data = data4clDistPlot,
              in.cols = getClColHier,
              in.fname = createFnameDistPlot)
-
+  
   
 }

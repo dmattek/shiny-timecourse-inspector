@@ -19,6 +19,7 @@ library(dendextend) # for color_branches
 library(colorspace) # for palettes (used to colour dendrogram)
 library(RColorBrewer)
 library(scales) # for percentages on y scale
+library(ggthemes) # nice colour palettes
 
 library(sparcl) # sparse hierarchical and k-means
 library(dtw) # for dynamic time warping
@@ -638,33 +639,34 @@ shinyServer(function(input, output, session) {
     
     # if dataset contains column mid.in with trajectory filtering status,
     # then, include it in plotting
-    if (sum(names(loc.dt) %in% 'mid.in') > 0)
+    if (sum(names(loc.dt) %in% COLIN) > 0)
       locMidIn = TRUE
     else
       locMidIn = FALSE
     
     ## Build expression for selecting columns from loc.dt
     # Core columns
-    s.colexpr = paste0('.(y = ', loc.s.y,
-                       ', id = trackObjectsLabelUni', 
-                       ', group = ', loc.s.gr,
-                       ', realtime = ', loc.s.rt)
+    s.colexpr = paste0('.(',  COLY, ' = ', loc.s.y,
+                       ', ', COLID, ' = ', COLIDUNI, 
+                       ', ', COLGR, ' = ', loc.s.gr,
+                       ', ', COLRT, ' = ', loc.s.rt)
     
     # account for the presence of 'mid.in' column in uploaded data
+    # future: choose this column in UI
     if(locMidIn)
       s.colexpr = paste0(s.colexpr, 
-                         ', mid.in = mid.in')
+                         ',', COLIN, ' = ', COLIN)
     
     # include position x,y columns in uploaded data
     if(locPos)
       s.colexpr = paste0(s.colexpr, 
-                         ', pos.x = ', loc.s.pos.x,
-                         ', pos.y = ', loc.s.pos.y)
+                         ', ', COLPOSX, '= ', loc.s.pos.x,
+                         ', ', COLPOSY, '= ', loc.s.pos.y)
     
     # include ObjectNumber column
     if(locObjNum)
       s.colexpr = paste0(s.colexpr, 
-                         ', obj.num = ', loc.s.objnum)
+                         ', ', COLOBJN, ' = ', loc.s.objnum)
     
     # close bracket, finish the expression
     s.colexpr = paste0(s.colexpr, ')')
@@ -683,10 +685,10 @@ shinyServer(function(input, output, session) {
       # add a 3rd level with status of track selection
       # to a column with trajectory filtering status in the uploaded file
       if(locMidIn)
-        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', mid.in)]
+        loc.out[, mid.in := ifelse(get(COLID) %in% loc.tracks.highlight, 'SELECTED', get(COLIN))]
       else
         # add a column with status of track selection
-        loc.out[, mid.in := ifelse(id %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
+        loc.out[, mid.in := ifelse(get(COLID) %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
     }
       
 
@@ -823,6 +825,16 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # prepare y-axis label in time series plots, depending on UI setting
+  
+  createYaxisLabel = reactive({
+    locLabel = input$inSelMeas1
+    
+    
+    
+    return(locLabel)
+  })
+  
   # download data as prepared for plotting
   # after all modification
   output$downloadDataClean <- downloadHandler(
@@ -869,7 +881,8 @@ shinyServer(function(input, output, session) {
   callModule(modTrajPlot, 'modTrajPlot', 
              in.data = data4trajPlotNoOut, 
              in.data.stim = data4stimPlot,
-             in.fname = function() {return(FPDFTCSINGLE)})
+             in.fname = function() {return(FPDFTCSINGLE)},
+             in.ylab = createYaxisLabel)
   
   # Trajectory plotting - PSD
   callModule(modPSDPlot, 'modPSDPlot',

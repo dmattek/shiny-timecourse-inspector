@@ -28,7 +28,7 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
         4,
         selectInput(
           ns('selPlotBoxLegendPos'),
-          label = 'Select legend position',
+          label = 'Legend position',
           choices = list(
             "Top" = 'top',
             "Right" = 'right',
@@ -76,10 +76,10 @@ modBoxPlotUI =  function(id, label = "Plot Box-plots") {
 # SERVER ----
 modBoxPlot = function(input, output, session, 
                       in.data, 
-                      in.cols = list(meas.x = 'realtime',
-                                     meas.y = 'y',
-                                     group = 'group',
-                                     id = 'id'), 
+                      in.cols = list(meas.x = COLRT,
+                                     meas.y = COLY,
+                                     group = COLGR,
+                                     id = COLID), 
                       in.fname) {
   
   ns <- session$ns
@@ -108,7 +108,7 @@ modBoxPlot = function(input, output, session,
     ns <- session$ns
     
     if(!( 'line' %in% input$inPlotType  ))
-      sliderInput(ns('inPlotBoxDodge'), 'Dodge series:', min = 0, max = 1, value = .4, step = 0.05)
+      sliderInput(ns('inPlotBoxDodge'), 'Space between groups:', min = 0, max = 1, value = .4, step = 0.05)
   })
   
   output$uiPlotBoxWidth = renderUI({
@@ -135,7 +135,7 @@ modBoxPlot = function(input, output, session,
     ns <- session$ns
     
     if('dot' %in% input$inPlotType)
-      sliderInput(ns('inPlotDotNbins'), 'Dot-plot bin size (10^x):', min = -4, max = 4, value = -1.5, step = 0.1)
+      sliderInput(ns('inPlotDotNbins'), '#Bins for dot-plot:', min = 2, max = 50, value = 30, step = 1)
   })
   
   # Boxplot - display
@@ -206,30 +206,30 @@ modBoxPlot = function(input, output, session,
     cat(file = stderr(), 'plotBox:dt not NULL\n')
     
     loc.par.dodge <- position_dodge(width = input$inPlotBoxDodge)
-    p.out = ggplot(loc.dt, aes_string(x = sprintf("factor(%s)", in.cols[['meas.x']]), y = in.cols[['meas.y']])) 
+    p.out = ggplot(loc.dt, aes_string(x = sprintf("factor(%s)", in.cols$meas.x), y = in.cols$meas.y)) 
     
     if('dot' %in% input$inPlotType)
-      p.out = p.out + geom_dotplot(aes_string(fill = in.cols[['group']]), 
+      p.out = p.out + geom_dotplot(aes_string(fill = in.cols[[COLGR]]), 
                                    color = NA,
-                                   binaxis = "y", 
+                                   binaxis = in.cols$meas.y, 
                                    stackdir = "center", 
                                    position = loc.par.dodge, 
-                                   binwidth = 10^(input$inPlotDotNbins), 
+                                   binwidth = abs(max(loc.dt[[ in.cols$meas.y ]], na.rm = T) - min(loc.dt[[ in.cols$meas.y ]], na.rm = T)) / (input$inPlotDotNbins - 1), 
                                    method = 'histodot')
     
     if('viol' %in% input$inPlotType)
-      p.out = p.out + geom_violin(aes_string(fill = in.cols[['group']]),
+      p.out = p.out + geom_violin(aes_string(fill = in.cols[[COLGR]]),
                                   position = loc.par.dodge,
                                   width = 0.2)
     
     if('line' %in% input$inPlotType)
       p.out = p.out + 
-      geom_path(aes_string(color = in.cols[['group']], group = in.cols[['id']])) +
-      facet_wrap(as.formula(paste("~", in.cols[['group']])))
+      geom_path(aes_string(color = in.cols[[COLGR]], group = in.cols[[COLID]])) +
+      facet_wrap(as.formula(paste("~", in.cols[[COLGR]])))
     
     if ('box' %in% input$inPlotType)
       p.out = p.out + geom_boxplot(
-        aes_string(fill = in.cols[['group']]), 
+        aes_string(fill = in.cols[[COLGR]]), 
         position = loc.par.dodge,
         #width = 0.2, #input$inPlotBoxWidth,
         notch = input$inPlotBoxNotches, 

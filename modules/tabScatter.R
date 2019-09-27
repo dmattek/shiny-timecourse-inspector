@@ -20,7 +20,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
   
   tagList(
     h4(
-      "Scatter plot between two t-points"
+      "Scatter plot between two time points"
     ),
     br(),
     
@@ -29,12 +29,17 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         4,
         uiOutput(ns('uiSelTptX')),
         uiOutput(ns('uiSelTptY')),
-        checkboxInput(ns('chBfoldChange'), 'Display difference between two t-points on Y-axis')
+        checkboxInput(ns('chBfoldChange'), 'Difference between two time points on Y-axis'),
+        bsTooltip(ns('chBfoldChange'), help.text.short[15], placement = "right", trigger = "hover", options = NULL),
+        checkboxInput(ns('chBregression'), 'Linear regression with 95% CI'),
+        bsTooltip(ns('chBregression'), help.text.short[16], placement = "right", trigger = "hover", options = NULL)
       ),
       column(
         4, 
-        numericInput(ns('inNeighTpts'), '#t-pts left & right', value = 0, step = 1, min = 0),
-        radioButtons(ns('rBstats'), 'Operation:', list('Mean' = 1, 'Min' = 2, 'Max' = 3))
+        numericInput(ns('inNeighTpts'), 'Time points left & right:', value = 0, step = 1, min = 0),
+        bsTooltip(ns('inNeighTpts'), help.text.short[17], placement = "right", trigger = "hover", options = NULL),
+        radioButtons(ns('rBstats'), 'Operation:', list('Mean' = 1, 'Min' = 2, 'Max' = 3)),
+        bsTooltip(ns('inNeighTpts'), help.text.short[18], placement = "right", trigger = "hover", options = NULL)
       ),
       column(
         4,
@@ -47,7 +52,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         ),
         numericInput(
           ns('inPlotNcolFacet'),
-          '#columns',
+          '#Columns',
           value = PLOTNFACETDEFAULT,
           min = 1,
           step = 1
@@ -78,7 +83,7 @@ getDataTpts <- reactive({
   if (is.null(loc.dt))
     return(NULL)
   else
-    return(unique(loc.dt$realtime))
+    return(unique(loc.dt[[COLRT]]))
 })
 
 output$uiSelTptX = renderUI({
@@ -90,7 +95,7 @@ output$uiSelTptX = renderUI({
   if (!is.null(loc.v)) {
     selectInput(
       ns('inSelTptX'),
-      'Select t-point for X-axis:',
+      'Time point for X-axis:',
       loc.v,
       width = '100%',
       selected = 0,
@@ -108,7 +113,7 @@ output$uiSelTptY = renderUI({
   if (!is.null(loc.v)) {
     selectInput(
       ns('inSelTptY'),
-      'Select t-point for Y-axis:',
+      'Time point for Y-axis:',
       loc.v,
       width = '100%',
       selected = 0,
@@ -129,7 +134,7 @@ data4scatterPlot <- reactive({
   
   # if neigbbouring points selected
   if (input$inNeighTpts > 0) {
-    loc.dt.in.tpts = unique(loc.dt.in$realtime)
+    loc.dt.in.tpts = unique(loc.dt.in[[COLRT]])
     
     loc.tpts.x.id = seq(which(loc.dt.in.tpts == loc.tpts.x) - input$inNeighTpts, which(loc.dt.in.tpts == loc.tpts.x) + input$inNeighTpts, 1)
     loc.tpts.y.id = seq(which(loc.dt.in.tpts == loc.tpts.y) - input$inNeighTpts, which(loc.dt.in.tpts == loc.tpts.y) + input$inNeighTpts, 1)
@@ -149,20 +154,20 @@ data4scatterPlot <- reactive({
   #cat(loc.tpts.y, '\n')
   
   if (input$rBstats == 1) {
-    loc.dt.x = loc.dt.in[realtime %in% loc.tpts.x, .(y.aggr = mean(y)), by = .(group, id)]
-    loc.dt.y = loc.dt.in[realtime %in% loc.tpts.y, .(y.aggr = mean(y)), by = .(group, id)]
+    loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = mean(y)), by = c(COLGR, COLID)]
+    loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = mean(y)), by = c(COLGR, COLID)]
   } else if (input$rBstats == 2) {
-    loc.dt.x = loc.dt.in[realtime %in% loc.tpts.x, .(y.aggr = min(y)), by = .(group, id)]
-    loc.dt.y = loc.dt.in[realtime %in% loc.tpts.y, .(y.aggr = min(y)), by = .(group, id)]
+    loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = min(y)), by = c(COLGR, COLID)]
+    loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = min(y)), by = c(COLGR, COLID)]
   } else {
-    loc.dt.x = loc.dt.in[realtime %in% loc.tpts.x, .(y.aggr = max(y)), by = .(group, id)]
-    loc.dt.y = loc.dt.in[realtime %in% loc.tpts.y, .(y.aggr = max(y)), by = .(group, id)]
+    loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = max(y)), by = c(COLGR, COLID)]
+    loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = max(y)), by = c(COLGR, COLID)]
   }
 
-  loc.dt = merge(loc.dt.x, loc.dt.y, by = 'id')
+  loc.dt = merge(loc.dt.x, loc.dt.y, by = COLID)
   
   loc.dt[, group.y := NULL]
-  setnames(loc.dt, c('group.x', 'y.aggr.x', 'y.aggr.y'), c('group', 'x', 'y'))
+  setnames(loc.dt, c('group.x', 'y.aggr.x', 'y.aggr.y'), c(COLGR, 'x', 'y'))
 
   if (input$chBfoldChange) {
     loc.dt[ , y := y - x]
@@ -181,8 +186,7 @@ plotScatter <- function() {
   # isolate because calculations & plotting take a while
   # re-plotting done upon button press
   loc.dt = isolate(data4scatterPlot())
-  #loc.fit = isolate(dataFit())
-  
+
   cat("plotScatter on to plot\n\n")
   if (is.null(loc.dt)) {
     cat(file=stderr(), 'plotScatter: dt is NULL\n')
@@ -198,20 +202,12 @@ plotScatter <- function() {
 
   p.out = LOCggplotScat(
     dt.arg = loc.dt,
-    band.arg = NULL, #list(a = loc.fit$coeff.a, b = loc.fit$coeff.b, width = input$inBandWidth),
-    group.col.arg = NULL,
     plotlab.arg = NULL,
-    # plotlab.arg = sprintf(
-    #   "%s%.2f\n%s%.2f x %.2f",
-    #   ifelse(input$inRobustFit, "lmRob, entire dataset R2=", "lm, entire dataset R2="),
-    #   loc.fit$r.squared,
-    #   'bandwidth=',
-    #   input$inBandWidth,
-    #   loc.fit$coeff.b
-    # ),
-    facet.arg = 'group',
+    facet.arg = COLGR,
     facet.ncol.arg = input$inPlotNcolFacet,
-    alpha.arg = 0.5
+    alpha.arg = 0.5,
+    trend.arg = input$chBregression,
+    ci.arg = 0.95
   )
   return(p.out)
 }
@@ -246,7 +242,7 @@ output$outPlotScatterInt <- renderPlotly({
   if (names(dev.cur()) != "null device") dev.off()
   pdf(NULL)
 
-  return( plotly_build(plotScatter()))
+  return(plotly_build(plotScatter()))
   
 })
 
@@ -257,9 +253,9 @@ output$outPlotScatterInt <- renderPlotly({
   output$plotInt_ui <- renderUI({
     ns <- session$ns
     if (input$plotInt)
-      tagList(plotlyOutput(ns("outPlotScatterInt"), height = paste0(input$inPlotHeight, "px")))
+      tagList( withSpinner(plotlyOutput(ns("outPlotScatterInt"), height = paste0(input$inPlotHeight, "px"))))
     else
-      tagList(plotOutput(ns('outPlotScatter'), height = paste0(input$inPlotHeight, "px")))
+      tagList( withSpinner(plotOutput(ns('outPlotScatter'), height = paste0(input$inPlotHeight, "px"))))
   })
   
 }

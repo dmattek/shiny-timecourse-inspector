@@ -39,7 +39,7 @@ modAUCplot = function(input, output, session, in.data, in.fname) {
     if (is.null(loc.dt))
       return(NULL)
     else
-      return(unique(loc.dt[['realtime']]))
+      return(unique(loc.dt[[COLRT]]))
   })
   
   # UI for trimming x-axis (time)
@@ -72,7 +72,7 @@ modAUCplot = function(input, output, session, in.data, in.fname) {
     if (is.null(loc.dt))
       return(NULL)
     else {
-      loc.res = loc.dt[realtime >= input$slTimeTrim[1] & realtime <= input$slTimeTrim[2], .(AUC = trapz(realtime, y)), by = .(group, id)]
+      loc.res = loc.dt[get(COLRT) >= input$slTimeTrim[1] & get(COLRT) <= input$slTimeTrim[2], .(AUC = trapz(get(COLRT), get(COLY))), by = c(COLGR, COLID)]
       return(loc.res)
     }
   })
@@ -80,15 +80,15 @@ modAUCplot = function(input, output, session, in.data, in.fname) {
   callModule(modStats, 'dispStats',
              in.data = AUCcells,
              in.meascol = 'AUC',
-             in.bycols = c('group'),
+             in.bycols = COLGR,
              in.fname = 'data4boxplotAUC.csv')
   
   callModule(modBoxPlot, 'boxPlot', 
              in.data = AUCcells, 
-             in.cols = list(meas.x = 'group',
+             in.cols = list(meas.x = COLGR,
                             meas.y = 'AUC',
-                            group = 'group',
-                            id = 'id'),
+                            group = COLGR,
+                            id = COLID),
              in.fname = in.fname)
   
   

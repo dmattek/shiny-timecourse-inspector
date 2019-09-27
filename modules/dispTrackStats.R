@@ -74,7 +74,7 @@ modTrackStats = function(input, output, session,
                                                         'measMean' = mean(x, na.rm = T),
                                                         'measSD' = sd(x, na.rm = T),
                                                         'measCV' = sd(x, na.rm = T)/mean(x, na.rm = T), 
-                                                        'measMedian' = median(x, na.rm = T),
+                                                        'measMedian' = median(as.double(x), na.rm = T),
                                                         'measIQR' = IQR(x, na.rm = T),
                                                         'meas_rCV_IQR' = IQR(x, na.rm = T)/median(x, na.rm = T))), .SDcols = COLY, by = c(in.bycols)]
     
@@ -96,10 +96,10 @@ modTrackStats = function(input, output, session,
                          by = c(in.bycols, COLID)][, .(tracksN = .N,
                                                    tracksLenMean = mean(nTpts),
                                                    tracksLenSD = sd(nTpts),
-                                                   tracksLenMedian = median(nTpts),
+                                                   tracksLenMedian = median(as.double(nTpts)),
                                                    tracksLenIQR = IQR(nTpts)), by = c(in.bycols)]
     
-    setnames(loc.dt.aggr, c(in.bycols, '#Tracks', 'Mean', 'SD', 'Median', 'IQR'))
+    setnames(loc.dt.aggr, c(in.bycols, 'nTracks', 'Mean', 'SD', 'Median', 'IQR'))
     
     return(loc.dt.aggr)
   })

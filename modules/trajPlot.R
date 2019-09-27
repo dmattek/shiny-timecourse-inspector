@@ -17,7 +17,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         2,
         numericInput(
           ns('inPlotTrajFacetNcol'),
-          '#Columns:',
+          '#Columns',
           value = PLOTNFACETDEFAULT,
           min = 1,
           width = '80px',
@@ -28,13 +28,13 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       ),
       column(
         2,
-        checkboxGroupInput(ns('chBPlotTrajStat'), 'Display:', list('Mean' = 'mean', 
+        checkboxGroupInput(ns('chBPlotTrajStat'), 'Add', list('Mean' = 'mean', 
                                                                    '95% conf. interv.' = 'CI', 
                                                                    'Std. error' = 'SE'))
       ),
       column(
         3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', 
+        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point', 
                     min = 1, max = 10, value = 1, step = 1),
         
         checkboxInput(ns('chBsetXbounds'), 'Set bounds for x-axis', FALSE),
@@ -61,7 +61,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         2,
         numericInput(
           ns('inPlotTrajWidth'),
-          'Width [%]:',
+          'Width [%]',
           value = PLOTWIDTH,
           min = 10,
           width = '100px',
@@ -69,18 +69,16 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         ),
         numericInput(
           ns('inPlotTrajHeight'),
-          'Height [px]:',
+          'Height [px]',
           value = PLOTTRAJHEIGHT,
           min = 100,
           width = '100px',
-          step = 50
         )
       )
     ),
     uiOutput(ns('uiPlotTraj')),
     br(),
     modTrackStatsUI(ns('dispTrackStats')),
-    
     downPlotUI(ns('downPlotTraj'), "Download PDF")
   )
 }
@@ -91,7 +89,8 @@ modTrajPlot = function(input, output, session,
                        in.data.stim,
                        in.fname,
                        in.facet = COLGR, 
-                       in.facet.color = NULL) {
+                       in.facet.color = NULL,
+                       in.ylab = NULL) {
   
   ns <- session$ns
   
@@ -329,9 +328,9 @@ modTrajPlot = function(input, output, session,
     
     p.out = LOCplotTraj(
       dt.arg = loc.dt,
-      x.arg = 'realtime',
-      y.arg = 'y',
-      group.arg = "id",
+      x.arg = COLRT,
+      y.arg = COLY,
+      group.arg = COLID,
       facet.arg = in.facet,
       facet.ncol.arg = input$inPlotTrajFacetNcol,
       facet.color.arg = loc.facet.col, 
@@ -341,9 +340,9 @@ modTrajPlot = function(input, output, session,
       stim.bar.width.arg = 1,
       xlab.arg = 'Time',
       line.col.arg = loc.line.col.arg,
-      aux.label1 = if (locPos) 'pos.x' else NULL,
-      aux.label2 = if (locPos) 'pos.y' else NULL,
-      aux.label3 = if (locObjNum) 'obj.num' else NULL,
+      aux.label1 = if (locPos) COLPOSX else NULL,
+      aux.label2 = if (locPos) COLPOSY else NULL,
+      aux.label3 = if (locObjNum) COLOBJN else NULL,
       stat.arg = input$chBPlotTrajStat,
       ylim.arg = loc.ylim.arg,
       xlim.arg = loc.xlim.arg

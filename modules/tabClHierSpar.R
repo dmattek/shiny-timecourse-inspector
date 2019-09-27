@@ -10,10 +10,21 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
   ns <- NS(id)
   
   tagList(
+    h4(
+      "Sparse hierarchical clustering using ",
+      a("sparcl", href = "https://cran.r-project.org/web/packages/sparcl/")
+    ),
     br(),
     fluidRow(
       column(
         4,
+        selectInput(
+          ns("selectPlotHierSparDiss"),
+          label = ("Select type of dissimilarity measure:"),
+          choices = list("Euclidean" = 1,
+                         "Manhattan" = 2),
+          selected = 1
+        ),
         selectInput(
           ns("selectPlotHierSparLinkage"),
           label = ("Select linkage method:"),
@@ -23,13 +34,6 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
             "Single" = 3,
             "Centroid" = 4
           ),
-          selected = 1
-        ),
-        selectInput(
-          ns("selectPlotHierSparDiss"),
-          label = ("Select type of dissimilarity measure:"),
-          choices = list("Squared Distance" = 1,
-                         "Absolute Value" = 2),
           selected = 1
         )
       ),
@@ -48,7 +52,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
         ),
         checkboxInput(ns('chBPlotHierSparClSel'), 'Manually select clusters to display'),
         uiOutput(ns('uiPlotHierSparClSel')),
-        downloadButton(ns('downCellClSpar'), 'Download CSV with cell IDs and cluster no.')
+        downloadButton(ns('downCellClSpar'), 'Download CSV with cluster assignments')
       ),
       
       column(
@@ -63,19 +67,19 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
     
     
     br(),
-
+    
     tabsetPanel(
-      tabPanel('Heat-map',
+      tabPanel('Heatmap',
+               br(),
                fluidRow(
                  column(3,
-                        checkboxInput(ns('selectPlotHierSparDend'), 'Plot dendrogram and re-order samples', TRUE),
                         selectInput(
                           ns("selectPlotHierSparPalette"),
-                          label = "Select colour palette:",
+                          label = "Heatmap\'s colour palette",
                           choices = l.col.pal,
                           selected = 'Spectral'
                         ),
-                        checkboxInput(ns('inPlotHierSparRevPalette'), 'Reverse colour palette', TRUE),
+                        checkboxInput(ns('inPlotHierSparRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
                         checkboxInput(ns('selectPlotHierSparKey'), 'Plot colour key', TRUE),
                         
                         checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
@@ -88,102 +92,97 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
                                  uiOutput(ns('uiSetColBoundsHigh'))
                           )
                         )
-                        
                  ),
                  column(3,
+                        selectInput(
+                          ns("selectPlotHierSparPaletteDend"),
+                          label = "Dendrogram\'s colour palette",
+                          choices = l.col.pal.dend.2,
+                          selected = 'Color Blind'
+                        ),
+                        checkboxInput(ns('selectPlotHierSparDend'), 'Plot dendrogram and re-order samples', TRUE),
                         sliderInput(
                           ns('inPlotHierSparNAcolor'),
-                          'Shade of grey for NA values (0 - black, 1 - white)',
+                          'Shade of grey for NA values',
                           min = 0,
                           max = 1,
                           value = 0.8,
                           step = .1,
                           ticks = TRUE
+                        )
+                        
+                 ),
+                 column(3,
+                        numericInput(
+                          ns('inPlotHierSparMarginX'),
+                          'Bottom margin',
+                          5,
+                          min = 1,
+                          width = "120px"
+                        ),
+                        numericInput(
+                          ns('inPlotHierSparFontY'),
+                          'Font size column labels',
+                          1,
+                          min = 0,
+                          width = "180px",
+                          step = 0.1
                         ),
                         numericInput(ns('inPlotHierSparHeatMapHeight'), 
                                      'Display plot height [px]', 
                                      value = 600, 
                                      min = 100,
-                                     step = 100)
+                                     step = 100, 
+                                     width = "180px")
+                        
                  ),
-                 column(6,
-                        br(),
-                        h4(
-                          "Sparse hierarchical clustering using ",
-                          a("sparcl", href = "https://cran.r-project.org/web/packages/sparcl/")
+                 column(3,
+                        numericInput(
+                          ns('inPlotHierSparMarginY'),
+                          'Right margin',
+                          20,
+                          min = 1,
+                          width = "120px"
                         ),
-                        p(
-                          'Column labels in the heat-map are additionally labeld according to their \"importance\":'
-                        ),
-                        tags$ol(
-                          tags$li("Black - not taken into account"),
-                          tags$li("Blue with \"*\" - low importance (weight factor in (0, 0.1]"),
-                          tags$li("Green with \"**\" - medium importance (weight factor in (0.1, 0.5]"),
-                          tags$li("Red with \"***\" - high importance (weight factor in (0.5, 1.0]")
+                        numericInput(
+                          ns('inPlotHierSparFontX'),
+                          'Font size row labels',
+                          1,
+                          min = 0,
+                          width = "180px",
+                          step = 0.1
                         )
                  )
                ),
                
-               fluidRow(
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierSparMarginX'),
-                     'Margin below x-axis',
-                     5,
-                     min = 1,
-                     width = 100
-                   )
-                 ),
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierSparMarginY'),
-                     'Margin right of y-axis',
-                     20,
-                     min = 1,
-                     width = 100
-                   )
-                 ),
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierSparFontX'),
-                     'Font size row labels',
-                     1,
-                     min = 0,
-                     width = 100,
-                     step = 0.1
-                   )
-                 ),
-                 column(
-                   3,
-                   numericInput(
-                     ns('inPlotHierSparFontY'),
-                     'Font size column labels',
-                     1,
-                     min = 0,
-                     width = 100,
-                     step = 0.1
-                   )
-                 )
-               ),
                br(),
                
-               
+               p('Note: columns in the heatmap labeled according to their \"importance\":'),
+               tags$ol(
+                 tags$li("Black - not taken into account"),
+                 tags$li("Blue with \"*\" - low importance (weight factor in (0, 0.1]"),
+                 tags$li("Green with \"**\" - medium importance (weight factor in (0.1, 0.5]"),
+                 tags$li("Red with \"***\" - high importance (weight factor in (0.5, 1.0]")),
+                 
                downPlotUI(ns('downPlotHierSparHM'), "Download PNG"),
-               
                actionButton(ns('butPlotHierSparHeatMap'), 'Plot!'),
                withSpinner(plotOutput(ns('outPlotHierSpar')))
       ),
-
+      
       tabPanel('Averages',
+               br(),
                modTrajRibbonPlotUI(ns('modPlotHierSparTrajRibbon'))),
       
-      tabPanel('Time-courses',
+      tabPanel('Time series',
+               br(),
                modTrajPlotUI(ns('modPlotHierSparTraj'))),
       
-      tabPanel('Cluster dist.',
+      tabPanel('PSD',
+               br(),
+               modPSDPlotUI(ns('modPlotHierPsd'))),
+      
+      tabPanel('Cluster distribution',
+               br(),
                modClDistPlotUI(ns('hierClSparDistPlot')))
     )
   )
@@ -191,7 +190,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
 
 # SERVER ----
 clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
-
+  
   # UI for advanced options
   output$uiPlotHierSparNperms = renderUI({
     ns <- session$ns
@@ -243,7 +242,7 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
   # UI for advanced options
   output$uiPlotHierSparNiter = renderUI({
     ns <- session$ns
-
+    
     if (input$inHierSparAdv)
       sliderInput(
         ns('inPlotHierSparNiter'),
@@ -259,7 +258,7 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
   
   output$uiPlotHierSparClSel = renderUI({
     ns <- session$ns
-
+    
     if(input$chBPlotHierSparClSel) {
       selectInput('inPlotHierSparClSel', 'Select clusters to display', 
                   choices = seq(1, input$inPlotHierSparNclust, 1),
@@ -267,11 +266,11 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
                   selected = 1)
     }
   })
-
+  
   
   userFitHierSpar <- reactive({
     cat(file = stderr(), 'userFitHierSpar \n')
-
+    
     dm.t = in.data4clust()
     if (is.null(dm.t)) {
       return()
@@ -309,14 +308,19 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     if (is.null(sparsehc)) {
       return()
     }
+
+    # number of clusters at which dendrigram is cut
+    loc.k = input$inPlotHierSparNclust
+    
+    # make a palette with the amount of colours equal to the number of clusters
+    #loc.col = get(input$selectPlotHierSparPaletteDend)(n = loc.k)
+    loc.col = ggthemes::tableau_color_pal(input$selectPlotHierSparPaletteDend)(n = loc.k)
+    
     
     dend <- as.dendrogram(sparsehc$hc)
-    
-    #cat('=============\ncutree:\n', dendextend::cutree(dend, input$inPlotHierSparNclust, order_clusters_as_data = TRUE), '\n')
-    
     dend <- color_branches(dend, 
-                           col = rainbow_hcl,
-                           k = input$inPlotHierSparNclust)
+                           col = loc.col,
+                           k = loc.k)
     
     return(dend)
   })
@@ -331,12 +335,12 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
       return(NULL)
     
     loc.cut = getClCol(loc.dend, input$inPlotHierSparNclust)
-
+    
     
     return(loc.cut)
   })
   
-
+  
   # return all unique track object labels (created in dataMod)
   # This will be used to display in UI for trajectory highlighting
   getDataTrackObjLabUni_afterTrim <- reactive({
@@ -378,16 +382,16 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     cat(file = stderr(), 'data4trajPlotClSpar: dt not NULL\n')
     
     #cat('rownames: ', rownames(in.data4clust()), '\n')
-
+    
     # get cellIDs with cluster assignments based on dendrogram cut
     loc.dt.cl = getDataClSpar(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
-
+    
     ####
     ## PROBLEM!!!
     ## the dendrogram from sparse hier clust doesn't contain cellID's
     ## the following merge won't work...
     ## No idea how to solve it
-  
+    
     loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
     
     # display only selected clusters
@@ -495,25 +499,25 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     
     
     loc.p = LOCplotHeatmap(loc.dm,
-                          loc.dend, 
-                          palette.arg = input$selectPlotHierSparPalette, 
-                          palette.rev.arg = input$inPlotHierSparRevPalette, 
-                          dend.show.arg = input$selectPlotHierSparDend, 
-                          key.show.arg = input$selectPlotHierSparKey, 
-                          margin.x.arg = input$inPlotHierSparMarginX, 
-                          margin.y.arg = input$inPlotHierSparMarginY, 
-                          nacol.arg = input$inPlotHierSparNAcolor, 
-                          colCol.arg = loc.colcol,
-                          labCol.arg = loc.colnames,
-                          font.row.arg = input$inPlotHierSparFontX, 
-                          font.col.arg = input$inPlotHierSparFontY, 
-                          breaks.arg = loc.col.bounds,
-                          title.arg = paste(
-                            "Distance measure: ",
-                            s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
-                            "\nLinkage method: ",
-                            s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)]
-                          ))
+                           loc.dend, 
+                           palette.arg = input$selectPlotHierSparPalette, 
+                           palette.rev.arg = input$inPlotHierSparRevPalette, 
+                           dend.show.arg = input$selectPlotHierSparDend, 
+                           key.show.arg = input$selectPlotHierSparKey, 
+                           margin.x.arg = input$inPlotHierSparMarginX, 
+                           margin.y.arg = input$inPlotHierSparMarginY, 
+                           nacol.arg = input$inPlotHierSparNAcolor, 
+                           colCol.arg = loc.colcol,
+                           labCol.arg = loc.colnames,
+                           font.row.arg = input$inPlotHierSparFontX, 
+                           font.col.arg = input$inPlotHierSparFontY, 
+                           breaks.arg = loc.col.bounds,
+                           title.arg = paste(
+                             "Distance measure: ",
+                             s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                             "\nLinkage method: ",
+                             s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)]
+                           ))
     
     return(loc.p)
   }
@@ -549,6 +553,15 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
            '.pdf')
   })
   
+  createFnamePsdPlot = reactive({
+    
+    paste0('clust_hierchSparse_tCoursesPsd_',
+           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           '_',
+           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], 
+           '.pdf')
+  })
+  
   createFnameDistPlot = reactive({
     
     paste0('clust_hierchSparse_clDist_',
@@ -576,6 +589,13 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
              in.facet = 'cl',  
              in.facet.color = getClColHierSpar,
              in.fname = createFnameRibbonPlot)
+  
+  # plot cluster PSD
+  callModule(modPSDPlot, 'modPlotHierSparPsd',
+             in.data = data4trajPlotClSpar,
+             in.facet = 'cl',
+             in.facet.color = getClColHierSpar,
+             in.fname = createFnamePsdPlot)
   
   # plot distribution barplot
   callModule(modClDistPlot, 'hierClSparDistPlot', 

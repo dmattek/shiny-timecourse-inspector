@@ -6,19 +6,22 @@
 #
 
 # UI ----
-tabBoxPlotUI =  function(id, label = "Comparing t-points") {
+tabBoxPlotUI =  function(id, label = "Snapshots at time points") {
   ns <- NS(id)
   
   tagList(
     h4(
-      "Box-/dot-/violin plot at selected t-points"
+      "Box-/dot-/violin plots at selected time points"
     ),
     br(),
     
     uiOutput(ns('varSelTpts')),
     
-    checkboxInput(ns('chBfoldCh'), 'Fold change w.r.t. t-point:'),
-    uiOutput(ns('uiSlFoldChTp')),
+    # This is an experimental feature to re-normalise data points with respect to a selected time point
+    # Current implementation is limited; in the future slider should be replaced by an input field or a choice list.
+    # currenlty, if the selected time point is larger than the smallest time point for snapshot plotting, error appears.
+    #checkboxInput(ns('chBfoldCh'), 'Fold change w.r.t. t-point:'),
+    #uiOutput(ns('uiSlFoldChTp')),
     
     modStatsUI(ns('dispStats')),
     br(),
@@ -33,14 +36,14 @@ tabBoxPlot = function(input, output, session, in.data, in.fname) {
   callModule(modStats, 'dispStats',
              in.data = data4boxPlot,
              in.meascol = 'y',
-             in.bycols = c('realtime', 'group'),
+             in.bycols = c(COLRT, COLGR),
              in.fname = 'data4boxplotTP.csv')
   
   callModule(modBoxPlot, 'boxPlot', 
              in.data = data4boxPlot, 
-             in.cols = list(meas.x = 'realtime',
-                            meas.y = 'y',
-                            group = 'group',
+             in.cols = list(meas.x = COLRT,
+                            meas.y = COLY,
+                            group = COLGR,
                             id = 'id'),
              in.fname = in.fname)
   
@@ -54,7 +57,7 @@ tabBoxPlot = function(input, output, session, in.data, in.fname) {
     if (is.null(loc.dt))
       return(NULL)
     else
-      return(unique(loc.dt[, realtime])) # column name specified in data4trajPlot
+      return(unique(loc.dt[[COLRT]])) # column name specified in data4trajPlot
   })
 
   output$uiSlFoldChTp = renderUI({
@@ -75,23 +78,21 @@ tabBoxPlot = function(input, output, session, in.data, in.fname) {
     if (is.null(loc.dt))
       return(NULL)
 
-    
-    if(input$chBfoldCh) {
-      out.dt = loc.dt[realtime %in% input$inSelTpts]
-      loc.dt.aux = loc.dt[realtime %in% c(as.numeric(input$inSelTpts) - input$slFoldChTp)]
-      loc.y.prev = loc.dt.aux[, y]
-      print(nrow(loc.dt.aux))
-      print(nrow(out.dt))
-      
-      out.dt[, y.prev := loc.y.prev]
-      print(out.dt)
-      out.dt[, y := abs(y / y.prev)]
-      print(out.dt)
-      out.dt[, y.prev := NULL]
-      print(out.dt)
-      
-    } else
-      out.dt = loc.dt[realtime %in% input$inSelTpts]
+    # This is part of re-nromalisation with respect to a time point.
+    # Test version here; works but needs improvements; see UI section
+    # if(input$chBfoldCh) {
+    #   out.dt = loc.dt[get(COLRT) %in% input$inSelTpts]
+    #   loc.dt.aux = loc.dt[get(COLRT) %in% c(as.numeric(input$inSelTpts) - input$slFoldChTp)]
+    #   loc.y.prev = loc.dt.aux[, y]
+    # 
+    #   out.dt[, y.prev := loc.y.prev]
+    # 
+    #   out.dt[, y := abs(y / y.prev)]
+    # 
+    #   out.dt[, y.prev := NULL]
+    # 
+    # } else
+      out.dt = loc.dt[get(COLRT) %in% input$inSelTpts]
     
     
     return(out.dt)
@@ -103,13 +104,14 @@ tabBoxPlot = function(input, output, session, in.data, in.fname) {
     ns <- session$ns
     
     loc.v = getDataTpts()
+    
     if (!is.null(loc.v)) {
       selectInput(
         ns('inSelTpts'),
         'Select one or more t-points:',
         loc.v,
         width = '100%',
-        selected = 0,
+        selected = loc.v[[1]],
         multiple = TRUE
       )
     }
