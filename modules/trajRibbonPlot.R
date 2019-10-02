@@ -146,7 +146,7 @@ modTrajRibbonPlot = function(input, output, session,
         ns('inSetYboundsLow'),
         label = 'Lower',
         step = 0.1, 
-        value = floor(min(loc.dt[[COLY]], na.rm = T))
+        value = min(loc.dt[[COLY]], na.rm = T)
       )
     }
   })
@@ -168,7 +168,7 @@ modTrajRibbonPlot = function(input, output, session,
         ns('inSetYboundsHigh'),
         label = 'Upper',
         step = 0.1, 
-        value = ceil(max(loc.dt[[COLY]], na.rm = T))
+        value = max(loc.dt[[COLY]], na.rm = T)
       )
     }
   })

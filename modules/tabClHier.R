@@ -35,7 +35,7 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                  "Ward D2" = 6,
                  "McQuitty" = 7
                ),
-               selected = 5
+               selected = 2
              )
       ),
       column(4,
@@ -149,9 +149,9 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                  )
                ),
                
-               withSpinner(plotOutput(ns('outPlotHier'))),
                actionButton(ns('butPlotHierHeatMap'), 'Plot!'),
-               downPlotUI(ns('downPlotHier'), "Download PNG")
+               downPlotUI(ns('downPlotHier'), "Download PNG"),
+               withSpinner(plotOutput(ns('outPlotHier')))
       ),
       
       tabPanel('Averages',

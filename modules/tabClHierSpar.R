@@ -34,7 +34,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
             "Single" = 3,
             "Centroid" = 4
           ),
-          selected = 1
+          selected = 2
         )
       ),
       
