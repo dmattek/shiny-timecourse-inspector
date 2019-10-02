@@ -17,10 +17,10 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         2,
         numericInput(
           ns('inPlotTrajFacetNcol'),
-          '#Columns',
+          '#columns',
           value = PLOTNFACETDEFAULT,
           min = 1,
-          width = '80px',
+          width = '100px',
           step = 1
         ),
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),

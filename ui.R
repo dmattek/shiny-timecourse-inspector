@@ -133,12 +133,12 @@ shinyUI(fluidPage(
         
         tabPanel(
           "AUC",
-          modAUCplotUI('tabAUC')
+          tabAUCplotUI('tabAUC')
         ),
         
         tabPanel(
           "Distributions",
-          tabBoxPlotUI('tabBoxPlot')
+          tabDistPlotUI('tabDistPlot')
         ),
         
         

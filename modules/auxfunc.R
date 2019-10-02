@@ -129,16 +129,16 @@ l.col.pal.dend.2 = list(
 
 # Clustering algorithms ----
 
-s.cl.linkage = c("average",
-                 "complete",
+s.cl.linkage = c("complete",
+                 "average",
                  "single",
                  "centroid",
                  "ward.D",
                  "ward.D2",
                  "mcquitty")
 
-s.cl.spar.linkage = c("average",
-                      "complete", 
+s.cl.spar.linkage = c("complete",
+                      "average",
                       "single",
                       "centroid")
 
@@ -191,10 +191,9 @@ help.text.short = c(
   'Normalise with respect to this time span.',                                                                                     #12
   'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and sd.',                 #13
   'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.',                      #14
-  'Instead of the value at a selected time point, y-axis can display a difference between values at time points on y- and x-axis.',#15
+  'Instead of the value at a selected time point, y-axis can display a difference between values at two selected time points.',    #15
   'Add a line with linear regression and regions of 95% confidence interval.',                                                     #16
-  'A number of time points left & right of selected time points; use the mean/min/max of values from these time points for the scatterplot.', #17
-  'Operations to perform on values at time points selected in the field above.'                                                    #18
+  'A number of time points left & right of selected time points; use the mean of values from these time points for the scatterplot.' #17
 )
 
 # Functions for data processing ----
@@ -809,7 +808,7 @@ LOCggplotScat = function(dt.arg,
                         trend.arg = T,
                         ci.arg = 0.95) {
   
-  p.tmp = ggplot(dt.arg, aes(x = x, y = y)) +
+  p.tmp = ggplot(dt.arg, aes(x = x, y = y, label = id)) +
     geom_point(alpha = alpha.arg)
 
   if (trend.arg) {

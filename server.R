@@ -208,7 +208,7 @@ shinyServer(function(input, output, session) {
     if (input$chBtrajInter) {
       numericInput(
         'inSelTimeFreq',
-        'Frequency of time units:',
+        'Interval between two time points:',
         min = 1,
         step = 1,
         width = '100%',
@@ -892,10 +892,10 @@ shinyServer(function(input, output, session) {
   
   # Tabs ----
   ###### AUC calculation and plotting
-  callModule(modAUCplot, 'tabAUC', data4trajPlotNoOut, in.fname = function() return(FPDFBOXAUC))
+  callModule(tabAUCplot, 'tabAUC', data4trajPlotNoOut, in.fname = function() return(FPDFBOXAUC))
   
   ###### Box-plot
-  callModule(tabBoxPlot, 'tabBoxPlot', data4trajPlotNoOut, in.fname = function() return(FPDFBOXTP))
+  callModule(tabDistPlot, 'tabDistPlot', data4trajPlotNoOut, in.fname = function() return(FPDFBOXTP))
   
   ###### Scatter plot
   callModule(tabScatterPlot, 'tabScatter', data4trajPlotNoOut, in.fname = function() return(FPDFSCATTER))
@@ -905,6 +905,4 @@ shinyServer(function(input, output, session) {
   
   ##### Sparse hierarchical clustering using sparcl
   callModule(clustHierSpar, 'tabClHierSpar', data4clust, data4trajPlotNoOut, data4stimPlot)
-
-  
 })

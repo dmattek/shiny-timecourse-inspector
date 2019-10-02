@@ -7,25 +7,26 @@
 # Calculates area under curve (AUC) for every single time course provided in the input
 
 # UI ----
-modAUCplotUI =  function(id, label = "Plot Area Under Curves") {
+tabAUCplotUI =  function(id, label = "Plot Area Under Curves") {
   ns <- NS(id)
   
   tagList(
     h4(
-      "Calculate area under curve and plot per group"
+      "Area under curve (AUC)"
     ),
+    actionLink(ns("alAUC"), "Learn more"),
     br(),
     
     uiOutput(ns('uiSlTimeTrim')),
     modStatsUI(ns('dispStats')),
     br(),
-    modBoxPlotUI(ns('boxPlot')
+    modAUCplotUI(ns('aucPlot')
     )
   )
 }
 
 # SERVER ----
-modAUCplot = function(input, output, session, in.data, in.fname) {
+tabAUCplot = function(input, output, session, in.data, in.fname) {
   
   ns <- session$ns
   
@@ -83,14 +84,20 @@ modAUCplot = function(input, output, session, in.data, in.fname) {
              in.bycols = COLGR,
              in.fname = 'data4boxplotAUC.csv')
   
-  callModule(modBoxPlot, 'boxPlot', 
+  callModule(modAUCplot, 'aucPlot', 
              in.data = AUCcells, 
              in.cols = list(meas.x = COLGR,
                             meas.y = 'AUC',
                             group = COLGR,
                             id = COLID),
+             in.labels = list(x = "Groups", y = "", legend = ""),
              in.fname = in.fname)
   
+  addPopover(session, 
+             id = ns("alAUC"), 
+             title = "AUC",
+             content = "Calculate area under curve (AUC) for every time series using trapezoidal rule",
+             trigger = "click")
   
 }
 

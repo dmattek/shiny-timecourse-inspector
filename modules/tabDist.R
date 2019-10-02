@@ -6,7 +6,7 @@
 #
 
 # UI ----
-tabBoxPlotUI =  function(id, label = "Snapshots at time points") {
+tabDistPlotUI =  function(id, label = "Snapshots at time points") {
   ns <- NS(id)
   
   tagList(
@@ -26,12 +26,12 @@ tabBoxPlotUI =  function(id, label = "Snapshots at time points") {
     modStatsUI(ns('dispStats')),
     br(),
    
-    modBoxPlotUI(ns('boxPlot')) 
+    modDistPlotUI(ns('distPlot')) 
   )
 }
 
 # SERVER ----
-tabBoxPlot = function(input, output, session, in.data, in.fname) {
+tabDistPlot = function(input, output, session, in.data, in.fname) {
   
   callModule(modStats, 'dispStats',
              in.data = data4boxPlot,
@@ -39,12 +39,13 @@ tabBoxPlot = function(input, output, session, in.data, in.fname) {
              in.bycols = c(COLRT, COLGR),
              in.fname = 'data4boxplotTP.csv')
   
-  callModule(modBoxPlot, 'boxPlot', 
+  callModule(modDistPlot, 'distPlot', 
              in.data = data4boxPlot, 
              in.cols = list(meas.x = COLRT,
                             meas.y = COLY,
                             group = COLGR,
-                            id = 'id'),
+                            id = COLID),
+             in.labels = list(x = "Time points", y = "", legend = "Groups:"),
              in.fname = in.fname)
   
   # return all unique time points (real time)
@@ -108,7 +109,7 @@ tabBoxPlot = function(input, output, session, in.data, in.fname) {
     if (!is.null(loc.v)) {
       selectInput(
         ns('inSelTpts'),
-        'Select one or more t-points:',
+        'Select one or more time points:',
         loc.v,
         width = '100%',
         selected = loc.v[[1]],

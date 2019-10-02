@@ -156,17 +156,13 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
                ),
                
                br(),
-               
-               p('Note: columns in the heatmap labeled according to their \"importance\":'),
-               tags$ol(
-                 tags$li("Black - not taken into account"),
-                 tags$li("Blue with \"*\" - low importance (weight factor in (0, 0.1]"),
-                 tags$li("Green with \"**\" - medium importance (weight factor in (0.1, 0.5]"),
-                 tags$li("Red with \"***\" - high importance (weight factor in (0.5, 1.0]")),
-                 
                downPlotUI(ns('downPlotHierSparHM'), "Download PNG"),
                actionButton(ns('butPlotHierSparHeatMap'), 'Plot!'),
+               br(),
+               "Columns in the heatmap labeled according to their ",
+               actionLink(ns("alImportance"), "importance"),
                withSpinner(plotOutput(ns('outPlotHierSpar')))
+
       ),
       
       tabPanel('Averages',
@@ -179,7 +175,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
       
       tabPanel('PSD',
                br(),
-               modPSDPlotUI(ns('modPlotHierPsd'))),
+               modPSDPlotUI(ns('modPlotHierSparPsd'))),
       
       tabPanel('Cluster distribution',
                br(),
@@ -189,7 +185,12 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
 }
 
 # SERVER ----
-clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
+clustHierSpar <- function(input, output, session, 
+                          in.data4clust, 
+                          in.data4trajPlot, 
+                          in.data4stimPlot) {
+  
+  ns = session$ns
   
   # UI for advanced options
   output$uiPlotHierSparNperms = renderUI({
@@ -384,7 +385,9 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     #cat('rownames: ', rownames(in.data4clust()), '\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataClSpar(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
+    loc.dt.cl = getDataClSpar(userFitDendHierSpar(), 
+                              input$inPlotHierSparNclust, 
+                              getDataTrackObjLabUni_afterTrim())
     
     ####
     ## PROBLEM!!!
@@ -426,7 +429,10 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     },
     
     content = function(file) {
-      write.csv(x = getDataClSpar(userFitDendHierSpar(), input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim()), file = file, row.names = FALSE)
+      write.csv(x = getDataClSpar(userFitDendHierSpar(), 
+                                  input$inPlotHierSparNclust, 
+                                  getDataTrackObjLabUni_afterTrim()), 
+                file = file, row.names = FALSE)
     }
   )
   
@@ -617,5 +623,22 @@ clustHierSpar <- function(input, output, session, in.data4clust, in.data4trajPlo
     
     plotHierSpar()
   }, height = getPlotHierSparHeatMapHeight)
-  
+
+  addPopover(session, 
+             ns("alImportance"),
+             title = "Variable importance",
+             content = paste0("<p>Weight factors (WF) calculated during clustering ",
+                              "reflect the importance of time points in the clustering. ",
+                              "The following labels are used to indicate the importance:",
+                              "<li>Black - time point not taken into account</li>",
+                              "<li><p, style=\"color:DodgerBlue;\">* - low, WF∈(0, 0.1]</p></li>",
+                              "<li><p, style=\"color:MediumSeaGreen;\">** - medium, WF∈(0.1, 0.5]</p></li>",
+                              "<li><p, style=\"color:Tomato;\">*** - high, WF∈(0.5, 1.0]</p></li>",
+                              "</p><p>Witten and Tibshirani (2010): ",
+                              "<i>A framework for feature selection in clustering</i>; ",
+                              "Journal of the American Statistical Association 105(490): 713-726.</p>"),
+             trigger = "click")
+
 }
+
+

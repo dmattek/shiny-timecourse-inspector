@@ -65,7 +65,7 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
     
     p.out = p.out + 
       scale_y_continuous(labels = percent) +
-      ylab("Percentage of time-series\n") +  
+      ylab("Percentage of time series\n") +  
       xlab("Groups") +  
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 

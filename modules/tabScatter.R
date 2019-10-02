@@ -22,6 +22,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
     h4(
       "Scatter plot between two time points"
     ),
+    actionLink(ns("alScatter"), "Learn more"),
     br(),
     
     fluidRow(
@@ -29,33 +30,37 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         4,
         uiOutput(ns('uiSelTptX')),
         uiOutput(ns('uiSelTptY')),
-        checkboxInput(ns('chBfoldChange'), 'Difference between two time points on Y-axis'),
-        bsTooltip(ns('chBfoldChange'), help.text.short[15], placement = "right", trigger = "hover", options = NULL),
+        bsAlert("alert2differentTpts"),
+        radioButtons(ns('rBfoldChange'), 'Y-axis', 
+                     choices = c("Y" = "y", "Y-X" = "diff"), 
+                     width = "100px", inline = T),
+        bsTooltip(ns('rBfoldChange'), help.text.short[15], placement = "right", trigger = "hover", options = NULL),
         checkboxInput(ns('chBregression'), 'Linear regression with 95% CI'),
         bsTooltip(ns('chBregression'), help.text.short[16], placement = "right", trigger = "hover", options = NULL)
       ),
       column(
         4, 
-        numericInput(ns('inNeighTpts'), 'Time points left & right:', value = 0, step = 1, min = 0),
-        bsTooltip(ns('inNeighTpts'), help.text.short[17], placement = "right", trigger = "hover", options = NULL),
-        radioButtons(ns('rBstats'), 'Operation:', list('Mean' = 1, 'Min' = 2, 'Max' = 3)),
-        bsTooltip(ns('inNeighTpts'), help.text.short[18], placement = "right", trigger = "hover", options = NULL)
+        numericInput(ns('inNeighTpts'), 'Smoothing', value = 0, step = 1, min = 0, width = "150px"),
+        bsTooltip(ns('inNeighTpts'), help.text.short[17], placement = "right", trigger = "hover", options = NULL)
       ),
       column(
         4,
         numericInput(
           ns('inPlotHeight'),
-          'Display plot height [px]',
+          'Height [px]',
           value = PLOTSCATTERHEIGHT,
           min = 100,
-          step = 100
+          step = 100,
+          width = "100px"
         ),
         numericInput(
           ns('inPlotNcolFacet'),
-          '#Columns',
+          '#columns',
           value = PLOTNFACETDEFAULT,
           min = 1,
-          step = 1
+          step = 1,
+          width = "100px"
+          
         )
       )
     ),
@@ -72,6 +77,8 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
 
 # SERVER ----
 tabScatterPlot <- function(input, output, session, in.data, in.fname) {
+  
+  ns <- session$ns
   
 # return all unique time points (real time)
 # This will be used to display in UI for box-plot
@@ -95,9 +102,9 @@ output$uiSelTptX = renderUI({
   if (!is.null(loc.v)) {
     selectInput(
       ns('inSelTptX'),
-      'Time point for X-axis:',
+      'Time point for X-axis',
       loc.v,
-      width = '100%',
+      width = '200px',
       selected = 0,
       multiple = FALSE
     )
@@ -113,10 +120,10 @@ output$uiSelTptY = renderUI({
   if (!is.null(loc.v)) {
     selectInput(
       ns('inSelTptY'),
-      'Time point for Y-axis:',
+      'Time point for Y-axis',
       loc.v,
-      width = '100%',
-      selected = 0,
+      width = '200px',
+      selected = 1,
       multiple = FALSE
     )
   }
@@ -129,47 +136,62 @@ data4scatterPlot <- reactive({
   if(is.null(loc.dt.in))
     return(NULL)
   
-  loc.tpts.x = input$inSelTptX
-  loc.tpts.y = input$inSelTptY
+  # obtain selected time points from UI
+  loc.tpts.x = as.integer(input$inSelTptX)
+  loc.tpts.y = as.integer(input$inSelTptY)
   
-  # if neigbbouring points selected
+  if (loc.tpts.x == loc.tpts.y) {
+    createAlert(session, "alert2differentTpts", "exampleAlert", title = "",
+                content = "Select two different time points.", append = FALSE)
+    return(NULL)
+    
+  } else {
+    closeAlert(session, "exampleAlert")    
+  }
+  
+  # if neigbbouring points selected, obtain time points for which the aggregation will be calculated
   if (input$inNeighTpts > 0) {
+    # get all time points in the dataset
     loc.dt.in.tpts = unique(loc.dt.in[[COLRT]])
     
+    # get indices of time points around selected time points
     loc.tpts.x.id = seq(which(loc.dt.in.tpts == loc.tpts.x) - input$inNeighTpts, which(loc.dt.in.tpts == loc.tpts.x) + input$inNeighTpts, 1)
     loc.tpts.y.id = seq(which(loc.dt.in.tpts == loc.tpts.y) - input$inNeighTpts, which(loc.dt.in.tpts == loc.tpts.y) + input$inNeighTpts, 1)
     
+    # get only indices of time points that are greater than 0
     loc.tpts.x.id = loc.tpts.x.id[loc.tpts.x.id > 0]
     loc.tpts.y.id = loc.tpts.y.id[loc.tpts.y.id > 0]
     
+    # update time points used for aggregation
     loc.tpts.x = loc.dt.in.tpts[loc.tpts.x.id]
     loc.tpts.y = loc.dt.in.tpts[loc.tpts.y.id]
+
+    # aggregate separately each time point sets
+    loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = mean(get(COLY))), by = c(COLGR, COLID)]
+    loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = mean(get(COLY))), by = c(COLGR, COLID)]
     
+    loc.dt = merge(loc.dt.x, loc.dt.y, by = COLID)
+    loc.dt[, group.y := NULL]
+    
+    setnames(loc.dt, c('group.x', 'y.aggr.x', 'y.aggr.y'), c(COLGR, 'x', 'y'))
+
     #cat(loc.tpts.x.id, '\n')
     #cat(loc.tpts.y.id, '\n')
-
-  } 
-
-  #cat(loc.tpts.x, '\n')
-  #cat(loc.tpts.y, '\n')
-  
-  if (input$rBstats == 1) {
-    loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = mean(y)), by = c(COLGR, COLID)]
-    loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = mean(y)), by = c(COLGR, COLID)]
-  } else if (input$rBstats == 2) {
-    loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = min(y)), by = c(COLGR, COLID)]
-    loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = min(y)), by = c(COLGR, COLID)]
   } else {
-    loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = max(y)), by = c(COLGR, COLID)]
-    loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = max(y)), by = c(COLGR, COLID)]
+    # get data from selected time points
+    loc.dt = loc.dt.in[get(COLRT) %in% c(loc.tpts.x, loc.tpts.y)]
+
+    # convert to wide, such that two selected time points are in two columns
+    loc.dt = dcast(loc.dt[, c(COLGR, COLID, COLY, COLRT), with = F], 
+                   as.formula(paste0(COLGR, "+", COLID, "~", COLRT)),
+                   value.var = COLY)
+   
+    setnames(loc.dt, c(COLGR, COLID, "x", "y"))
   }
 
-  loc.dt = merge(loc.dt.x, loc.dt.y, by = COLID)
   
-  loc.dt[, group.y := NULL]
-  setnames(loc.dt, c('group.x', 'y.aggr.x', 'y.aggr.y'), c(COLGR, 'x', 'y'))
 
-  if (input$chBfoldChange) {
+  if (input$rBfoldChange == "diff") {
     loc.dt[ , y := y - x]
   }
   return(loc.dt)
@@ -249,7 +271,7 @@ output$outPlotScatterInt <- renderPlotly({
   # download pdf
   callModule(downPlot, "downPlotScatter", in.fname, plotScatter, TRUE)
   
-  # Hierarchical - choose to display regular heatmap.2 or d3heatmap (interactive)
+  # Scatter plot - choose to display regular or interactive plot
   output$plotInt_ui <- renderUI({
     ns <- session$ns
     if (input$plotInt)
@@ -257,5 +279,13 @@ output$outPlotScatterInt <- renderPlotly({
     else
       tagList( withSpinner(plotOutput(ns('outPlotScatter'), height = paste0(input$inPlotHeight, "px"))))
   })
+  
+  addPopover(session, 
+             id = ns("alScatter"), 
+             title = "Scatter plot",
+             content = "Display measurement values from two different time points as a scatter plot.",
+             trigger = "click")
+  
+  
   
 }
