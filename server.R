@@ -235,7 +235,7 @@ shinyServer(function(input, output, session) {
         #cat('UI varSelGroup::locColSel ', locColSel, '\n')
         selectInput(
           'inSelGroup',
-          'Select:',
+          'Group column:',
           locCols,
           width = '100%',
           selected = locColSel,

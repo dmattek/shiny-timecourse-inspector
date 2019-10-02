@@ -100,7 +100,7 @@ shinyUI(fluidPage(
       uiOutput('uiChBnormGroup'),
 
       tags$hr(),
-      downloadButton('downloadDataClean', 'Download mod\'d data'),
+      downloadButton('downloadDataClean', 'Download processed data'),
       bsTooltip('downloadDataClean', helpText.server[16], placement = "bottom", trigger = "hover", options = NULL)
     ),
     
