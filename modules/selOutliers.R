@@ -5,12 +5,22 @@
 # This is a module of a Shiny web application.
 # Outlier identification, selection
 
+helpText.selOutliers = c(chbRemoveOut = "Remove outlier time points. Gaps created by removing outliers can be interpolated or you can choose to remove entire trajectories that contain outlier time points.",
+                         numOutliersPerc = 'Percentage of data points to remove from pooled data from all time points.',
+                         chBtrajInter = 'Linearly interpolate gaps created after removing outlier time points.',
+                         rbOutliersType = 'Choose whether to remove outliers from the top, bottom, or both ends of the pooled data distribution.',
+                         slOutliersGapLen = 'Duration of a maximum allowed gap created by removing outlier time points. Time series with gaps longer than the set threshold will be removed entirely. ',
+                         chBplotDist = 'Visualise a distribution of pooled data points. Red regions indicate the percentage of data set for removal.'
+)
+
 # UI-remove-outliers ----
 modSelOutliersUI = function(id, label = "Outlier Selection") {
   ns <- NS(id)
   
   tagList(
     checkboxInput(ns('chbRemoveOut'), 'Remove outliers', value = F),
+    bsTooltip(ns('chbRemoveOut'), helpText.selOutliers[["chbRemoveOut"]], placement = "top", trigger = "hover", options = NULL),
+    
     uiOutput(ns('uiSelOutliers'))
   )
 }
@@ -45,20 +55,25 @@ modSelOutliers = function(input, output, session, in.data) {
                             max = 100,
                             value = 0, 
                             step = 0.05, width = '100px'),
-               checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F)
+               bsTooltip(ns('numOutliersPerc'), helpText.selOutliers[["numOutliersPerc"]], placement = "top", trigger = "hover", options = NULL),
+               
+               checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F),
+               bsTooltip(ns('chBtrajInter'), helpText.selOutliers[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL)
         ),
         column(2, 
                radioButtons(ns('rbOutliersType'), 
                             label = 'From', 
-                            choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot'))
+                            choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot')),
+               bsTooltip(ns('rbOutliersType'), helpText.selOutliers[["rbOutliersType"]], placement = "top", trigger = "hover", options = NULL)
         ),
         column(3,
                sliderInput(ns('slOutliersGapLen'),
-                           label = 'Remove tracks with gaps equal to or longer than',
-                           min = 1,
+                           label = 'Max allowed gap duration',
+                           min = 0,
                            max = 10,
-                           value = 1, 
-                           step = 1)
+                           value = 0, 
+                           step = 1),
+               bsTooltip(ns('slOutliersGapLen'), helpText.selOutliers[["slOutliersGapLen"]], placement = "top", trigger = "hover", options = NULL)
         ),
         column(3,
                downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
@@ -66,6 +81,8 @@ modSelOutliers = function(input, output, session, in.data) {
         )
       ),
       checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
+      bsTooltip(ns('chBplotDist'), helpText.selOutliers[["chBplotDist"]], placement = "top", trigger = "hover", options = NULL),
+      
       uiOutput(ns('uiDistPlot'))
       )
     }
@@ -245,8 +262,8 @@ modSelOutliers = function(input, output, session, in.data) {
         print(loc.outpts)
       }
         
-      if (input$slOutliersGapLen > 1) {
-        # remove tracks with gaps longer than the value set in slOutliersGapLen
+      if (input$slOutliersGapLen > 0) {
+        # remove tracks with gaps equal to or longer than the value set in slOutliersGapLen
         # shorter gaps are interpolated linearly
         
         # add index column per trajecory
@@ -260,8 +277,8 @@ modSelOutliers = function(input, output, session, in.data) {
         # the value of that column corresponds to the gap length (hence the "-1")
         loc.out[, (COLIDXDIFF) := c(1, diff(get(COLIDX))) - 1, by = c(COLID)]
 
-        # get track ids where the max gap is equal to or longer than the threshold
-        loc.idgaps = loc.out[, max(get(COLIDXDIFF)), by = c(COLID)][V1 >= input$slOutliersGapLen, get(COLID)]
+        # get track ids where the max gap is longer than the threshold
+        loc.idgaps = loc.out[, max(get(COLIDXDIFF)), by = c(COLID)][V1 > input$slOutliersGapLen, get(COLID)]
         
         if (DEB) {
           cat(file = stdout(), '\nmodSelOutliers:dtReturn: Track IDs with max gap >= threshold:\n')
@@ -303,7 +320,7 @@ modSelOutliers = function(input, output, session, in.data) {
             # This is to ensure that interpolated columns are of porper type.
             data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
             
-            loc.out[, (col) := na.interpolation(get(col)), by = c(COLID)]        
+            loc.out[, (col) := na_interpolation(get(col)), by = c(COLID)]        
           }
         } 
       } else {

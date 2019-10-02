@@ -4,6 +4,18 @@
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
+helpText.clHier = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calculate the distance. ",
+                                                "NAs and missing data can be interpolated by activating the option in the left panel. ",
+                                                "If outlier points were removed, activate \"Interpolate gaps\" or ",
+                                                "decrease the threshold for maximum allowed gap length. ",
+                                                "The latter will result in entire trajectories with outliers being removed."),
+                    alertNAsPresent = paste0("NAs present. The selected distance measure will work with missing data, ",
+                                             "however caution is recommended. NAs and missing data can be interpolated by activating the option in the left panel. ",
+                                             "If outlier points were removed, activate \"Interpolate gaps\" or ",
+                                             "decrease the threshold for maximum allowed gap length. ",
+                                             "The latter will result in entire trajectories with outliers being removed."))
+
+
 # UI ----
 clustHierUI <- function(id, label = "Hierarchical CLustering") {
   ns <- NS(id)
@@ -23,6 +35,7 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                               "DTW" = 5),
                selected = 1
              ),
+             bsAlert("alertAnchorClHierNAsPresent"),
              selectInput(
                ns("selectPlotHierLinkage"),
                label = ("Select linkage method:"),
@@ -149,9 +162,9 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                  )
                ),
                
-               withSpinner(plotOutput(ns('outPlotHier'))),
                actionButton(ns('butPlotHierHeatMap'), 'Plot!'),
-               downPlotUI(ns('downPlotHier'), "Download PNG")
+               downPlotUI(ns('downPlotHier'), "Download PNG"),
+               withSpinner(plotOutput(ns('outPlotHier')))
       ),
       
       tabPanel('Averages',
@@ -447,6 +460,26 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     loc.dm = in.data4clust()
     if (is.null(loc.dm))
       return(NULL)
+    
+    print(sum(is.na(loc.dm)))
+    if(sum(is.na(loc.dm)) > 0) {
+      if (input$selectPlotHierDiss == 5) {
+      createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentDTW", title = "Error",
+                  content = helpText.clHier[["alertNAsPresentDTW"]], 
+                  append = FALSE,
+                  style = "danger")
+      return(NULL)
+      } else {
+        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresent", title = "Warning",
+                    content = helpText.clHier[["alertNAsPresent"]], 
+                    append = FALSE, 
+                    style = "warning")
+        closeAlert(session, 'alertNAsPresentDTW')
+        }
+    } else {
+      closeAlert(session, 'alertNAsPresentDTW')
+      closeAlert(session, 'alertNAsPresent')
+    }
     
     loc.dend <- userFitDendHier()
     if (is.null(loc.dend))

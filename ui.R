@@ -26,39 +26,39 @@ shinyUI(fluidPage(
         'Select data file and click "Load Data"',
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       ),
-      bsTooltip('inFileLoadNuc', helpText.server[1], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('inFileLoadNuc', helpText.server[1], placement = "top", trigger = "hover", options = NULL),
 
-      radioButtons("inRbutLongWide", "Data format:", c("Long" = 0, "Wide" = 1), width = "40%"),
-      bsTooltip('inRbutLongWide', helpText.server[2], placement = "bottom", trigger = "hover", options = NULL),
+      radioButtons("inRbutLongWide", "Data format:", c("Long" = 0, "Wide" = 1), inline = T),
+      bsTooltip('inRbutLongWide', helpText.server[2], placement = "top", trigger = "hover", options = NULL),
       
       actionButton("inButLoadNuc", "Load Data"),
       actionButton("butReset", "Reset file input"),
       
       actionButton('inDataGen1', 'Synthetic data'),
-      bsTooltip('inDataGen1', helpText.server[3], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('inDataGen1', helpText.server[3], placement = "top", trigger = "hover", options = NULL),
       
       tags$hr(),
       checkboxInput('chBtrajRem', 'Upload tracks to remove'),
-      bsTooltip('chBtrajRem', helpText.server[4], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('chBtrajRem', helpText.server[4], placement = "top", trigger = "hover", options = NULL),
       
       uiOutput('uiFileLoadTrajRem'),
       uiOutput('uiButLoadTrajRem'),
       
       #tags$hr(),
       checkboxInput('chBstim', 'Upload stimulation pattern'),
-      bsTooltip('chBstim', helpText.server[5], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('chBstim', helpText.server[5], placement = "top", trigger = "hover", options = NULL),
       
       uiOutput('uiFileLoadStim'),
       uiOutput('uiButLoadStim'),
       
       #tags$hr(),
       checkboxInput('chBtrajInter', 'Interpolate NAs and missing data', value = F),
-      bsTooltip('chBtrajInter', helpText.server[6], placement = "bottom", trigger = "hover", options = NULL),
-      
+      bsAlert("alertAnchorSidePanelNAsPresent"),
+      bsTooltip('chBtrajInter', helpText.server[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('varSelTimeFreq'),
 
       checkboxInput('chBtrackUni', 'Create unique track ID', F),
-      bsTooltip('chBtrackUni', helpText.server[7], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('chBtrackUni', helpText.server[7], placement = "top", trigger = "hover", options = NULL),
       uiOutput('varSelSite'),
       
       tags$hr(),
@@ -66,7 +66,7 @@ shinyUI(fluidPage(
       uiOutput('varSelTrackLabel'),
       
       checkboxInput('chBgroup', 'Columns for plot grouping', F),                
-      bsTooltip('chBgroup', helpText.server[8], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('chBgroup', helpText.server[8], placement = "top", trigger = "hover", options = NULL),
 
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
@@ -83,17 +83,17 @@ shinyUI(fluidPage(
           '1 / X' = '1 / '
         )
       ),
-      bsTooltip('inSelMath', helpText.server[9], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('inSelMath', helpText.server[9], placement = "top", trigger = "hover", options = NULL),
       
       uiOutput('varSelMeas2'),
       
       tags$hr(),
       checkboxInput('chBtimeTrim', 'Trim x-axis', FALSE),
-      bsTooltip('chBtimeTrim', helpText.server[10], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('chBtimeTrim', helpText.server[10], placement = "top", trigger = "hover", options = NULL),
       uiOutput('uiSlTimeTrim'),
 
       checkboxInput('chBnorm', 'Normalization', FALSE),
-      bsTooltip('chBnorm', helpText.server[11], placement = "bottom", trigger = "hover", options = NULL),
+      bsTooltip('chBnorm', helpText.server[11], placement = "top", trigger = "hover", options = NULL),
       uiOutput('uiChBnorm'),
       uiOutput('uiSlNorm'),
       uiOutput('uiChBnormRobust'),
@@ -101,7 +101,7 @@ shinyUI(fluidPage(
 
       tags$hr(),
       downloadButton('downloadDataClean', 'Download mod\'d data'),
-      bsTooltip('downloadDataClean', helpText.server[16], placement = "bottom", trigger = "hover", options = NULL)
+      bsTooltip('downloadDataClean', helpText.server[16], placement = "top", trigger = "hover", options = NULL)
     ),
     
     mainPanel(

@@ -349,7 +349,7 @@ shinyServer(function(input, output, session) {
         choices = list('fold-change' = 'mean', 'z-score' = 'z.score'),
         width = "40%"
       ),
-      bsTooltip('rBnormMeth', helpText.server[12], placement = "bottom", trigger = "hover", options = NULL)
+      bsTooltip('rBnormMeth', helpText.server[12], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -377,7 +377,7 @@ shinyServer(function(input, output, session) {
         value = c(locRTmin, 0.1 * locRTmax), 
         step = 1
       ),
-      bsTooltip('slNormRtMinMax', helpText.server[13], placement = "bottom", trigger = "hover", options = NULL)
+      bsTooltip('slNormRtMinMax', helpText.server[13], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -393,7 +393,7 @@ shinyServer(function(input, output, session) {
                     label = 'Robust stats',
                     FALSE, 
                     width = "40%"),
-      bsTooltip('chBnormRobust', helpText.server[14], placement = "bottom", trigger = "hover", options = NULL)
+      bsTooltip('chBnormRobust', helpText.server[14], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -409,7 +409,7 @@ shinyServer(function(input, output, session) {
                    label = 'Normalisation grouping',
                    choices = list('Entire dataset' = 'none', 'Per group' = 'group', 'Per trajectory' = 'id'), 
                    width = "40%"),
-      bsTooltip('chBnormGroup', helpText.server[15], placement = "bottom", trigger = "hover", options = NULL)
+      bsTooltip('chBnormGroup', helpText.server[15], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -513,7 +513,6 @@ shinyServer(function(input, output, session) {
     
     
     # remove trajectories based on uploaded csv
-
     if (input$chBtrajRem) {
       if (DEB)
         cat(file = stdout(), 'server:dataMod: trajRem not NULL\n')
@@ -521,6 +520,9 @@ shinyServer(function(input, output, session) {
       loc.dt.rem = dataLoadTrajRem()
       loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem[[1]])]
     }
+    
+    # check if NAs present
+    
     
     return(loc.dt)
   })
@@ -699,6 +701,15 @@ shinyServer(function(input, output, session) {
     # or the frame number metadata can be missing, as is the case for tCourseSelected files that already have realtime column.
     # Therefore, we cannot rely on that info to get time frequency; user must provide this number!
     
+    # check if NA's present
+    if (sum(is.na(loc.out[[COLY]])))
+      createAlert(session, "alertAnchorSidePanelNAsPresent", "alertNAsPresent", title = "Warning",
+                  content = helpText.server[["alertNAsPresent"]], 
+                  append = FALSE,
+                  style = "warning")
+    else
+      closeAlert(session, "alertNAsPresent")
+    
     setkeyv(loc.out, c(COLGR, COLID, COLRT))
 
     if (input$chBtrajInter) {
@@ -726,7 +737,7 @@ shinyServer(function(input, output, session) {
         #loc.out[, (col) := as.numeric(get(col))]
         data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
 
-        loc.out[, (col) := na.interpolation(get(col)), by = c(COLID)]        
+        loc.out[, (col) := na_interpolation(get(col)), by = c(COLID)]        
       }
       
       # loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = c(COLID), .SDcols = s.cols]
@@ -776,7 +787,7 @@ shinyServer(function(input, output, session) {
   
   
   # prepare data for clustering
-  # return a matrix with:
+  # convert from long to wide; return a matrix with:
   # cells as columns
   # time points as rows
   data4clust <- reactive({

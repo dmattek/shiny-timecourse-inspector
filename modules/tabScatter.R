@@ -14,12 +14,12 @@
 # callModule(clustHier, 'TabClustHier', dataMod)
 # where dataMod is the output from a reactive function that returns dataset ready for clustering
 
-helpText.tabScatter = c("Display measurement values from two different time points as a scatter plot.",
-                  'Y-axis can display a value at a selected time point or a difference between values at two selected time points.', #1
-                  'Add a line with linear regression and regions of 95% confidence interval.', #2
-                  'A number of time points left & right of selected time points; use the mean of values from these time points for the scatterplot.', #3
-                  'Height in pixels of the displayed plot', #4
-                  'Number of facets in a row. Each facet displayes a scatter plot for a single group.' #5
+helpText.tabScatter = c(alScatter = "Display measurement values from two different time points as a scatter plot.",
+                        rBfoldChange = 'Y-axis can display a value at a selected time point or a difference between values at two selected time points.', #1
+                  chBregression = 'Add a line with linear regression and regions of 95% confidence interval.', #2
+                  inNeighTpts = 'A number of time points left & right of selected time points; use the mean of values from these time points for the scatterplot.', #3
+                  inPlotHeight = 'Height in pixels of the displayed plot', #4
+                  inPlotNcolFacet = 'Number of facets in a row. Each facet displayes a scatter plot for a single group.' #5
 )
 
 # UI ----
@@ -38,20 +38,18 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         4,
         uiOutput(ns('uiSelTptX')),
         uiOutput(ns('uiSelTptY')),
-        bsAlert("alert2differentTpts"),
-        checkboxInput(ns('chBregression'), 'Linear regression with 95% CI'),
-        bsTooltip(ns('chBregression'), helpText.tabScatter[3], placement = "bottom", trigger = "hover", options = NULL)
+        bsAlert("alertAnchor2differentTpts"),
+        radioButtons(ns('rBfoldChange'), 'Y-axis', 
+                     choices = c("Y" = "y", "Y-X" = "diff"), 
+                     width = "100px", inline = T),
+        bsTooltip(ns('rBfoldChange'), helpText.tabScatter[["rBfoldChange"]], placement = "top", trigger = "hover", options = NULL)
       ),
       column(
         4, 
         numericInput(ns('inNeighTpts'), 'Smoothing', value = 0, step = 1, min = 0, width = "120px"),
-        bsTooltip(ns('inNeighTpts'), helpText.tabScatter[4], placement = "bottom", trigger = "hover", options = NULL),
-
-        radioButtons(ns('rBfoldChange'), 'Y-axis', 
-                     choices = c("Y" = "y", "Y-X" = "diff"), 
-                     width = "100px", inline = T),
-        bsTooltip(ns('rBfoldChange'), helpText.tabScatter[2], placement = "bottom", trigger = "hover", options = NULL)
-        
+        bsTooltip(ns('inNeighTpts'), helpText.tabScatter[["inNeighTpts"]], placement = "top", trigger = "hover", options = NULL),
+        checkboxInput(ns('chBregression'), 'Linear regression with 95% CI'),
+        bsTooltip(ns('chBregression'), helpText.tabScatter[["chBregression"]], placement = "top", trigger = "hover", options = NULL)
       ),
       column(
         4,
@@ -63,7 +61,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
           step = 100,
           width = "100px"
         ),
-        bsTooltip(ns('inPlotHeight'), helpText.tabScatter[5], placement = "bottom", trigger = "hover", options = NULL),
+        bsTooltip(ns('inPlotHeight'), helpText.tabScatter[["inPlotHeight"]], placement = "top", trigger = "hover", options = NULL),
 
         numericInput(
           ns('inPlotNcolFacet'),
@@ -73,7 +71,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
           step = 1,
           width = "100px"
         ),
-        bsTooltip(ns('inPlotNcolFacet'), helpText.tabScatter[6], placement = "bottom", trigger = "hover", options = NULL)
+        bsTooltip(ns('inPlotNcolFacet'), helpText.tabScatter[["inPlotNcolFacet"]], placement = "top", trigger = "hover", options = NULL)
       )
     ),
     
@@ -171,12 +169,14 @@ data4scatterPlot <- reactive({
   loc.tpts.y = as.integer(input$inSelTptY)
   
   if (loc.tpts.x == loc.tpts.y) {
-    createAlert(session, "alert2differentTpts", "exampleAlert", title = "",
-                content = "Select two different time points.", append = FALSE)
+    createAlert(session, "alertAnchor2differentTpts", "alert2differentTpts", title = "Error",
+                content = "Select two different time points.", 
+                append = FALSE,
+                style = "danger")
     return(NULL)
     
   } else {
-    closeAlert(session, "exampleAlert")    
+    closeAlert(session, "alert2differentTpts")    
   }
   
   # if neigbbouring points selected, obtain time points for which the aggregation will be calculated
@@ -309,7 +309,7 @@ output$outPlotScatterInt <- renderPlotly({
   addPopover(session, 
              id = ns("alScatter"), 
              title = "Scatter plot",
-             content = helpText.tabScatter[1],
+             content = helpText.tabScatter[["alScatter"]],
              trigger = "click")
   
   
