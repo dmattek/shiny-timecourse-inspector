@@ -5,12 +5,17 @@
 # This module is for displaying stats in an interactive table using DT package
 #
 
+helpText.dispStats = c("Display statistics aggregated per group, e.g. mean/median/CV per group." #1
+)
+
 # UI ----
 modStatsUI =  function(id, label = "Comparing t-points") {
   ns <- NS(id)
   
   tagList(
     checkboxInput(ns('chbTabStats'), 'Show statistics', FALSE),
+    bsTooltip(ns('chbTabStats'), helpText.dispStats[1], placement = "bottom", trigger = "hover", options = NULL),
+    
     uiOutput(ns('uiTabStats')),
     uiOutput(ns('uiDownSingleCellData'))
   )

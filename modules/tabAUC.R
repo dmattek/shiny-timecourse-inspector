@@ -6,6 +6,9 @@
 #
 # Calculates area under curve (AUC) for every single time course provided in the input
 
+helpText.tabAUC = c("Calculate area under curve (AUC) for every time series using trapezoidal rule." #1
+)
+
 # UI ----
 tabAUCplotUI =  function(id, label = "Plot Area Under Curves") {
   ns <- NS(id)
@@ -96,7 +99,7 @@ tabAUCplot = function(input, output, session, in.data, in.fname) {
   addPopover(session, 
              id = ns("alAUC"), 
              title = "AUC",
-             content = "Calculate area under curve (AUC) for every time series using trapezoidal rule",
+             content = helpText.tabAUC[1],
              trigger = "click")
   
 }

@@ -14,6 +14,14 @@
 # callModule(clustHier, 'TabClustHier', dataMod)
 # where dataMod is the output from a reactive function that returns dataset ready for clustering
 
+helpText.tabScatter = c("Display measurement values from two different time points as a scatter plot.",
+                  'Y-axis can display a value at a selected time point or a difference between values at two selected time points.', #1
+                  'Add a line with linear regression and regions of 95% confidence interval.', #2
+                  'A number of time points left & right of selected time points; use the mean of values from these time points for the scatterplot.', #3
+                  'Height in pixels of the displayed plot', #4
+                  'Number of facets in a row. Each facet displayes a scatter plot for a single group.' #5
+)
+
 # UI ----
 tabScatterPlotUI <- function(id, label = "Comparing t-points") {
   ns <- NS(id)
@@ -31,17 +39,19 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         uiOutput(ns('uiSelTptX')),
         uiOutput(ns('uiSelTptY')),
         bsAlert("alert2differentTpts"),
-        radioButtons(ns('rBfoldChange'), 'Y-axis', 
-                     choices = c("Y" = "y", "Y-X" = "diff"), 
-                     width = "100px", inline = T),
-        bsTooltip(ns('rBfoldChange'), help.text.short[15], placement = "right", trigger = "hover", options = NULL),
         checkboxInput(ns('chBregression'), 'Linear regression with 95% CI'),
-        bsTooltip(ns('chBregression'), help.text.short[16], placement = "right", trigger = "hover", options = NULL)
+        bsTooltip(ns('chBregression'), helpText.tabScatter[3], placement = "bottom", trigger = "hover", options = NULL)
       ),
       column(
         4, 
-        numericInput(ns('inNeighTpts'), 'Smoothing', value = 0, step = 1, min = 0, width = "150px"),
-        bsTooltip(ns('inNeighTpts'), help.text.short[17], placement = "right", trigger = "hover", options = NULL)
+        numericInput(ns('inNeighTpts'), 'Smoothing', value = 0, step = 1, min = 0, width = "120px"),
+        bsTooltip(ns('inNeighTpts'), helpText.tabScatter[4], placement = "bottom", trigger = "hover", options = NULL),
+
+        radioButtons(ns('rBfoldChange'), 'Y-axis', 
+                     choices = c("Y" = "y", "Y-X" = "diff"), 
+                     width = "100px", inline = T),
+        bsTooltip(ns('rBfoldChange'), helpText.tabScatter[2], placement = "bottom", trigger = "hover", options = NULL)
+        
       ),
       column(
         4,
@@ -53,6 +63,8 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
           step = 100,
           width = "100px"
         ),
+        bsTooltip(ns('inPlotHeight'), helpText.tabScatter[5], placement = "bottom", trigger = "hover", options = NULL),
+
         numericInput(
           ns('inPlotNcolFacet'),
           '#columns',
@@ -60,8 +72,8 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
           min = 1,
           step = 1,
           width = "100px"
-          
-        )
+        ),
+        bsTooltip(ns('inPlotNcolFacet'), helpText.tabScatter[6], placement = "bottom", trigger = "hover", options = NULL)
       )
     ),
     
@@ -94,7 +106,7 @@ getDataTpts <- reactive({
 })
 
 output$uiSelTptX = renderUI({
-  cat(file = stderr(), 'UI uiSelTptX\n')
+  cat(file = stderr(), 'tabScatter:uiSelTptX\n')
   
   ns <- session$ns
   
@@ -104,7 +116,7 @@ output$uiSelTptX = renderUI({
       ns('inSelTptX'),
       'Time point for X-axis',
       loc.v,
-      width = '200px',
+      width = '180px',
       selected = 0,
       multiple = FALSE
     )
@@ -112,7 +124,7 @@ output$uiSelTptX = renderUI({
 })
 
 output$uiSelTptY = renderUI({
-  cat(file = stderr(), 'UI uiSelTptY\n')
+  cat(file = stderr(), 'tabScatter:uiSelTptY\n')
   
   ns <- session$ns
   
@@ -122,7 +134,25 @@ output$uiSelTptY = renderUI({
       ns('inSelTptY'),
       'Time point for Y-axis',
       loc.v,
-      width = '200px',
+      width = '180px',
+      selected = 1,
+      multiple = FALSE
+    )
+  }
+})
+
+output$uiNcolFacet = renderUI({
+  cat(file = stderr(), 'tabScatter:uiNcolFacet\n')
+  
+  ns <- session$ns
+  
+  loc.v = getDataTpts()
+  if (!is.null(loc.v)) {
+    selectInput(
+      ns('inSelTptY'),
+      'Time point for Y-axis',
+      loc.v,
+      width = '180px',
       selected = 1,
       multiple = FALSE
     )
@@ -217,10 +247,6 @@ plotScatter <- function() {
   
   cat(file=stderr(), 'plotScatter:dt not NULL\n')
   
-  
-  ## FIX: r.squared is unavailable for lm  
-  
-  #     loc.fit.rsq = ifelse(input$inRobustFit, loc.fit$r.squared, )
 
   p.out = LOCggplotScat(
     dt.arg = loc.dt,
@@ -283,7 +309,7 @@ output$outPlotScatterInt <- renderPlotly({
   addPopover(session, 
              id = ns("alScatter"), 
              title = "Scatter plot",
-             content = "Display measurement values from two different time points as a scatter plot.",
+             content = helpText.tabScatter[1],
              trigger = "click")
   
   

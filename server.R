@@ -178,7 +178,7 @@ shinyServer(function(input, output, session) {
     
     selectInput(
       'inSelTrackLabel',
-      'Select ID:',
+      'Track ID column:',
       locCols,
       width = '100%',
       selected = locColSel
@@ -194,7 +194,7 @@ shinyServer(function(input, output, session) {
     
     selectInput(
       'inSelTime',
-      'Select time column:',
+      'Time column:',
       locCols,
       width = '100%',
       selected = locColSel
@@ -235,7 +235,7 @@ shinyServer(function(input, output, session) {
         #cat('UI varSelGroup::locColSel ', locColSel, '\n')
         selectInput(
           'inSelGroup',
-          'Select columns for plot grouping:',
+          'Select:',
           locCols,
           width = '100%',
           selected = locColSel,
@@ -257,7 +257,7 @@ shinyServer(function(input, output, session) {
       
       selectInput(
         'inSelSite',
-        'Select grouping columns to add to track label:',
+        'Columns to add to track ID:',
         locCols,
         width = '100%',
         selected = locColSel,
@@ -277,7 +277,7 @@ shinyServer(function(input, output, session) {
 
       selectInput(
         'inSelMeas1',
-        'Select 1st meas.:',
+        'Column with 1st measurement:',
         locCols,
         width = '100%',
         selected = locColSel
@@ -298,7 +298,7 @@ shinyServer(function(input, output, session) {
 
       selectInput(
         'inSelMeas2',
-        'Select 2nd meas.',
+        'Column with 2nd measurement',
         locCols,
         width = '100%',
         selected = locColSel
@@ -349,7 +349,7 @@ shinyServer(function(input, output, session) {
         choices = list('fold-change' = 'mean', 'z-score' = 'z.score'),
         width = "40%"
       ),
-      bsTooltip('rBnormMeth', help.text.short[11], placement = "right", trigger = "hover", options = NULL)
+      bsTooltip('rBnormMeth', helpText.server[12], placement = "bottom", trigger = "hover", options = NULL)
       )
     }
   })
@@ -377,7 +377,7 @@ shinyServer(function(input, output, session) {
         value = c(locRTmin, 0.1 * locRTmax), 
         step = 1
       ),
-      bsTooltip('slNormRtMinMax', help.text.short[12], placement = "right", trigger = "hover", options = NULL)
+      bsTooltip('slNormRtMinMax', helpText.server[13], placement = "bottom", trigger = "hover", options = NULL)
       )
     }
   })
@@ -393,7 +393,7 @@ shinyServer(function(input, output, session) {
                     label = 'Robust stats',
                     FALSE, 
                     width = "40%"),
-      bsTooltip('chBnormRobust', help.text.short[13], placement = "right", trigger = "hover", options = NULL)
+      bsTooltip('chBnormRobust', helpText.server[14], placement = "bottom", trigger = "hover", options = NULL)
       )
     }
   })
@@ -409,7 +409,7 @@ shinyServer(function(input, output, session) {
                    label = 'Normalisation grouping',
                    choices = list('Entire dataset' = 'none', 'Per group' = 'group', 'Per trajectory' = 'id'), 
                    width = "40%"),
-      bsTooltip('chBnormGroup', help.text.short[14], placement = "right", trigger = "hover", options = NULL)
+      bsTooltip('chBnormGroup', helpText.server[15], placement = "bottom", trigger = "hover", options = NULL)
       )
     }
   })

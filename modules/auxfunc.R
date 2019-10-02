@@ -176,24 +176,23 @@ helpPopup <- function(title, content,
   )
 }
 
-help.text.short = c(
-  'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',                       #1
-  'If the track ID is unique only within a group, make it unique globally by combining with the grouping column.',                 #2
-  'Interpolate missing time points and pre-existing NAs. The interval of the time column must be provided!',                       #3
-  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with ID.', #4
-  'Select columns to group data according to treatment, condition, etc.',                                                          #5
-  'Select math operation to perform on a single or two columns,',                                                                  #6
-  'Select range of time for further processing.',                                                                                  #7
-  'Divide measurments by the mean/median or calculate z-score with respect to selected time span.',                                #8
-  'Download time series after modification in this section.',                                                                      #9
-  'Long format: a row is a single data point. Wide format: a row is a time series with columns as time points.',                   #10
-  'Fold-change or z-score with respect to selected time span.',                                                                    #11
-  'Normalise with respect to this time span.',                                                                                     #12
-  'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and sd.',                 #13
-  'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.',                      #14
-  'Instead of the value at a selected time point, y-axis can display a difference between values at two selected time points.',    #15
-  'Add a line with linear regression and regions of 95% confidence interval.',                                                     #16
-  'A number of time points left & right of selected time points; use the mean of values from these time points for the scatterplot.' #17
+helpText.server = c(
+  'Load main data as a CSV or compressed CSV file (gz or bz2).',                                                                   #1
+  'Long format: a row is a single data point. Wide format: a row is a time series with columns as time points.',                   #2
+  'Generate 60 random synthetic time series distributed evenly among 6 groups. Every time series has 60 time points.',             #3
+  'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',                       #4
+  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with ID.', #5
+  'Interpolate missing time points and pre-existing NAs. The interval of the time column must be provided!',                       #6
+  'If the track ID is unique only within a group, make it unique globally by combining with grouping columns.',                    #7
+  'Select columns to group data according to treatment, condition, etc.',                                                          #8
+  'Select math operation to perform on a single or two columns,',                                                                  #9
+  'Select range of time for further processing.',                                                                                  #10
+  'Divide measurments by the mean/median or calculate z-score with respect to selected time span.',                                #11
+  'Fold-change or z-score with respect to selected time span.',                                                                    #12
+  'Normalise with respect to this time span.',                                                                                     #13
+  'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and sd.',                 #14
+  'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.',                      #15
+  'Download time series after modification in this section.'                                                                       #16
 )
 
 # Functions for data processing ----
