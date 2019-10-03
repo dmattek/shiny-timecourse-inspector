@@ -53,7 +53,7 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
                  "Ward D2" = 6,
                  "McQuitty" = 7
                ),
-               selected = 5
+               selected = 2
              )
       ),
       column(4,
