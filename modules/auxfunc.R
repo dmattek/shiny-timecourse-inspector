@@ -177,8 +177,18 @@ helpPopup <- function(title, content,
 }
 
 helpText.server = c(
-  'Load main data as a CSV or compressed CSV file (gz or bz2).',                                                                   #1
-  'Long format: a row is a single data point. Wide format: a row is a time series with columns as time points.',                   #2
+  alDataFormat =  paste0("<p>Switch between long and wide formats of input data. ",
+                           "TCI accepts CSV or compressed CSV files (gz or bz2).</p>",
+                           "<p><b>Long format</b> - a row is a single data point and consecutive time series are arranged vertically. ",
+                           "Data file should contain at least 3 columns separated with a comma:</p>",
+                           "<li>Identifier of a time series</li>",
+                           "<li>Time points</li>",
+                           "<li>A time-varying variable</li>",
+                           "<br>",
+                           "<p><b>Wide format</b> - a row is a time series with columns as time points.",
+                           "At least 3 columns shuold be present:</p>",
+                           "<li>First two columns in wide format should contain grouping and track IDs</li>",
+                           "<li>A column with a time point. Headers of columns with time points need to be numeric</li>"), #2
   'Generate 60 random synthetic time series distributed evenly among 6 groups. Every time series has 60 time points.',             #3
   'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',                       #4
   'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with ID.', #5
@@ -193,7 +203,9 @@ helpText.server = c(
   'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and sd.',                 #14
   'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.',                      #15
   'Download time series after modification in this section.',                                                                      #16
-  alertNAsPresent = "NAs present in the measurement column. Consider interpolation."
+  alertNAsPresent = "NAs present in the measurement column. Consider interpolation.",
+  alertWideMissesNumericTime = "Non-numeric headers of time columns. Data in wide format should have numeric column headers corresponding to time points.",
+  alertWideTooFewColumns = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point."
 )
 
 # Functions for data processing ----

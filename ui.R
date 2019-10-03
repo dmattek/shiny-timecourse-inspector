@@ -26,10 +26,9 @@ shinyUI(fluidPage(
         'Select data file and click "Load Data"',
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       ),
-      bsTooltip('inFileLoadNuc', helpText.server[1], placement = "top", trigger = "hover", options = NULL),
 
-      radioButtons("inRbutLongWide", "Data format:", c("Long" = 0, "Wide" = 1), inline = T),
-      bsTooltip('inRbutLongWide', helpText.server[2], placement = "top", trigger = "hover", options = NULL),
+      radioButtons("inRbutLongWide", actionLink("alDataFormat", "Data Format:"), c("Long" = 0, "Wide" = 1), inline = T),
+      bsAlert("alertAnchorSidePanelDataFormat"),
       
       actionButton("inButLoadNuc", "Load Data"),
       actionButton("butReset", "Reset file input"),

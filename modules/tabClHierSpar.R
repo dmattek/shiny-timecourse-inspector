@@ -5,6 +5,17 @@
 # This module is for sparse hierarchical clustering using sparcl package
 #
 
+helpText.clHierSpar = c(alImportance = paste0("<p>Weight factors (WF) calculated during clustering ",
+                                              "reflect the importance of time points in the clustering. ",
+                                              "The following labels are used to indicate the importance:",
+                                              "<li>Black - time point not taken into account</li>",
+                                              "<li><p, style=\"color:DodgerBlue;\">* - low, WF∈(0, 0.1]</p></li>",
+                                              "<li><p, style=\"color:MediumSeaGreen;\">** - medium, WF∈(0.1, 0.5]</p></li>",
+                                              "<li><p, style=\"color:Tomato;\">*** - high, WF∈(0.5, 1.0]</p></li>",
+                                              "</p><p>Witten and Tibshirani (2010): ",
+                                              "<i>A framework for feature selection in clustering</i>; ",
+                                              "Journal of the American Statistical Association 105(490): 713-726.</p>"))
+
 # UI ----
 clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
   ns <- NS(id)
@@ -14,6 +25,8 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
       "Sparse hierarchical clustering using ",
       a("sparcl", href = "https://cran.r-project.org/web/packages/sparcl/")
     ),
+    p("Columns in the heatmap labeled according to their ",
+      actionLink(ns("alImportance"), "importance.")),
     br(),
     fluidRow(
       column(
@@ -158,9 +171,6 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
                br(),
                downPlotUI(ns('downPlotHierSparHM'), "Download PNG"),
                actionButton(ns('butPlotHierSparHeatMap'), 'Plot!'),
-               br(),
-               "Columns in the heatmap labeled according to their ",
-               actionLink(ns("alImportance"), "importance"),
                withSpinner(plotOutput(ns('outPlotHierSpar')))
 
       ),
@@ -627,16 +637,7 @@ clustHierSpar <- function(input, output, session,
   addPopover(session, 
              ns("alImportance"),
              title = "Variable importance",
-             content = paste0("<p>Weight factors (WF) calculated during clustering ",
-                              "reflect the importance of time points in the clustering. ",
-                              "The following labels are used to indicate the importance:",
-                              "<li>Black - time point not taken into account</li>",
-                              "<li><p, style=\"color:DodgerBlue;\">* - low, WF∈(0, 0.1]</p></li>",
-                              "<li><p, style=\"color:MediumSeaGreen;\">** - medium, WF∈(0.1, 0.5]</p></li>",
-                              "<li><p, style=\"color:Tomato;\">*** - high, WF∈(0.5, 1.0]</p></li>",
-                              "</p><p>Witten and Tibshirani (2010): ",
-                              "<i>A framework for feature selection in clustering</i>; ",
-                              "Journal of the American Statistical Association 105(490): 713-726.</p>"),
+             content = helpText.clHierSpar[["alImportance"]],
              trigger = "click")
 
 }
