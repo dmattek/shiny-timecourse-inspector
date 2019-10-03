@@ -14,12 +14,21 @@
 # callModule(clustHier, 'TabClustHier', dataMod)
 # where dataMod is the output from a reactive function that returns dataset ready for clustering
 
+<<<<<<< HEAD
 helpText.tabScatter = c(alScatter = "Display measurement values from two different time points as a scatter plot.",
                         rBfoldChange = 'Y-axis can display a value at a selected time point or a difference between values at two selected time points.', #1
                   chBregression = 'Add a line with linear regression and regions of 95% confidence interval.', #2
                   inNeighTpts = 'A number of time points left & right of selected time points; use the mean of values from these time points for the scatterplot.', #3
                   inPlotHeight = 'Height in pixels of the displayed plot', #4
                   inPlotNcolFacet = 'Number of facets in a row. Each facet displayes a scatter plot for a single group.' #5
+=======
+helpText.tabScatter = c("Display measurement relationship between two different time points as a scatter plot. Instead of using the exact value of time points, can also use local average values around them with the smoothing option.",
+                  'Y-axis can display a value at a selected time point or a difference between values at two selected time points. The former reports the magnitude of the difference while the former reports the amplitude of the difference between the 2 selected time points.', #1
+                  'Add a line with linear regression and regions of 95% confidence interval.', #2
+                  'Window length for moving average smoothing used before plotting the scatterplot. Useful to avoid artefacts in the scatterplot due to spurious variations at specific time points.', #3
+                  'Height in pixels of the displayed plot', #4
+                  'Number of facets in a row. Each facet displayes a scatter plot for a single group.' #5
+>>>>>>> d154660843617744aa265b8e65e9abb9bbf8b1ce
 )
 
 # UI ----
@@ -47,9 +56,19 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
       column(
         4, 
         numericInput(ns('inNeighTpts'), 'Smoothing', value = 0, step = 1, min = 0, width = "120px"),
+<<<<<<< HEAD
         bsTooltip(ns('inNeighTpts'), helpText.tabScatter[["inNeighTpts"]], placement = "top", trigger = "hover", options = NULL),
         checkboxInput(ns('chBregression'), 'Linear regression with 95% CI'),
         bsTooltip(ns('chBregression'), helpText.tabScatter[["chBregression"]], placement = "top", trigger = "hover", options = NULL)
+=======
+        bsTooltip(ns('inNeighTpts'), helpText.tabScatter[4], placement = "bottom", trigger = "hover", options = NULL),
+
+        radioButtons(ns('rBfoldChange'), 'Y-axis', 
+                     choices = c("Y" = "y", "Y - X" = "diff"), 
+                     width = "100px", inline = T),
+        bsTooltip(ns('rBfoldChange'), helpText.tabScatter[2], placement = "bottom", trigger = "hover", options = NULL)
+        
+>>>>>>> d154660843617744aa265b8e65e9abb9bbf8b1ce
       ),
       column(
         4,
@@ -77,7 +96,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
     
     br(),
     checkboxInput(ns('plotInt'), 
-                  'Interactive Plot?',
+                  'Interactive Plot',
                   value = FALSE),
     actionButton(ns('butGoScatter'), 'Plot!'),
     uiOutput(ns("plotInt_ui")),
