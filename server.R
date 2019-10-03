@@ -415,6 +415,12 @@ shinyServer(function(input, output, session) {
   })
   
   
+  # Pop-overs ----
+  addPopover(session, 
+             "alDataFormat",
+             title = "Data format",
+             content = helpText.server[["alDataFormat"]],
+             trigger = "click", )
   
 
   # Processing-data ----
@@ -461,14 +467,55 @@ shinyServer(function(input, output, session) {
       
       # convert to long format if radio box set to "wide"
       # the input data in long format should contain:
-      # - the first row with a header: ID, 1, 2, 3...
+      # - the first row with a header: group, track id, time points as columns with numeric header
       # - consecutive rows with time series, where columns are time points
       if (input$inRbutLongWide == 1) {
-        # long to wide
-        dm = melt(dm, id.vars = names(dm)[1], variable.name = COLRT, value.name = COLY)
+        print(length(names(dm)))
+        
+        # data in wide format requires at least 3 columns: grouping, track id, 1 time point
+        if (length(names(dm)) < 3) {
+          dm = NULL
+          
+          createAlert(session, "alertAnchorSidePanelDataFormat", "alertWideTooFewColumns", 
+                      title = "Error",
+                      content = helpText.server[["alertWideTooFewColumns"]], 
+                      append = FALSE,
+                      style = "danger")
+          
 
-        # convert column names with time points to a number
-        dm[, (COLRT) := as.numeric(levels(get(COLRT)))[get(COLRT)]]
+        } else {
+          closeAlert(session, "alertWideTooFewColumns")
+
+          # obtain column headers from the wide format data
+          # headers for grouping and track id columns
+          loc.cols.idvars = names(dm)[1:2]
+          
+          # headers for time columns
+          loc.cols.time = names(dm)[c(-1, -2)]
+          
+          # check if time columns are numeric
+          # from https://stackoverflow.com/a/21154566/1898713
+          loc.cols.time.numres = grepl("[-]?[0-9]+[.]?[0-9]*|[-]?[0-9]+[L]?|[-]?[0-9]+[.]?[0-9]*[eE][0-9]+", loc.cols.time)
+          
+          # melt the table only if time columns are numeric
+          if (sum(!loc.cols.time.numres) == 0) {
+            closeAlert(session, "alertWideMissesNumericTime")
+            
+            # long to wide
+            dm = melt(dm, id.vars = loc.cols.idvars, variable.name = COLRT, value.name = COLY)
+            
+            # convert column names with time points to a number
+            dm[, (COLRT) := as.numeric(levels(get(COLRT)))[get(COLRT)]]
+            
+          } else {
+            dm = NULL
+
+            createAlert(session, "alertAnchorSidePanelDataFormat", "alertWideMissesNumericTime", title = "Error",
+                        content = helpText.server[["alertWideMissesNumericTime"]], 
+                        append = FALSE,
+                        style = "danger")
+          }
+        }
       }
       
       # no need to isolate updating the counter reactive values!
@@ -477,6 +524,7 @@ shinyServer(function(input, output, session) {
       cat("server:dataInBoth else\n")
       dm = NULL
     }
+    
     return(dm)
   })
   
