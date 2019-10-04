@@ -14,17 +14,19 @@
 # callModule(clustHier, 'TabClustHier', dataMod)
 # where dataMod is the output from a reactive function that returns dataset ready for clustering
 
-helpText.tabScatter = c(alScatter = paste0("Display measurement relationship between two different time points as a scatter plot. ",
-                                           "Instead of plotting the exact value of time points, you can also switch on smoothing and use local average values around chosen time points."),
-                        rBfoldChange = paste0("Y-axis can display a value at a selected time point or a difference between values at two selected time points.", 
-                                              "The former reports the magnitude of the difference while the former reports the amplitude of the difference between the 2 selected time points."),
+helpText.tabScatter = c(alScatter = paste0("Display a relationship between measurements at two different time points as a scatter plot. ",
+                                           "Instead of using the exact measurements at selected time points, you have an option to smooth and use local average of measurements around chosen time points."),
+                        rBfoldChange = paste0("Y-axis can display a value at a selected time point (the magnitude), ",
+                                              "or a difference between the value at time point selected for Y-axis and the value at time point displayed on the X-axis ",
+                                              "(i.e. the amplitude at the second time point with respect to the value at the first time point)."),
                         chBregression = 'Add a line with linear regression and regions of 95% confidence interval.', #2
-                        inNeighTpts = 'Window length in time points for smoothing with the average used before plotting the scatterplot. Useful to avoid artefacts in the scatterplot due to spurious variations at specific time points.', #3
+                        inNeighTpts = paste0("Window length in time points for smoothing with the average used before plotting the scatterplot. ",
+                                             "Useful to avoid artefacts in the scatterplot due to spurious variations at specific time points."), #3
                         inPlotHeight = 'Height in pixels of the displayed plot', #4
                         inPlotNcolFacet = 'Number of facets in a row. Each facet displayes a scatter plot for a single group.')
 
 # UI ----
-tabScatterPlotUI <- function(id, label = "Comparing t-points") {
+tabScatterPlotUI <- function(id, label = "Comparing measurements at time points") {
   ns <- NS(id)
   
   tagList(
@@ -32,6 +34,7 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
       "Scatter plot between two time points"
     ),
     actionLink(ns("alScatter"), "Learn more"),
+    br(),
     br(),
     fluidRow(
       column(
@@ -48,7 +51,8 @@ tabScatterPlotUI <- function(id, label = "Comparing t-points") {
         bsTooltip(ns('chBregression'), helpText.tabScatter[["chBregression"]], placement = "top", trigger = "hover", options = NULL),
         radioButtons(ns('rBfoldChange'), 'Y-axis', 
                      choices = c("Y" = "y", "Y - X" = "diff"), 
-                     width = "100px", inline = T)
+                     width = "100px", inline = T),
+        bsTooltip(ns("rBfoldChange"), helpText.tabScatter[["rBfoldChange"]], placement = "top", trigger = "hover", options = NULL)
       ),
       column(
         4,
@@ -138,23 +142,6 @@ output$uiSelTptY = renderUI({
   }
 })
 
-output$uiNcolFacet = renderUI({
-  cat(file = stderr(), 'tabScatter:uiNcolFacet\n')
-  
-  ns <- session$ns
-  
-  loc.v = getDataTpts()
-  if (!is.null(loc.v)) {
-    selectInput(
-      ns('inSelTptY'),
-      'Time point for Y-axis',
-      loc.v,
-      width = '180px',
-      selected = 1,
-      multiple = FALSE
-    )
-  }
-})
 
 data4scatterPlot <- reactive({
   cat(file = stderr(), 'data4scatterPlot\n')
