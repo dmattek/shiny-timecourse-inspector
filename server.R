@@ -23,15 +23,22 @@ library(ggthemes) # nice colour palettes
 
 library(sparcl) # sparse hierarchical and k-means
 library(dtw) # for dynamic time warping
+library(factoextra) # extract and visualize the output of multivariate data analyses 
 library(imputeTS) # for interpolating NAs
 library(robust) # for robust linear regression
 library(MASS)
-library(pracma) # for trapz
+library(pracma) # for trapz used in AUC calculation
+
 
 
 # Global parameters ----
 # change to increase the limit of the upload file size
 options(shiny.maxRequestSize = 200 * 1024 ^ 2)
+
+# Important when joining, grouping or ordering numeric (i.e. double, POSIXct) columns.
+# https://stackoverflow.com/questions/58230619/xy-join-of-keyed-data-table-fails-when-key-on-numeric-column-and-data-fread-fr
+setNumericRounding(2)
+
 
 # colour of loader spinner (shinycssloaders)
 options(spinner.color="#00A8AA")
@@ -67,7 +74,7 @@ shinyServer(function(input, output, session) {
     if (DEB)
       cat("server:dataGen1\n")
     
-    return(LOCgenTraj(in.nwells = 3, in.addout = 3))
+    return(LOCgenTraj2())
   })
   
   # Load main data file
@@ -349,7 +356,7 @@ shinyServer(function(input, output, session) {
         choices = list('fold-change' = 'mean', 'z-score' = 'z.score'),
         width = "40%"
       ),
-      bsTooltip('rBnormMeth', helpText.server[12], placement = "top", trigger = "hover", options = NULL)
+      bsTooltip('rBnormMeth', helpText.server[["rBnormMeth"]], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -377,7 +384,7 @@ shinyServer(function(input, output, session) {
         value = c(locRTmin, 0.1 * locRTmax), 
         step = 1
       ),
-      bsTooltip('slNormRtMinMax', helpText.server[13], placement = "top", trigger = "hover", options = NULL)
+      bsTooltip('slNormRtMinMax', helpText.server[["slNormRtMinMax"]], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -393,7 +400,7 @@ shinyServer(function(input, output, session) {
                     label = 'Robust stats',
                     FALSE, 
                     width = "40%"),
-      bsTooltip('chBnormRobust', helpText.server[14], placement = "top", trigger = "hover", options = NULL)
+      bsTooltip('chBnormRobust', helpText.server[["chBnormRobust"]], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -409,7 +416,7 @@ shinyServer(function(input, output, session) {
                    label = 'Normalisation grouping',
                    choices = list('Entire dataset' = 'none', 'Per group' = 'group', 'Per trajectory' = 'id'), 
                    width = "40%"),
-      bsTooltip('chBnormGroup', helpText.server[15], placement = "top", trigger = "hover", options = NULL)
+      bsTooltip('chBnormGroup', helpText.server[["chBnormGroup"]], placement = "top", trigger = "hover", options = NULL)
       )
     }
   })
@@ -420,7 +427,7 @@ shinyServer(function(input, output, session) {
              "alDataFormat",
              title = "Data format",
              content = helpText.server[["alDataFormat"]],
-             trigger = "click", )
+             trigger = "click")
   
 
   # Processing-data ----
@@ -761,8 +768,12 @@ shinyServer(function(input, output, session) {
     setkeyv(loc.out, c(COLGR, COLID, COLRT))
 
     if (input$chBtrajInter) {
-      # here we fill missing data with NA's
-      loc.out = loc.out[setkeyv(loc.out[, .(seq(min(get(COLRT), na.rm = T), max(get(COLRT), na.rm = T), input$inSelTimeFreq)), by = c(COLGR, COLID)], c(COLGR, COLID, 'V1'))]
+      # here we fill missing rows with NA's
+      loc.out = loc.out[setkeyv(loc.out[, 
+                                        .(seq(min(get(COLRT), na.rm = T), 
+                                              max(get(COLRT), na.rm = T), 
+                                              input$inSelTimeFreq)), 
+                                        by = c(COLGR, COLID)], c(COLGR, COLID, 'V1'))]
       
       # x-check: print all rows with NA's
       if (DEB) {
@@ -959,6 +970,9 @@ shinyServer(function(input, output, session) {
   ###### Scatter plot
   callModule(tabScatterPlot, 'tabScatter', data4trajPlotNoOut, in.fname = function() return(FPDFSCATTER))
   
+  ##### Hierarchical estimation
+  callModule(clustValid, 'tabClValid', data4clust)
+
   ##### Hierarchical clustering
   callModule(clustHier, 'tabClHier', data4clust, data4trajPlotNoOut, data4stimPlot)
   
