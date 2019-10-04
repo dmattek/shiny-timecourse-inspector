@@ -127,31 +127,6 @@ l.col.pal.dend.2 = list(
   "Seattle Grays 5" = 'Seattle Grays'
 )
 
-# Clustering algorithms ----
-
-s.cl.linkage = c("complete",
-                 "average",
-                 "single",
-                 "centroid",
-                 "ward.D",
-                 "ward.D2",
-                 "mcquitty")
-
-s.cl.spar.linkage = c("complete",
-                      "average",
-                      "single",
-                      "centroid")
-
-s.cl.diss = c("euclidean", 
-              "maximum", 
-              "manhattan", 
-              "canberra", 
-              "DTW")
-
-s.cl.spar.diss = c("squared.distance",
-                   "absolute.value")
-
-
 # Help text ----
 # Creates a popup with help text
 # From: https://gist.github.com/jcheng5/5913297
@@ -188,15 +163,13 @@ helpText.server = c(
                            "<p><b>Wide format</b> - a row is a time series with columns as time points.",
                            "At least 3 columns shuold be present:</p>",
                            "<li>First two columns in wide format should contain grouping and track IDs</li>",
-                           "<li>A column with a time point. Headers of columns with time points need to be numeric</li>"), #2
-  'Generate 60 random synthetic time series distributed evenly among 6 groups. Every time series has 60 time points.',             #3
-  'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',                       #4
-  'Load CSV file with 5 columns: grouping, start and end tpts of stimulation, start and end of y-position, dummy column with ID.', #5
-  chBtrajInter = 'Interpolate missing time points and pre-existing NAs. Missing time points are rows entirely missing from the dataset. To interpolate, the interval of the time column must be provided.',                       #6
-  'If the track ID is unique only within a group, make it unique globally by combining with grouping columns.',                    #7
-  'Load CSV file with 5 columns: grouping, start and end time points of stimulation, start and end of y-position, dummy column with ID.', #5
-  'Interpolate missing time points indicated with NAs. In addition, add NA if a row with a time point is completely missing. The interval of the time column must be provided to know which rows are missing.',                       #6
-  'If the track ID is not globally unique, try to make it unique by prepending another column to the track ID (typically the group column).',                    #7
+                           "<li>A column with a time point. Headers of columns with time points need to be numeric</li>"),
+  inDataGen1 =   'Generate 60 random synthetic time series distributed evenly among 6 groups. Every time series has 60 time points.',
+  chBtrajRem =   'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',
+  chBstim =      'Load CSV file with stimulation pattern. Should contain 5 columns: grouping, start and end time points of stimulation, start and end of y-position, dummy column with ID.',
+  chBtrajInter = 'Interpolate missing measurements indicated with NAs in the data file. In addition, interpolate a row that is completely missing from the data. The interval of the time column must be provided to know which rows are missing.',                       #6
+  chBtrackUni =  'If the track ID is unique only within a group, make it unique globally by combining with grouping columns.', 
+  'If the track ID is not globally unique, try to make it unique by prepending another column to the track ID (typically the group column).', 
   'Select columns to group data according to treatment, condition, etc.',                                                          #8
   'Select math operation to perform on a single or two columns,',                                                                  #9
   'Select range of time for further processing.',                                                                                  #10
@@ -317,9 +290,7 @@ LOCcalcPSD <- function(in.dt,
 }
 
 
-#' Generate synthetic CellProfiler output with single cell time series
-#'
-#'
+#' Generate synthetic CellProfiler output with single-cell time series
 #'
 #' @param in.ntpts Number of time points (default 60)
 #' @param in.ntracks Number of tracks per FOV (default 10)
@@ -363,6 +334,101 @@ LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 
                       id = rep(1:(in.ntracks*in.nfov), each = in.ntpts))
   
   return(dt.nuc)
+}
+
+LOCgenTraj2 <- function(n_perGroup = 20, sd_noise = 0.01, sampleFreq = 0.2, endTime = 50)
+{
+  # Function definition ----------------------------------
+  sim_expodecay_lagged_stim <-
+    function (n,
+              noise,
+              interval.stim = 5,
+              lambda = 0.2,
+              freq = 0.2,
+              end = 50)
+    {
+      require(data.table)
+      tvec <- seq(0, end - 1, by = freq)
+      stim_time <- seq(interval.stim, end - 1, interval.stim)
+      stim_time_matrix <-
+        matrix(stim_time, nrow = length(stim_time),
+               ncol = n)
+      noise_matrix <- abs(replicate(n, rnorm(
+        n = length(stim_time),
+        mean = 0,
+        sd = noise
+      )))
+      stim_time_matrix <- stim_time_matrix + noise_matrix
+      trajs <- matrix(0, nrow = length(tvec), ncol = n)
+      for (col in 1:ncol(stim_time_matrix)) {
+        for (row in 1:nrow(stim_time_matrix)) {
+          index <- which(tvec >= stim_time_matrix[row, col])[1]
+          trajs[index, col] <- 1
+        }
+      }
+      decrease_factor <- exp(-lambda * freq)
+      for (col in 1:ncol(trajs)) {
+        for (row in 2:nrow(trajs)) {
+          if (trajs[row, col] != 1) {
+            trajs[row, col] <- trajs[row - 1, col] * decrease_factor
+          }
+        }
+      }
+      trajs <- as.data.table(trajs)
+      trajs <- cbind(seq(0, end - 1, by = freq), trajs)
+      colnames(trajs)[1] <- "Time"
+      trajs <- melt(trajs, id.vars = "Time")
+      return(trajs)
+    }
+  
+  
+  # Dataset creation -----------------------------------------------
+  dt1 <-
+    sim_expodecay_lagged_stim(
+      n = n_perGroup,
+      noise = 0.75,
+      interval.stim = 10,
+      lambda = 0.4,
+      freq = sampleFreq,
+      end = endTime
+    )
+  dt2 <-
+    sim_expodecay_lagged_stim(
+      n = n_perGroup,
+      noise = 0.75,
+      interval.stim = 10,
+      lambda = 0.1,
+      freq = sampleFreq,
+      end = endTime
+    )
+  dt3 <-
+    sim_expodecay_lagged_stim(
+      n = n_perGroup,
+      noise = 0.75,
+      interval.stim = 10,
+      lambda = 0.4,
+      freq = sampleFreq,
+      end = endTime
+    )
+  dt3[, value := value / 3]
+  
+  dt1[, Group := "fastDecay"]
+  dt2[, Group := "slowDecay"]
+  dt3[, Group := "lowAmplitude"]
+  
+  dt <- rbindlist(list(dt1, dt2, dt3))
+  dt[, ID := paste(Group, variable, sep = "_")]
+  dt[, variable := NULL]
+  dt[, Group := as.factor(Group)]
+  
+  dt[, value := value + runif(1, -0.1, 0.1), by = ID]
+  noise_vec <- rnorm(n = nrow(dt), mean = 0, sd = sd_noise)
+  dt[, value := value + noise_vec]
+  
+  setnames(dt, "value", "Meas")
+  setcolorder(dt, c("Group", "ID", "Time", "Meas"))
+  
+  return(dt)
 }
 
 #' Normalize Trajectory
@@ -436,7 +502,7 @@ LOCnormTraj = function(in.dt,
 
 
 
-# Functions for clustering ----
+# Clustering ----
 
 # Return a dt with cell IDs and corresponding cluster assignments depending on dendrogram cut (in.k)
 # This one works wth dist & hclust pair
@@ -498,6 +564,59 @@ getClCol <- function(in.dend, in.k) {
   return(unique(
     data.table(cl.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
                cl.col = loc.col_labels)))
+}
+
+# Cluster validation ----
+
+#Customize factoextra functions to accept dissimilarity matrix from start. Otherwise can't use distance functions that are not in base R, like DTW.
+
+# Inherit and adapt hcut function to take input from UI, used for fviz_clust 
+LOChcut <- function(x, k = 2, isdiss = inherits(x, "dist"), hc_func = "hclust", hc_method = "average", hc_metric = "euclidean"){
+  if(!inherits(x, "dist")){stop("x must be a distance matrix")}
+  return(factoextra::hcut(x = x, k = k, isdiss = TRUE, hc_func = hc_func, hc_method = hc_method, hc_metric = hc_metric))
+}
+
+# Modified from factoextra::fviz_nbclust
+# Allow (actually enforce) x to be a distance matrix; no GAP statistics for compatibility
+LOCnbclust <- function (x, FUNcluster = LOChcut, method = c("silhouette", "wss"), k.max = 10, verbose = FALSE, 
+          barfill = "steelblue", barcolor = "steelblue", linecolor = "steelblue", 
+          print.summary = TRUE, ...) 
+{
+  set.seed(123)
+  if (k.max < 2) 
+    stop("k.max must bet > = 2")
+  method = match.arg(method)
+  if (!inherits(x, c("dist")))
+    stop("x should be an object of class dist")
+  else if (is.null(FUNcluster)) 
+    stop("The argument FUNcluster is required. ", "Possible values are kmeans, pam, hcut, clara, ...")
+  else if (method %in% c("silhouette", "wss")) {
+    diss <- x  # x IS ENFORCED TO BE A DISSIMILARITY MATRIX
+    v <- rep(0, k.max)
+    if (method == "silhouette") {
+      for (i in 2:k.max) {
+        clust <- FUNcluster(x, i, ...)
+        v[i] <- factoextra:::.get_ave_sil_width(diss, clust$cluster)
+      }
+    }
+    else if (method == "wss") {
+      for (i in 1:k.max) {
+        clust <- FUNcluster(x, i, ...)
+        v[i] <- factoextra:::.get_withinSS(diss, clust$cluster)
+      }
+    }
+    df <- data.frame(clusters = as.factor(1:k.max), y = v)
+    ylab <- "Total Within Sum of Square"
+    if (method == "silhouette") 
+      ylab <- "Average silhouette width"
+    p <- ggpubr::ggline(df, x = "clusters", y = "y", group = 1, 
+                        color = linecolor, ylab = ylab, xlab = "Number of clusters k", 
+                        main = "Optimal number of clusters")
+    if (method == "silhouette") 
+      p <- p + geom_vline(xintercept = which.max(v), linetype = 2, 
+                          color = linecolor)
+    return(p)
+  }
 }
 
 
