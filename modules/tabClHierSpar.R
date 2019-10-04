@@ -17,7 +17,7 @@ helpText.clHierSpar = c(alImportance = paste0("<p>Weight factors (WF) calculated
                                               "Journal of the American Statistical Association 105(490): 713-726.</p>"))
 
 # UI ----
-clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
+clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
   ns <- NS(id)
   
   tagList(
@@ -30,32 +30,32 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical CLustering") {
     br(),
     fluidRow(
       column(
-        4,
+        3,
         selectInput(
           ns("selectPlotHierSparDiss"),
-          label = ("Select type of dissimilarity measure:"),
-          choices = list("Euclidean" = 1,
-                         "Manhattan" = 2),
+          label = ("Dissimilarity measure"),
+          choices = list("Euclidean" = "squared.distance",
+                         "Manhattan" = "absolute.value"),
           selected = 1
         ),
         selectInput(
           ns("selectPlotHierSparLinkage"),
-          label = ("Select linkage method:"),
+          label = ("Linkage method"),
           choices = list(
-            "Average" = 1,
-            "Complete" = 2,
-            "Single" = 3,
-            "Centroid" = 4
+            "Average"  = "average",
+            "Complete" = "complete",
+            "Single"   = "single",
+            "Centroid" = "centroid"
           ),
-          selected = 2
+          selected = 1
         )
       ),
       
       column(
-        4,
+        6,
         sliderInput(
           ns('inPlotHierSparNclust'),
-          '#dendrogram branches to colour',
+          'Number of dendrogram branches to cut',
           min = 1,
           max = 20,
           value = 1,
@@ -294,15 +294,15 @@ clustHierSpar <- function(input, output, session,
       dm.t,
       wbounds = NULL,
       nperms = ifelse(input$inHierSparAdv, input$inPlotHierSparNperms, 1),
-      dissimilarity = s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)]
+      dissimilarity = input$selectPlotHierSparDiss
     )
     
     sparsehc <- HierarchicalSparseCluster(
       dists = perm.out$dists,
       wbound = perm.out$bestw,
       niter = ifelse(input$inHierSparAdv, input$inPlotHierSparNiter, 1),
-      method = s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)],
-      dissimilarity = s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)]
+      method = input$selectPlotHierSparLinkage,
+      dissimilarity = input$selectPlotHierSparDiss
     )
     
     #cat('=============\nsparsehc:\n')
@@ -433,9 +433,9 @@ clustHierSpar <- function(input, output, session,
   output$downCellClSpar <- downloadHandler(
     filename = function() {
       paste0('clust_hierchSpar_data_',
-             s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+             input$selectPlotHierSparDiss,
              '_',
-             s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.csv')
+             input$selectPlotHierSparLinkage, '.csv')
     },
     
     content = function(file) {
@@ -530,9 +530,9 @@ clustHierSpar <- function(input, output, session,
                            breaks.arg = loc.col.bounds,
                            title.arg = paste(
                              "Distance measure: ",
-                             s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+                             input$selectPlotHierSparDiss,
                              "\nLinkage method: ",
-                             s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)]
+                             input$selectPlotHierSparLinkage
                            ))
     
     return(loc.p)
@@ -545,45 +545,45 @@ clustHierSpar <- function(input, output, session,
   createFnameHeatMap = reactive({
     
     paste0('clust_hierchSparse_heatMap_',
-           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           input$selectPlotHierSparDiss,
            '_',
-           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)],
+           input$selectPlotHierSparLinkage,
            '.png')
   })
   
   createFnameTrajPlot = reactive({
     
     paste0('clust_hierchSparse_tCourses_',
-           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           input$selectPlotHierSparDiss,
            '_',
-           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], 
+           input$selectPlotHierSparLinkage, 
            '.pdf')
   })
   
   createFnameRibbonPlot = reactive({
     
     paste0('clust_hierchSparse_tCoursesMeans_',
-           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           input$selectPlotHierSparDiss,
            '_',
-           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], 
+           input$selectPlotHierSparLinkage, 
            '.pdf')
   })
   
   createFnamePsdPlot = reactive({
     
     paste0('clust_hierchSparse_tCoursesPsd_',
-           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           input$selectPlotHierSparDiss,
            '_',
-           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], 
+           input$selectPlotHierSparLinkage, 
            '.pdf')
   })
   
   createFnameDistPlot = reactive({
     
     paste0('clust_hierchSparse_clDist_',
-           s.cl.spar.diss[as.numeric(input$selectPlotHierSparDiss)],
+           input$selectPlotHierSparDiss,
            '_',
-           s.cl.spar.linkage[as.numeric(input$selectPlotHierSparLinkage)], '.pdf')  })
+           input$selectPlotHierSparLinkage, '.pdf')  })
   
   
   
@@ -634,6 +634,8 @@ clustHierSpar <- function(input, output, session,
     plotHierSpar()
   }, height = getPlotHierSparHeatMapHeight)
 
+  # Pop-overs ----
+  
   addPopover(session, 
              ns("alImportance"),
              title = "Variable importance",
