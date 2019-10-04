@@ -17,7 +17,7 @@ helpText.clHier = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calcula
 
 
 # UI ----
-clustHierUI <- function(id, label = "Hierarchical CLustering") {
+clustHierUI <- function(id, label = "Hierarchical Clustering") {
   ns <- NS(id)
   
   tagList(
@@ -29,37 +29,37 @@ clustHierUI <- function(id, label = "Hierarchical CLustering") {
       " functions."),
     br(),
     fluidRow(
-      column(4,
+      column(3,
              selectInput(
                ns("selectPlotHierDiss"),
-               label = ("Select type of dissimilarity measure:"),
-               choices = list("Euclidean" = 1,
-                              "Maximum" = 2,
-                              "Manhattan" = 3,
-                              "Canberra" = 4,
-                              "DTW" = 5),
+               label = ("Dissimilarity measure"),
+               choices = list("Euclidean" = "euclidean",
+                              "Manhattan" = "manhattan",
+                              "Maximum"   = "maximum",
+                              "Canberra"  = "canberra",
+                              "DTW"       = "DTW"),
                selected = 1
              ),
              bsAlert("alertAnchorClHierNAsPresent"),
              selectInput(
                ns("selectPlotHierLinkage"),
-               label = ("Select linkage method:"),
+               label = ("Linkage method"),
                choices = list(
-                 "Average" = 1,
-                 "Complete" = 2,
-                 "Single" = 3,
-                 "Centroid" = 4,
-                 "Ward" = 5,
-                 "Ward D2" = 6,
-                 "McQuitty" = 7
+                 "Average"  = "average",
+                 "Complete" = "complete",
+                 "Single"   = "single",
+                 "Centroid" = "centroid",
+                 "Ward"     = "ward.D",
+                 "Ward D2"  = "ward.D2",
+                 "McQuitty" = "mcquitty"
                ),
-               selected = 2
+               selected = 1
              )
       ),
-      column(4,
+      column(6,
              sliderInput(
                ns('inPlotHierNclust'),
-               '#dendrogram branches to colour',
+               'Number of dendrogram branches to cut',
                min = 1,
                max = 20,
                value = 1,
@@ -263,7 +263,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     }
     
     #pr_DB$set_entry(FUN = fastDTW, names = c("fastDTW"))
-    cl.dist = dist(dm.t, method = s.cl.diss[as.numeric(input$selectPlotHierDiss)])
+    cl.dist = dist(dm.t, method = input$selectPlotHierDiss)
     
     return(cl.dist)
   })
@@ -279,7 +279,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
       return(NULL)
     }
     
-    cl.hc = hclust(dm.dist, method = s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
+    cl.hc = hclust(dm.dist, method = input$selectPlotHierLinkage)
     
     # number of clusters at which dendrigram is cut
     loc.k = input$inPlotHierNclust
@@ -402,9 +402,9 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   output$downCellCl <- downloadHandler(
     filename = function() {
       paste0('clust_hierch_data_',
-             s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+             input$selectPlotHierDiss,
              '_',
-             s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.csv')
+             input$selectPlotHierLinkage, '.csv')
     },
     
     content = function(file) {
@@ -451,9 +451,9 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   
   createMethodStr = reactive({
     
-    paste0(s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+    paste0(input$selectPlotHierDiss,
            '_',
-           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)])
+           input$selectPlotHierLinkage)
     
   })
   
@@ -466,9 +466,11 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     if (is.null(loc.dm))
       return(NULL)
     
-    print(sum(is.na(loc.dm)))
+    # Throw some warnings if NAs present in the dataset.
+    # DTW cannot compute distance when NA's are preset.
+    # Other distance measures can be calculated but caution is required with interpretation.
     if(sum(is.na(loc.dm)) > 0) {
-      if (input$selectPlotHierDiss == 5) {
+      if (input$selectPlotHierDiss == "DTW") {
       createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentDTW", title = "Error",
                   content = helpText.clHier[["alertNAsPresentDTW"]], 
                   append = FALSE,
@@ -511,9 +513,9 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
                            breaks.arg = loc.col.bounds,
                            title.arg = paste0(
                              "Distance measure: ",
-                             s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+                             input$selectPlotHierDiss,
                              "\nLinkage method: ",
-                             s.cl.linkage[as.numeric(input$selectPlotHierLinkage)]
+                             input$selectPlotHierLinkage
                            ))
     
     return(loc.p)
@@ -541,45 +543,45 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   createFnameHeatMap = reactive({
     
     paste0('clust_hierch_heatMap_',
-           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           input$selectPlotHierDiss,
            '_',
-           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)],
+           input$selectPlotHierLinkage,
            '.png')
   })
   
   createFnameTrajPlot = reactive({
     
     paste0('clust_hierch_tCourses_',
-           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           input$selectPlotHierDiss,
            '_',
-           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], 
+           input$selectPlotHierLinkage, 
            '.pdf')
   })
   
   createFnameRibbonPlot = reactive({
     
     paste0('clust_hierch_tCoursesMeans_',
-           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           input$selectPlotHierDiss,
            '_',
-           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], 
+           input$selectPlotHierLinkage, 
            '.pdf')
   })
   
   createFnamePsdPlot = reactive({
     
     paste0('clust_hierch_tCoursesPsd_',
-           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           input$selectPlotHierDiss,
            '_',
-           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], 
+           input$selectPlotHierLinkage, 
            '.pdf')
   })
   
   createFnameDistPlot = reactive({
     
     paste0('clust_hierch_clDist_',
-           s.cl.diss[as.numeric(input$selectPlotHierDiss)],
+           input$selectPlotHierDiss,
            '_',
-           s.cl.linkage[as.numeric(input$selectPlotHierLinkage)], '.pdf')  
+           input$selectPlotHierLinkage, '.pdf')  
   })
   
   
