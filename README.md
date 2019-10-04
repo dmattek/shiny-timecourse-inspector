@@ -27,6 +27,7 @@ Following packages need to be installed in order to run the app locally:
 * ggthemes
 * sparcl
 * dtw
+* factoextra
 * imputeTS
 * MASS
 * robust
@@ -40,7 +41,7 @@ install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 					"data.table", "DT",
 					"ggplot2", "gplots", "plotly", "scales", "grid",
 					"dendextend", "RColorBrewer", "ggthemes",
-					"sparcl", "dtw",
+					"sparcl", "dtw", "factoextra",
 					"imputeTS", "MASS", "robust", "pracma", "Hmisc")) 
 ```
 
