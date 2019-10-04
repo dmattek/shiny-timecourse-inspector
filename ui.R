@@ -34,18 +34,18 @@ shinyUI(fluidPage(
       actionButton("butReset", "Reset file input"),
       
       actionButton('inDataGen1', 'Synthetic data'),
-      bsTooltip('inDataGen1', helpText.server[3], placement = "top", trigger = "hover", options = NULL),
+      bsTooltip('inDataGen1', helpText.server[["inDataGen1"]], placement = "top", trigger = "hover", options = NULL),
       
       tags$hr(),
       checkboxInput('chBtrajRem', 'Upload tracks to remove'),
-      bsTooltip('chBtrajRem', helpText.server[4], placement = "top", trigger = "hover", options = NULL),
+      bsTooltip('chBtrajRem', helpText.server[["chBtrajRem"]], placement = "top", trigger = "hover", options = NULL),
       
       uiOutput('uiFileLoadTrajRem'),
       uiOutput('uiButLoadTrajRem'),
       
       #tags$hr(),
       checkboxInput('chBstim', 'Upload stimulation pattern'),
-      bsTooltip('chBstim', helpText.server[5], placement = "top", trigger = "hover", options = NULL),
+      bsTooltip('chBstim', helpText.server[["chBstim"]], placement = "top", trigger = "hover", options = NULL),
       
       uiOutput('uiFileLoadStim'),
       uiOutput('uiButLoadStim'),
@@ -57,7 +57,7 @@ shinyUI(fluidPage(
       uiOutput('varSelTimeFreq'),
 
       checkboxInput('chBtrackUni', 'Create unique track ID', F),
-      bsTooltip('chBtrackUni', helpText.server[7], placement = "top", trigger = "hover", options = NULL),
+      bsTooltip('chBtrackUni', helpText.server[["chBtrackUni"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('varSelSite'),
       
       tags$hr(),
@@ -152,15 +152,22 @@ shinyUI(fluidPage(
           tabScatterPlotUI('tabScatter')
         ),
         
+        # hierarchical clustering
         tabPanel(
           'Hierarchical',
           clustHierUI('tabClHier')
         ),
         
         # sparse hierarchical clustering package sparcl temporarily unavailable from CRAN
-         tabPanel(
+        tabPanel(
            'Hierarchical Sparse',
            clustHierSparUI('tabClHierSpar')
+        ),
+        
+        # cluster validation
+        tabPanel(
+          'Validation',
+          clustValidUI('tabClValid')
         )
       ))
   )
