@@ -12,22 +12,22 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
   tagList(
     fluidRow(
       column(
-        2,
-        radioButtons(ns('rBlegendPos'), 'Legend:', list('top' = 'top', 'right' = 'right')),
+        3,
+        radioButtons(ns('rBlegendPos'), 'Legend', list('top' = 'top', 'right' = 'right')),
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
       column(
         2,
-        radioButtons(ns('rBPlotTrajStat'), 'Display:', list('Mean only' = 'Mean',
+        radioButtons(ns('rBPlotTrajStat'), 'Display', list('Mean only' = 'Mean',
                                                             'Add 95% CI' = 'CI', 
                                                             'Add SE' = 'SE'))
       ),
       column(
         3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point:', min = 1, max = 10, value = 1, step = 1),
+        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point', min = 1, max = 10, value = 1, step = 1),
         
-        checkboxInput(ns('chBsetXbounds'), 'Set bounds for x-axis', FALSE),
+        checkboxInput(ns('chBsetXbounds'), 'Bounds for X', FALSE),
         fluidRow(
           column(6,
                  uiOutput(ns('uiSetXboundsLow'))
@@ -36,7 +36,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
                  uiOutput(ns('uiSetXboundsHigh'))
           )),
         
-        checkboxInput(ns('chBsetYbounds'), 'Set bounds for y-axis', FALSE),
+        checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
         fluidRow(
           column(6,
                  uiOutput(ns('uiSetYboundsLow'))
@@ -49,7 +49,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
         2,
         numericInput(
           ns('inPlotTrajWidth'),
-          'Width [%]:',
+          'Width [%]',
           value = PLOTWIDTH,
           min = 10,
           width = '100px',
@@ -57,7 +57,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
         ),
         numericInput(
           ns('inPlotTrajHeight'),
-          'Height [px]:',
+          'Height [px]',
           value = PLOTRIBBONHEIGHT,
           min = 100,
           width = '100px',
@@ -69,7 +69,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
     br(),
     modTrackStatsUI(ns('dispTrackStats')),
     
-    downPlotUI(ns('downPlotTraj'), "Download PDF")
+    downPlotUI(ns('downPlotTraj'), "Download Plot")
   )
 }
 

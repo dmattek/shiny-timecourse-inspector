@@ -16,7 +16,7 @@ modClDistPlotUI =  function(id, label = "Plot distribution of clusters per group
                    "90 deg" = 90), inline = T),
     actionButton(ns('butPlotClDist'), 'Plot!'),
     plotOutput(ns('outPlotClDist'), height = PLOTBOXHEIGHT, width = 'auto'),
-    downPlotUI(ns('downPlotClDist'), "Download PDF")
+    downPlotUI(ns('downPlotClDist'), "Download Plot")
   )
 }
 

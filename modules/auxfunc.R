@@ -128,29 +128,6 @@ l.col.pal.dend.2 = list(
 )
 
 # Help text ----
-# Creates a popup with help text
-# From: https://gist.github.com/jcheng5/5913297
-helpPopup <- function(title, content,
-                      placement=c('right', 'top', 'left', 'bottom'),
-                      trigger=c('click', 'hover', 'focus', 'manual')) {
-  tagList(
-    singleton(
-      tags$head(
-        tags$script("$(function() { $(\"[data-toggle='popover']\").popover(); })")
-      )
-    ),
-    tags$a(
-      href = "#", class = "btn btn-mini", `data-toggle` = "popover",
-      title = title, `data-content` = content, `data-animation` = TRUE,
-      `data-placement` = match.arg(placement, several.ok=TRUE)[1],
-      `data-trigger` = match.arg(trigger, several.ok=TRUE)[1],
-      #tags$i(class="icon-question-sign")
-      # changed based on http://stackoverflow.com/questions/30436013/info-bubble-text-in-a-shiny-interface
-      icon("question")
-    )
-  )
-}
-
 helpText.server = c(
   alDataFormat =  paste0("<p>Switch between long and wide formats of input data. ",
                            "TCI accepts CSV or compressed CSV files (gz or bz2).</p>",
@@ -164,24 +141,30 @@ helpText.server = c(
                            "At least 3 columns shuold be present:</p>",
                            "<li>First two columns in wide format should contain grouping and track IDs</li>",
                            "<li>A column with a time point. Headers of columns with time points need to be numeric</li>"),
-  inDataGen1 =   'Generate 60 random synthetic time series distributed evenly among 6 groups. Every time series has 60 time points.',
-  chBtrajRem =   'Load CSV file with a column of track IDs for removal. IDs should correspond to those used for plotting.',
-  chBstim =      'Load CSV file with stimulation pattern. Should contain 5 columns: grouping, start and end time points of stimulation, start and end of y-position, dummy column with ID.',
-  chBtrajInter = 'Interpolate missing measurements indicated with NAs in the data file. In addition, interpolate a row that is completely missing from the data. The interval of the time column must be provided to know which rows are missing.',                       #6
-  chBtrackUni =  'If the track ID is unique only within a group, make it unique globally by combining with grouping columns.', 
-  'If the track ID is not globally unique, try to make it unique by prepending another column to the track ID (typically the group column).', 
-  'Select columns to group data according to treatment, condition, etc.',                                                          #8
-  'Select math operation to perform on a single or two columns,',                                                                  #9
-  'Select range of time for further processing.',                                                                                  #10
-  'Divide measurements by the mean/median or calculate z-score with respect to selected time span.',                                #11
-  'Fold-change or z-score with respect to selected time span.',                                                                    #12
-  'Normalise with respect to this time span.',                                                                                     #13
-  'Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and standard deviation.',                 #14
-  'Normalise to mean/median of selected time calculated globally, per group, or for individual time series.',                      #15
-  'Download time series after modification in this section.',                                                                      #16
-  alertNAsPresent = "NAs present in the measurement column. Consider interpolation.",
+  inDataGen1 =   paste0("Generate 3 groups with 20 random synthetic time series. ",
+                        "Every time series contains 101 time points. ",
+                        "Track IDs are unique across entire dataset."),
+  chBtrajRem =   paste0("Load CSV file with a column of track IDs for removal. ",
+                        "IDs should correspond to those used for plotting."),
+  chBstim =      paste0("Load CSV file with stimulation pattern. Should contain 5 columns: ",
+                        "grouping, start and end time points of stimulation, start and end of y-position, dummy column with ID."),
+  chBtrajInter = paste0("Interpolate missing measurements indicated with NAs in the data file. ",
+                        "In addition, interpolate a row that is completely missing from the data. ",
+                        "The interval of the time column must be provided to know which rows are missing."),
+  chBtrackUni =  paste0("If the track ID in the uploaded dataset is unique only within a group (e.g. an experimental condition), ",
+                        "make it unique by prepending other columns to the track ID (typically a grouping column)."), 
+  chBgroup    = "Select columns to group data according to treatment, condition, etc.",
+  inSelMath   = "Select math operation to perform on a single or two measurement columns,",
+  chBtimeTrim = "Trim time for further processing.",
+  chBnorm     = "Divide measurements by the mean/median or calculate z-score with respect to selected time span.",
+  rBnormMeth  = "Fold-change or z-score with respect to selected time span.",
+  slNormRtMinMax = "Normalise with respect to this time span.",
+  chBnormRobust  = "Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and standard deviation.",
+  chBnormGroup   = "Normalise to mean/median of selected time calculated globally, per group, or for individual time series.",
+  downloadDataClean = "Download all time series after modifications in this panel.",
+  alertNAsPresent            = "NAs present in the measurement column. Consider interpolation.",
   alertWideMissesNumericTime = "Non-numeric headers of time columns. Data in wide format should have numeric column headers corresponding to time points.",
-  alertWideTooFewColumns = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point."
+  alertWideTooFewColumns     = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point."
 )
 
 # Functions for data processing ----
@@ -345,11 +328,11 @@ LOCgenTraj2 <- function(n_perGroup = 20, sd_noise = 0.01, sampleFreq = 0.2, endT
               interval.stim = 5,
               lambda = 0.2,
               freq = 0.2,
-              end = 50)
+              end = 40)
     {
       require(data.table)
-      tvec <- seq(0, end - 1, by = freq)
-      stim_time <- seq(interval.stim, end - 1, interval.stim)
+      tvec <- seq(0, end, by = freq)
+      stim_time <- seq(interval.stim, end, interval.stim)
       stim_time_matrix <-
         matrix(stim_time, nrow = length(stim_time),
                ncol = n)
@@ -375,7 +358,7 @@ LOCgenTraj2 <- function(n_perGroup = 20, sd_noise = 0.01, sampleFreq = 0.2, endT
         }
       }
       trajs <- as.data.table(trajs)
-      trajs <- cbind(seq(0, end - 1, by = freq), trajs)
+      trajs <- cbind(seq(0, end, by = freq), trajs)
       colnames(trajs)[1] <- "Time"
       trajs <- melt(trajs, id.vars = "Time")
       return(trajs)
@@ -417,11 +400,11 @@ LOCgenTraj2 <- function(n_perGroup = 20, sd_noise = 0.01, sampleFreq = 0.2, endT
   dt3[, Group := "lowAmplitude"]
   
   dt <- rbindlist(list(dt1, dt2, dt3))
-  dt[, ID := paste(Group, variable, sep = "_")]
+  dt[, ID := sprintf("%s_%02d", Group, as.integer(gsub('[A-Z]', '', variable)))]
   dt[, variable := NULL]
   dt[, Group := as.factor(Group)]
   
-  dt[, value := value + runif(1, -0.1, 0.1), by = ID]
+  dt[, value := value + runif(1, -0.1, 0.1), by = .(Group, ID)]
   noise_vec <- rnorm(n = nrow(dt), mean = 0, sd = sd_noise)
   dt[, value := value + noise_vec]
   

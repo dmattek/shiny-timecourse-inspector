@@ -53,7 +53,7 @@ modTrackStats = function(input, output, session,
     if (is.null(loc.dt))
       return(NULL)
     
-    sprintf('<b>Total number of time-series: %d <br>Average length: %.2f time units</b>', 
+    sprintf('<b>Total number of time series: %d <br>Average length: %.2f time points</b>', 
             length(unique(loc.dt[[COLID]])), 
             loc.dt[, .(trackLength = .N), by = COLID][, mean(trackLength)])
     
@@ -78,7 +78,7 @@ modTrackStats = function(input, output, session,
                                                         'measIQR' = IQR(x, na.rm = T),
                                                         'meas_rCV_IQR' = IQR(x, na.rm = T)/median(x, na.rm = T))), .SDcols = COLY, by = c(in.bycols)]
     
-    setnames(loc.dt.aggr, c(in.bycols, '#NAs', 'Min', 'Max', 'Mean', 'SD', 'CV', 'Median', 'IQR', 'rCV'))
+    setnames(loc.dt.aggr, c(in.bycols, '#NAs', 'Min Y', 'Max Y', 'Mean Y', 'SD', 'CV', 'Median Y', 'IQR', 'rCV'))
     
     return(loc.dt.aggr)
   })
@@ -99,7 +99,7 @@ modTrackStats = function(input, output, session,
                                                    tracksLenMedian = median(as.double(nTpts)),
                                                    tracksLenIQR = IQR(nTpts)), by = c(in.bycols)]
     
-    setnames(loc.dt.aggr, c(in.bycols, 'nTracks', 'Mean', 'SD', 'Median', 'IQR'))
+    setnames(loc.dt.aggr, c(in.bycols, 'nTracks', 'Mean Length', 'SD', 'Median Length', 'IQR'))
     
     return(loc.dt.aggr)
   })
@@ -114,7 +114,9 @@ modTrackStats = function(input, output, session,
     
     if (nrow(loc.dt))
       datatable(loc.dt, 
-                caption = 'Statistics of time series: number of time series, mean/median and the spread of track lengths, SD - standard deviation, IQR - interquartile range.',
+                caption = paste0("Statistics of time series: number of time series, ",
+                                 "mean/median track length, ",
+                                 "SD - standard deviation, IQR - interquartile range."),
                 rownames = TRUE,
                 extensions = 'Buttons', 
                 options = list(
@@ -144,7 +146,11 @@ modTrackStats = function(input, output, session,
     
     if (nrow(loc.dt))
       datatable(loc.dt, 
-                caption = 'Statistics of measurements: number of NA time points, min/max/mean/median and the spread of the y-axis value. SD - standard deviation, CV - coefficient of variation, SD/mean; IQR - interquartile range, rCV - robust CV, IQR/median.',
+                caption = paste0("Statistics of measurements: number of NA time points, ",
+                                 "min/max/mean/median of the measurmeent selected for the Y-axis. ",
+                                 "SD - standard deviation; CV - coefficient of variation; ",
+                                 "SD/mean; IQR - interquartile range; ",
+                                 "rCV - robust CV, IQR/median."),
                 rownames = TRUE,
                 extensions = 'Buttons', 
                 options = list(
@@ -178,7 +184,9 @@ modTrackStats = function(input, output, session,
     
     if (nrow(loc.duptracks))
       datatable(loc.duptracks, 
-                caption = 'Track IDs with duplicated objects in a group. To avoid, create a data-wide unique track ID in the panel on the left or in your input data.',
+                caption = paste0("Track IDs with duplicated objects in a group. ",
+                                 "To avoid, create a data-wide unique track ID in ",
+                                 "the panel on the left or in your input data."),
                 rownames = TRUE,
                 extensions = 'Buttons', 
                 options = list(

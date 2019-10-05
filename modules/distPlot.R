@@ -72,7 +72,7 @@ modDistPlotUI =  function(id, label = "Plot distributions") {
     ),
     
     uiOutput(ns('uiPlotBox')),
-    downPlotUI(ns('downPlotBox'), "Download PDF")
+    downPlotUI(ns('downPlotBox'), "Download Plot")
   )
 }
 

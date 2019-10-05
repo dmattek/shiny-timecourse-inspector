@@ -12,24 +12,24 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
   tagList(
     fluidRow(
       column(
-        2,
+        3,
         radioButtons(ns('rBPSDmethod'), 'Method for PSD estimation:', list('Smoothed Fourier' = 'pgram', 'AR Fit' = 'ar')),
         checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
         actionButton(ns('butPlotTraj'), 'Plot!')
       ),
       column(
         2,
-        selectInput(ns('inPSDxchoice'), 'X-axis:', list('Period'= TRUE, 'Frequency'= FALSE)),
-        numericInput(ns('ninPSDsamplFreq'), '# time units between 2 points:', value = 1, min = 0, step = 1)
+        selectInput(ns('inPSDxchoice'), 'X-axis', list('Period'= TRUE, 'Frequency'= FALSE)),
+        numericInput(ns('ninPSDsamplFreq'), 'Time units between 2 points:', value = 1, min = 0, step = 1)
       ),
       column(
         2,
-        selectInput(ns('inPSDtransXtype'), 'Transform X-axis:', list('none' = 'none',
+        selectInput(ns('inPSDtransXtype'), 'Transform X', list('none' = 'none',
                                                                    '1/x'='inverse_trans', 
                                                                    'log2'= 'log2', 
                                                                    'log10'= 'log10', 
                                                                    'ln'= 'log')),
-        selectInput(ns('inPSDtransYtype'), 'Transform Y-axis:', list('none' = 'none',
+        selectInput(ns('inPSDtransYtype'), 'Transform Y', list('none' = 'none',
                                                                    '1/y'='inverse_trans', 
                                                                    'log2'= 'log2', 
                                                                    'log10'= 'log10', 
@@ -39,7 +39,7 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
         2,
         numericInput(
           ns('inPlotTrajWidth'),
-          'Width [%]:',
+          'Width [%]',
           value = 100,
           min = 10,
           width = '100px',
@@ -47,7 +47,7 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
         ),
         numericInput(
           ns('inPlotTrajHeight'),
-          'Height [px]:',
+          'Height [px]',
           value = PLOTPSDHEIGHT,
           min = 100,
           width = '100px',
@@ -56,7 +56,7 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
       )
     ),
     uiOutput(ns('uiPlotTraj')),
-    downPlotUI(ns('downPlotTraj'), "Download PDF")
+    downPlotUI(ns('downPlotTraj'), "Download Plot")
   )
 }
 

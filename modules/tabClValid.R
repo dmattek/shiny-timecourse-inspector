@@ -35,7 +35,7 @@ helpText.clValid = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calcul
                                          "<p><b>Stability validation</b>, is a special version of internal validation. ",
                                          "It evaluates the consistency of a clustering result by comparing it with the clusters obtained ",
                                          "after each column is removed, one at a time.</p>"),
-                    outPlotWss = "Weighted squared sum...",
+                    outPlotWss = "Within squared sum...",
                     outPlotSilhAvg = "Average...",
                     outPlotTree = "Dendrogram...",
                     outPlotSilhForCut = "Silhouette plot at dendrogram cut...")
@@ -51,6 +51,7 @@ clustValidUI <- function(id, label = "Validation") {
     br(),
     br(),
     fluidRow(
+
       column(3,
              selectInput(
                ns("selectDiss"),

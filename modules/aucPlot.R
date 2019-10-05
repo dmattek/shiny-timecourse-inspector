@@ -67,7 +67,7 @@ modAUCplotUI =  function(id, label = "Plot AUC distributions") {
     ),
     
     uiOutput(ns('uiPlotBox')),
-    downPlotUI(ns('downPlotBox'), "Download PDF")
+    downPlotUI(ns('downPlotBox'), "Download Plot")
   )
 }
 

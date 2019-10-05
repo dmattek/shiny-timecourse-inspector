@@ -14,7 +14,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
   tagList(
     fluidRow(
       column(
-        2,
+        3,
         numericInput(
           ns('inPlotTrajFacetNcol'),
           '#columns',
@@ -37,7 +37,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point', 
                     min = 1, max = 10, value = 1, step = 1),
         
-        checkboxInput(ns('chBsetXbounds'), 'Set bounds for x-axis', FALSE),
+        checkboxInput(ns('chBsetXbounds'), 'Bounds for X', FALSE),
         fluidRow(
           column(6,
                  uiOutput(ns('uiSetXboundsLow'))
@@ -46,7 +46,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
                  uiOutput(ns('uiSetXboundsHigh'))
           )),
         
-        checkboxInput(ns('chBsetYbounds'), 'Set bounds for y-axis', FALSE),
+        checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
         fluidRow(
           column(6,
                  uiOutput(ns('uiSetYboundsLow'))
@@ -79,7 +79,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
     uiOutput(ns('uiPlotTraj')),
     br(),
     modTrackStatsUI(ns('dispTrackStats')),
-    downPlotUI(ns('downPlotTraj'), "Download PDF")
+    downPlotUI(ns('downPlotTraj'), "Download Plot")
   )
 }
 

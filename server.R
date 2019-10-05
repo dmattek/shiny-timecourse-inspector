@@ -74,7 +74,7 @@ shinyServer(function(input, output, session) {
     if (DEB)
       cat("server:dataGen1\n")
     
-    return(LOCgenTraj2())
+    return(LOCgenTraj2(n_perGroup = 20, sd_noise = 0.01, sampleFreq = 0.4, endTime = 40))
   })
   
   # Load main data file
@@ -139,7 +139,7 @@ shinyServer(function(input, output, session) {
     if(input$chBtrajRem) 
       fileInput(
         'inFileLoadTrajRem',
-        'Select file and press "Load Data"',
+        "Select file and click Load Data",
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       )
   })
@@ -160,7 +160,7 @@ shinyServer(function(input, output, session) {
     if(input$chBstim) 
       fileInput(
         'inFileLoadStim',
-        'Select file and press "Load Data"',
+        "Select file and click Load Data",
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       )
   })
@@ -185,7 +185,7 @@ shinyServer(function(input, output, session) {
     
     selectInput(
       'inSelTrackLabel',
-      'Track ID column:',
+      'Track ID column',
       locCols,
       width = '100%',
       selected = locColSel
@@ -201,7 +201,7 @@ shinyServer(function(input, output, session) {
     
     selectInput(
       'inSelTime',
-      'Time column:',
+      'Time column',
       locCols,
       width = '100%',
       selected = locColSel
@@ -215,7 +215,7 @@ shinyServer(function(input, output, session) {
     if (input$chBtrajInter) {
       numericInput(
         'inSelTimeFreq',
-        'Interval between two time points:',
+        'Interval between 2 time points',
         min = 1,
         step = 1,
         width = '100%',
@@ -242,7 +242,7 @@ shinyServer(function(input, output, session) {
         #cat('UI varSelGroup::locColSel ', locColSel, '\n')
         selectInput(
           'inSelGroup',
-          'Group column:',
+          'Grouping columns',
           locCols,
           width = '100%',
           selected = locColSel,
@@ -264,7 +264,7 @@ shinyServer(function(input, output, session) {
       
       selectInput(
         'inSelSite',
-        'Columns to add to track ID:',
+        'Prepend track ID with',
         locCols,
         width = '100%',
         selected = locColSel,
@@ -284,7 +284,7 @@ shinyServer(function(input, output, session) {
 
       selectInput(
         'inSelMeas1',
-        'Column with 1st measurement:',
+        '1st measurement column',
         locCols,
         width = '100%',
         selected = locColSel
@@ -305,7 +305,7 @@ shinyServer(function(input, output, session) {
 
       selectInput(
         'inSelMeas2',
-        'Column with 2nd measurement',
+        '2nd measurement column',
         locCols,
         width = '100%',
         selected = locColSel
@@ -329,7 +329,7 @@ shinyServer(function(input, output, session) {
       
       sliderInput(
         'slTimeTrim',
-        label = 'Time range to include',
+        label = 'Use time range',
         min = locRTmin,
         max = locRTmax,
         value = c(locRTmin, locRTmax),

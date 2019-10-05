@@ -23,7 +23,7 @@ shinyUI(fluidPage(
       #Selector for file upload
       fileInput(
         'inFileLoadNuc',
-        'Select data file and click "Load Data"',
+        "Select data file and click Load Data",
         accept = c('text/csv', 'text/comma-separated-values,text/plain')
       ),
 
@@ -64,8 +64,8 @@ shinyUI(fluidPage(
 
       uiOutput('varSelTrackLabel'),
       
-      checkboxInput('chBgroup', 'Columns for plot grouping', F),                
-      bsTooltip('chBgroup', helpText.server[8], placement = "top", trigger = "hover", options = NULL),
+      checkboxInput('chBgroup', 'Group data', F),                
+      bsTooltip('chBgroup', helpText.server[["chBgroup"]], placement = "top", trigger = "hover", options = NULL),
 
       uiOutput('varSelGroup'),
       uiOutput('varSelTime'),
@@ -82,17 +82,17 @@ shinyUI(fluidPage(
           '1 / X' = '1 / '
         )
       ),
-      bsTooltip('inSelMath', helpText.server[9], placement = "top", trigger = "hover", options = NULL),
+      bsTooltip('inSelMath', helpText.server[["inSelMath"]], placement = "top", trigger = "hover", options = NULL),
       
       uiOutput('varSelMeas2'),
       
       tags$hr(),
-      checkboxInput('chBtimeTrim', 'Trim x-axis', FALSE),
-      bsTooltip('chBtimeTrim', helpText.server[10], placement = "top", trigger = "hover", options = NULL),
+      checkboxInput('chBtimeTrim', 'Trim X-axis', FALSE),
+      bsTooltip('chBtimeTrim', helpText.server[["chBtimeTrim"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('uiSlTimeTrim'),
 
       checkboxInput('chBnorm', 'Normalization', FALSE),
-      bsTooltip('chBnorm', helpText.server[11], placement = "top", trigger = "hover", options = NULL),
+      bsTooltip('chBnorm', helpText.server[["chBnorm"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('uiChBnorm'),
       uiOutput('uiSlNorm'),
       uiOutput('uiChBnormRobust'),
@@ -100,7 +100,7 @@ shinyUI(fluidPage(
 
       tags$hr(),
       downloadButton('downloadDataClean', 'Download processed data'),
-      bsTooltip('downloadDataClean', helpText.server[16], placement = "top", trigger = "hover", options = NULL)
+      bsTooltip('downloadDataClean', helpText.server[["downloadDataClean"]], placement = "top", trigger = "hover", options = NULL)
     ),
     
     mainPanel(

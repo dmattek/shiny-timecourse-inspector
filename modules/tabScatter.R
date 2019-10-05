@@ -84,7 +84,7 @@ tabScatterPlotUI <- function(id, label = "Comparing measurements at time points"
                   value = FALSE),
     actionButton(ns('butGoScatter'), 'Plot!'),
     uiOutput(ns("plotInt_ui")),
-    downPlotUI(ns('downPlotScatter'), "Download PDF")
+    downPlotUI(ns('downPlotScatter'), "Download Plot")
   )
 }
 

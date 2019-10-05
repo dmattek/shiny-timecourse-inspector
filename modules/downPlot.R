@@ -19,28 +19,41 @@ downPlotUI <- function(id, label = "Download Plot") {
     h4(label),
     
     fluidRow(
+      # CSS to make label next to text input
+      # From: https://stackoverflow.com/a/45299050/1898713
+      tags$head(
+        tags$style(type="text/css", 
+        "#inline label{ display: table-cell; text-align: center; vertical-align: middle; } #inline .form-group { display: table-row;}")
+      ),
+      
+
+      column(3,
+             uiOutput(ns('uiDownButton'))
+             ),
       column(
         3,
-        numericInput(
-          ns('inPlotWidth'),
-          "Width (in)",
-          8.5,
-          min = 1,
-          width = 100
+        tags$div(id = "inline", 
+                 numericInput(
+                   ns('inPlotWidth'),
+                   "Width [in]",
+                   8.5,
+                   min = 1,
+                   width = 100
+                   )
         )
       ),
       column(
         3,
-        numericInput(
-          ns('inPlotHeight'),
-          "Height (in)",
-          11,
-          min = 1,
-          width = 100
+        tags$div(id = "inline", 
+                 numericInput(
+                   ns('inPlotHeight'),
+                   "Height [in]",
+                   11,
+                   min = 1,
+                   width = 100
+                 )
         )
-      ),
-      column(6,
-             uiOutput(ns('uiDownButton')))
+      )
     )
   )
 }
