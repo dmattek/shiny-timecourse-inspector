@@ -23,7 +23,9 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
   tagList(
     h4(
       "Sparse hierarchical clustering using ",
-      a("sparcl", href = "https://cran.r-project.org/web/packages/sparcl/")
+      a("sparcl", 
+        href = "https://cran.r-project.org/web/packages/sparcl/",
+        title="External link")
     ),
     p("Columns in the heatmap labeled according to their ",
       actionLink(ns("alImportance"), "importance.")),
