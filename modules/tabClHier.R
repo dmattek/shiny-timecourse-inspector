@@ -5,15 +5,9 @@
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
 helpText.clHier = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calculate the distance. ",
-                                                "NAs and missing data can be interpolated by activating the option in the left panel. ",
-                                                "If outlier points were removed, activate \"Interpolate gaps\" or ",
-                                                "decrease the threshold for maximum allowed gap length. ",
-                                                "The latter will result in entire trajectories with outliers being removed."),
-                    alertNAsPresent = paste0("NAs present. The selected distance measure will work with missing data, ",
-                                             "however caution is recommended. NAs and missing data can be interpolated by activating the option in the left panel. ",
-                                             "If outlier points were removed, activate \"Interpolate gaps\" or ",
-                                             "decrease the threshold for maximum allowed gap length. ",
-                                             "The latter will result in entire trajectories with outliers being removed."))
+                                                "Consider interpolation of NAs and missing data in the left panel."),
+                    alertNAsPresent = paste0("NAs present. The selected distance measure will work, ",
+                                             "however caution is recommended. Consider interpolation of NAs and missing data the left panel."))
 
 
 # UI ----
