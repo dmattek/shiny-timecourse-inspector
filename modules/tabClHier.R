@@ -23,9 +23,13 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
   tagList(
     h4('Hierarchical clustering'),
     p("Standard approach using R's ",
-      a("dist", href = "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/dist.html"),
+      a("dist", 
+        href = "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/dist.html",
+        title="External link"),
       " and ",
-      a("hclust", href = "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/hclust.html"),
+      a("hclust", 
+        href = "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/hclust.html",
+        title="External link"),
       " functions."),
     br(),
     fluidRow(
