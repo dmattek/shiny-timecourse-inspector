@@ -14,31 +14,31 @@ helpText.clValid = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calcul
                                              "If outlier points were removed, activate \"Interpolate gaps\" or ",
                                              "decrease the threshold for maximum allowed gap length. ",
                                              "The latter will result in entire trajectories with outliers being removed."),
-                    alLearnMore = paste0("<p><a href=http://www.sthda.com/english/wiki/print.php?id=241>Clustering</a> is an <b>unsupervised</b> machine learning method for partitioning ",
+                    alLearnMore = paste0("<p><a href=http://www.sthda.com/english/wiki/print.php?id=241 title=\"External link\">Clustering</a> ",
+                                         "is an <b>unsupervised</b> machine learning method for partitioning ",
                                          "dataset into a set of groups or clusters. The procedure will return clusters ",
                                          "even if the data <b>does not</b> contain any! ",
                                          "Therefore, it’s necessary to ",
                                          "assess clustering tendency before the analysis, and ",
-                                         "validate the quality of the result after clustering.<p>",
-                                         "<p><b>Relative validation</b>, evaluates the clustering structure ",
-                                         "by varying different parameter values for the same algorithm ",
-                                         "(e.g. varying the number of clusters <i>k</i>). Typically used for ",
-                                         "determining the optimal number of clusters.</p>",
-                                         "<p><b>Internal validation</b>, uses the internal information of the clustering process ",
-                                         "to evaluate the goodness of a clustering structure without reference to external information. ",
-                                         "It can be also used for estimating the number of clusters and the appropriate clustering algorithm ",
-                                         "without any external data.</p>",
-                                         "<p><b>External validation</b>, compares the results of a cluster analysis ",
-                                         "to an externally known result, such as externally provided class labels. ",
-                                         "Since we know the “true” cluster number in advance, ",
-                                         "this approach is mainly used for selecting the right clustering algorithm for a specific dataset.</p>",
-                                         "<p><b>Stability validation</b>, is a special version of internal validation. ",
-                                         "It evaluates the consistency of a clustering result by comparing it with the clusters obtained ",
-                                         "after each column is removed, one at a time.</p>"),
-                    outPlotWss = "Within squared sum...",
-                    outPlotSilhAvg = "Average...",
-                    outPlotTree = "Dendrogram...",
-                    outPlotSilhForCut = "Silhouette plot at dendrogram cut...")
+                                         "validate the quality of the result after clustering.<p>"
+                                         ),
+                    alLearnMoreRel = paste0("<p>Determine the optimal number of clusters by inspecting ",
+                                            "the average silhouette width and the total within cluster sum of squares (WSS) ",
+                                            "for a range of cluster numbers.</p>", 
+                                            "<p><b>Silhouette analysis</b> estimates the average distance between clusters. ",
+                                            "Larger silhouette widths indicate better.<p>",
+                                            "<p><b>WSS</b> evaluates the compactness of clusters. ",
+                                            "Compact clusters achieve low WSS values. ",
+                                            "Look for the <i>knee</i> in the plot of WSS as function of cluster numbers.</p>"),
+                    alLearnMoreInt = paste0("<p>Evaluate the goodness of a clustering structure by inspecting <b>the dendrogram</b> ",
+                                            "and <b>the silhouette</b> for a given number of clusters.</p>",
+                                            "<p>The height of dendrogram branches indicates how well clusters are separated.</p>",
+                                            "<p>The silhouette plot displays how close each time series in one cluster ", 
+                                            "is to time series in the neighboring clusters. ",
+                                            "A large positive silhouette (Si) indicates time series that are well clustered.",
+                                            "A negative Si indicates time series that are closer to ",
+                                            "a neighboring cluster, and are placed in the wrong cluster.</p>")
+                    )
 
 
 # UI ----
@@ -46,7 +46,12 @@ clustValidUI <- function(id, label = "Validation") {
   ns <- NS(id)
   
   tagList(
-    h4('Cluster validation'),
+    h4(
+      "Cluster validation using ",
+      a("factoextra", 
+        href="https://cran.r-project.org/web/packages/factoextra/",
+        title="External link")
+    ),
     actionLink(ns("alLearnMore"), "Learn more"),
     br(),
     br(),
@@ -87,6 +92,8 @@ clustValidUI <- function(id, label = "Validation") {
     tabsetPanel(
       tabPanel("Relative",
                br(),
+               p("Determine and visualise the optimal number of clusters. ",
+                 actionLink(ns("alLearnMoreRel"), "Learn more")),
                fluidRow(
                  column(2, 
                         actionButton(ns('butPlotRel'), 'Validate!')
@@ -94,7 +101,7 @@ clustValidUI <- function(id, label = "Validation") {
                  column(6,
                         sliderInput(
                           ns('slClValidMaxClust'),
-                          'Maximum number of clusters to validate',
+                          'Maximum number of clusters to consider',
                           min = 2,
                           max = 20,
                           value = 10,
@@ -106,16 +113,14 @@ clustValidUI <- function(id, label = "Validation") {
                ),
                br(),
                withSpinner(plotOutput(ns('outPlotSilhAvg'))),
-               bsTooltip(ns('outPlotSilhAvg'), helpText.clValid[["outPlotSilhAvg"]], 
-                         placement = "top", trigger = "hover", options = NULL),
                br(),
-               withSpinner(plotOutput(ns('outPlotWss'))),
-               bsTooltip(ns('outPlotWss'), helpText.clValid[["outPlotWss"]], 
-                         placement = "top", trigger = "hover", options = NULL)
+               withSpinner(plotOutput(ns('outPlotWss')))
                
       ),
       tabPanel("Internal",
                br(),
+               p("Validate a given data partitioning. ",
+                 actionLink(ns("alLearnMoreInt"), "Learn more")),
                fluidRow(
                  column(2,
                         actionButton(ns('butPlotInt'), 'Validate!')
@@ -135,12 +140,10 @@ clustValidUI <- function(id, label = "Validation") {
                ),
                br(),
                withSpinner(plotOutput(ns('outPlotTree'))),
-               bsTooltip(ns('outPlotTree'), helpText.clValid[["outPlotTree"]], 
-                         placement = "top", trigger = "hover", options = NULL),
                br(),
-               withSpinner(plotOutput(ns('outPlotSilhForCut'))),
-               bsTooltip(ns('outPlotSilhForCut'), helpText.clValid[["outPlotSilhForCut"]], 
-                         placement = "top", trigger = "hover", options = NULL)
+               #withSpinner(plotOutput(ns('outPlotClPCA'))),
+               br(),
+               withSpinner(plotOutput(ns('outPlotSilhForCut')))
       )
     )
   )
@@ -205,6 +208,7 @@ clustValid <- function(input, output, session, in.data4clust) {
                    hc_method = input$selectLinkage, hc_metric = input$selectDiss))
   })
   
+  # Plotting ----
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
@@ -224,7 +228,12 @@ clustValid <- function(input, output, session, in.data4clust) {
                        verbose = TRUE, 
                        k.max = input$slClValidMaxClust,
                        hc_metric = input$selectDiss,
-                       hc_method = input$selectLinkage)
+                       hc_method = input$selectLinkage) +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND)
     return(loc.p)
   }
 
@@ -243,22 +252,50 @@ clustValid <- function(input, output, session, in.data4clust) {
                        verbose = TRUE, 
                        k.max = input$slClValidMaxClust,
                        hc_metric = input$selectDiss,
-                       hc_method = input$selectLinkage)
+                       hc_method = input$selectLinkage) +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND)
     
     return(loc.p)
   }
-  
 
   # plot dendrogram tree
   plotTree <- function() {
     
-    loc.dend = calcDendCut()
+    loc.part = calcDendCut()
     
-    if (is.null(loc.dend)) {
+    if (is.null(loc.part)) {
       return(NULL)
     }
     
-    loc.p = factoextra::fviz_dend(x = loc.dend, k = input$slClValidNclust)
+    loc.p = factoextra::fviz_dend(x = loc.part, 
+                                  show_labels = F,
+                                  rect = T,
+                                  xlab = "Time series",
+                                  k = input$slClValidNclust) +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND)
+    
+    return(loc.p)
+  }
+  
+  
+  # PCA visualization of partitioning methods 
+  plotClPCA <- function() {
+    
+    loc.part = calcDendCut()
+    
+    if (is.null(loc.part)) {
+      return(NULL)
+    }
+    
+    loc.p = factoextra::fviz_cluster(object = loc.part, ellipse.type = "convex")
     
     return(loc.p)
   }
@@ -266,21 +303,26 @@ clustValid <- function(input, output, session, in.data4clust) {
   # plot silhouetts for a particular dendrogram cut
   plotSilhForCut <- function() {
     
-    loc.dmdist = userFitDistHier()
-    loc.dend = LOChcut(x = loc.dmdist, 
-                       k = input$slClValidNclust, 
-                       hc_func = "hclust", 
-                       hc_method = input$selectLinkage, hc_metric = input$selectDiss)
+    loc.part = calcDendCut()
     
-    if (is.null(loc.dend)) {
+    if (is.null(loc.part)) {
       return(NULL)
     }
     
-    loc.p = factoextra::fviz_silhouette(sil.obj = loc.dend, print.summary = FALSE)
+    loc.p = factoextra::fviz_silhouette(sil.obj = loc.part, 
+                                        print.summary = FALSE) +
+      xlab("Time series") +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND) +
+      theme(axis.text.x = element_blank())
     
     return(loc.p)
   }
   
+  # Plot rendering ----
   # Display silhouette
   output$outPlotSilhAvg <- renderPlot({
     locBut = input$butPlotRel
@@ -339,6 +381,18 @@ clustValid <- function(input, output, session, in.data4clust) {
              ns("alLearnMore"),
              title = "Classes of cluster validation",
              content = helpText.clValid[["alLearnMore"]],
+             trigger = "click")
+  
+  addPopover(session, 
+             ns("alLearnMoreRel"),
+             title = "Relative validation",
+             content = helpText.clValid[["alLearnMoreRel"]],
+             trigger = "click")
+  
+  addPopover(session, 
+             ns("alLearnMoreInt"),
+             title = "Internal validation",
+             content = helpText.clValid[["alLearnMoreInt"]],
              trigger = "click")
 }
 
