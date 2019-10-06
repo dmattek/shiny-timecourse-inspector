@@ -4,16 +4,8 @@
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
-helpText.clValid = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calculate the distance. ",
-                                                "NAs and missing data can be interpolated by activating the option in the left panel. ",
-                                                "If outlier points were removed, activate \"Interpolate gaps\" or ",
-                                                "decrease the threshold for maximum allowed gap length. ",
-                                                "The latter will result in entire trajectories with outliers being removed."),
-                    alertNAsPresent = paste0("NAs present. The selected distance measure will work with missing data, ",
-                                             "however caution is recommended. NAs and missing data can be interpolated by activating the option in the left panel. ",
-                                             "If outlier points were removed, activate \"Interpolate gaps\" or ",
-                                             "decrease the threshold for maximum allowed gap length. ",
-                                             "The latter will result in entire trajectories with outliers being removed."),
+helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected distance measure will work, ",
+                                              "however caution is recommended. Consider interpolation of NAs and missing data in the left panel."),
                     alLearnMore = paste0("<p><a href=http://www.sthda.com/english/wiki/print.php?id=241 title=\"External link\">Clustering</a> ",
                                          "is an <b>unsupervised</b> machine learning method for partitioning ",
                                          "dataset into a set of groups or clusters. The procedure will return clusters ",
@@ -30,8 +22,12 @@ helpText.clValid = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calcul
                                             "<p><b>WSS</b> evaluates the compactness of clusters. ",
                                             "Compact clusters achieve low WSS values. ",
                                             "Look for the <i>knee</i> in the plot of WSS as function of cluster numbers.</p>"),
-                    alLearnMoreInt = paste0("<p>Evaluate the goodness of a clustering structure by inspecting <b>the dendrogram</b> ",
-                                            "and <b>the silhouette</b> for a given number of clusters.</p>",
+                    alLearnMoreInt = paste0("<p>Evaluate the goodness of a clustering structure by inspecting ",
+                                            "principle components, the dendrogram, ",
+                                            "and the silhouette for a given number of clusters.</p>",
+                                            "<p>Each point in the scatter plot of 2 principle components corresponds to a single time series. ",
+                                            "Points are coloured by cluster numbers. Compact, well separated clusters ",
+                                            "indicate good partitioning.</p>",
                                             "<p>The height of dendrogram branches indicates how well clusters are separated.</p>",
                                             "<p>The silhouette plot displays how close each time series in one cluster ", 
                                             "is to time series in the neighboring clusters. ",
@@ -57,20 +53,19 @@ clustValidUI <- function(id, label = "Validation") {
     br(),
     fluidRow(
 
-      column(3,
+      column(4,
              selectInput(
                ns("selectDiss"),
                label = ("Dissimilarity measure"),
                choices = list("Euclidean" = "euclidean",
                               "Manhattan" = "manhattan",
                               "Maximum"   = "maximum",
-                              "Canberra"  = "canberra",
-                              "DTW"       = "DTW"),
-               selected = 1
+                              "Canberra"  = "canberra"),
+               selected = "euclidean"
              ),
-             bsAlert("alertAnchorClHierNAsPresent")
+             bsAlert("alertAnchorClValidNAsPresent")
              ),
-      column(3,
+      column(4,
              selectInput(
                ns("selectLinkage"),
                label = ("Linkage method"),
@@ -83,7 +78,7 @@ clustValidUI <- function(id, label = "Validation") {
                  "Ward D2"  = "ward.D2",
                  "McQuitty" = "mcquitty"
                ),
-               selected = 2
+               selected = "average"
                )
              )
     ),
@@ -128,7 +123,7 @@ clustValidUI <- function(id, label = "Validation") {
                  column(6,
                         sliderInput(
                           ns('slClValidNclust'),
-                          'Number of dendrogram branches to cut',
+                          'Number of clusters to evaluate',
                           min = 2,
                           max = 20,
                           value = 1,
@@ -139,9 +134,9 @@ clustValidUI <- function(id, label = "Validation") {
                         )
                ),
                br(),
-               withSpinner(plotOutput(ns('outPlotTree'))),
+               withSpinner(plotOutput(ns('outPlotClPCA'))),
                br(),
-               #withSpinner(plotOutput(ns('outPlotClPCA'))),
+               withSpinner(plotOutput(ns('outPlotTree'))),
                br(),
                withSpinner(plotOutput(ns('outPlotSilhForCut')))
       )
@@ -168,23 +163,14 @@ clustValid <- function(input, output, session, in.data4clust) {
     # Throw some warnings if NAs present in the dataset.
     # DTW cannot compute distance when NA's are preset.
     # Other distance measures can be calculated but caution is required with interpretation.
+    print(sum(is.na(loc.dm)))
     if(sum(is.na(loc.dm)) > 0) {
-      if (input$selectPlotHierDiss == "DTW") {
-        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentDTW", title = "Error",
-                    content = helpText.clHier[["alertNAsPresentDTW"]], 
-                    append = FALSE,
-                    style = "danger")
-        return(NULL)
-      } else {
-        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresent", title = "Warning",
-                    content = helpText.clHier[["alertNAsPresent"]], 
+        createAlert(session, "alertAnchorClValidNAsPresent", "alertClValidNAsPresent", title = "Warning",
+                    content = helpText.clValid[["alertClValidNAsPresent"]], 
                     append = FALSE, 
                     style = "warning")
-        closeAlert(session, 'alertNAsPresentDTW')
-      }
     } else {
-      closeAlert(session, 'alertNAsPresentDTW')
-      closeAlert(session, 'alertNAsPresent')
+      closeAlert(session, 'alertClValidNAsPresent')
     }
     
     # calculate distance matrix
@@ -196,16 +182,49 @@ clustValid <- function(input, output, session, in.data4clust) {
   calcDendCut = reactive({
     cat(file = stderr(), 'clustValid:calcDendCut \n')
     
-    loc.dmdist = userFitDistHier()
+    loc.dm = returnDMwithChecks()
     
-    if (is.null(loc.dmdist)) {
+    if (is.null(loc.dm)) {
       return(NULL)
     }
     
-    return(LOChcut(x = loc.dmdist, 
-                   k = input$slClValidNclust, 
-                   hc_func = "hclust", 
-                   hc_method = input$selectLinkage, hc_metric = input$selectDiss))
+    return(factoextra::eclust(x = loc.dm, 
+                              FUNcluster = "hclust",
+                              k = input$slClValidNclust, 
+                              hc_method = input$selectLinkage, 
+                              hc_metric = input$selectDiss,
+                              graph = FALSE))
+  })
+  
+  # Return a matrix with time series in wide format
+  # If data contains NAs (from explicit NAs or due to missing time points, 
+  # or due to missing time points after outlier removal),
+  # some warnings are thrown. E.g. DTW cannot caluclate distance if NAs are present.
+  returnDMwithChecks = reactive({
+    cat(file = stderr(), 'clustValid:returnDMwithChecks \n')
+    
+    loc.dm = in.data4clust()
+    
+    if (is.null(loc.dm)) {
+      return(NULL)
+    }
+    
+    # Throw some warnings if NAs present in the dataset.
+    # DTW cannot compute distance when NA's are preset.
+    # Other distance measures can be calculated but caution is required with interpretation.
+    print(sum(is.na(loc.dm)))
+    
+    if(sum(is.na(loc.dm)) > 0) {
+        createAlert(session, "alertAnchorClValidNAsPresent", "alertClValidNAsPresent", 
+                    title = "Warning",
+                    content = helpText.clValid[["alertClValidNAsPresent"]], 
+                    append = FALSE, 
+                    style = "warning")
+    } else {
+      closeAlert(session, 'alertClValidNAsPresent')
+    }
+    
+    return(loc.dm)
   })
   
   # Plotting ----
@@ -216,19 +235,27 @@ clustValid <- function(input, output, session, in.data4clust) {
   # plot average silhouette
   plotSilhAvg <- function() {
 
-    loc.dmdist = userFitDistHier()
-    
-    if (is.null(loc.dmdist)) {
+    locBut = input$butPlotRel
+    if (locBut == 0) {
+      cat(file = stderr(), 'plotSilhAvg: Go button not pressed\n')
+      
       return(NULL)
     }
     
-    loc.p = LOCnbclust(x = loc.dmdist, 
-                       FUNcluster = LOChcut,  
-                       method = "silhouette", 
-                       verbose = TRUE, 
-                       k.max = input$slClValidMaxClust,
-                       hc_metric = input$selectDiss,
-                       hc_method = input$selectLinkage) +
+    loc.dm = returnDMwithChecks()
+    if (is.null(loc.dm)) {
+      return(NULL)
+    }
+    
+    loc.p = factoextra::fviz_nbclust(loc.dm,
+                                     hcut, 
+                                     method = "silhouette",
+                                     k.max = input$slClValidMaxClust,
+                                     hc_metric = input$selectDiss,
+                                     hc_method = input$selectLinkage) +
+      xlab("Number of clusters") +
+      ylab("Average silhouette width") +
+      ggtitle("Optimal number of clusters from silhouette analysis") +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
@@ -240,19 +267,27 @@ clustValid <- function(input, output, session, in.data4clust) {
   # plot Ws
   plotWss <- function() {
     
-    loc.dmdist = userFitDistHier()
-    
-    if (is.null(loc.dmdist)) {
+    locBut = input$butPlotRel
+    if (locBut == 0) {
+      cat(file = stderr(), 'plotWss: Go button not pressed\n')
+      
       return(NULL)
     }
     
-    loc.p = LOCnbclust(x = loc.dmdist, 
-                       FUNcluster = LOChcut,  
-                       method = "wss", 
-                       verbose = TRUE, 
-                       k.max = input$slClValidMaxClust,
-                       hc_metric = input$selectDiss,
-                       hc_method = input$selectLinkage) +
+    loc.dm = returnDMwithChecks()
+    if (is.null(loc.dm)) {
+      return(NULL)
+    }
+    
+    loc.p = factoextra::fviz_nbclust(loc.dm,
+                                     hcut, 
+                                     method = "wss",
+                                     k.max = input$slClValidMaxClust,
+                                     hc_metric = input$selectDiss,
+                                     hc_method = input$selectLinkage) +
+      xlab("Number of clusters") +
+      ylab("Total within cluster sum of squares") +
+      ggtitle("Within cluster sum of squares for different cluster numbers") +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
@@ -265,17 +300,23 @@ clustValid <- function(input, output, session, in.data4clust) {
   # plot dendrogram tree
   plotTree <- function() {
     
-    loc.part = calcDendCut()
+    locBut = input$butPlotInt
+    if (locBut == 0) {
+      cat(file = stderr(), 'plotTree: Go button not pressed\n')
+      
+      return(NULL)
+    }
     
+    loc.part = calcDendCut()
     if (is.null(loc.part)) {
       return(NULL)
     }
     
-    loc.p = factoextra::fviz_dend(x = loc.part, 
+    loc.p = factoextra::fviz_dend(loc.part, 
                                   show_labels = F,
                                   rect = T,
-                                  xlab = "Time series",
-                                  k = input$slClValidNclust) +
+                                  xlab = "Time series", 
+                                  main = "Dendrogram") +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
@@ -289,13 +330,23 @@ clustValid <- function(input, output, session, in.data4clust) {
   # PCA visualization of partitioning methods 
   plotClPCA <- function() {
     
-    loc.part = calcDendCut()
+    locBut = input$butPlotInt
+    if (locBut == 0) {
+      cat(file = stderr(), 'plotClPCA: Go button not pressed\n')
+      
+      return(NULL)
+    }
     
+    loc.part = calcDendCut()
     if (is.null(loc.part)) {
       return(NULL)
     }
     
-    loc.p = factoextra::fviz_cluster(object = loc.part, ellipse.type = "convex")
+    loc.p = factoextra::fviz_cluster(loc.part, 
+                                     geom = "point",
+                                     elipse.type = "norm", 
+                                     main = "Principle components"
+                                     )
     
     return(loc.p)
   }
@@ -303,14 +354,21 @@ clustValid <- function(input, output, session, in.data4clust) {
   # plot silhouetts for a particular dendrogram cut
   plotSilhForCut <- function() {
     
-    loc.part = calcDendCut()
+    locBut = input$butPlotInt
+    if (locBut == 0) {
+      cat(file = stderr(), 'plotSilhForCut: Go button not pressed\n')
+      
+      return(NULL)
+    }
     
+    loc.part = calcDendCut()
     if (is.null(loc.part)) {
       return(NULL)
     }
     
-    loc.p = factoextra::fviz_silhouette(sil.obj = loc.part, 
-                                        print.summary = FALSE) +
+    loc.p = factoextra::fviz_silhouette(loc.part, 
+                                        print.summary = FALSE, 
+                                        main = "Silhouette") +
       xlab("Time series") +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
@@ -325,55 +383,72 @@ clustValid <- function(input, output, session, in.data4clust) {
   # Plot rendering ----
   # Display silhouette
   output$outPlotSilhAvg <- renderPlot({
-    locBut = input$butPlotRel
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotSilhAvg: Go button not pressed\n')
-      
+    loc.p = plotSilhAvg()
+    if(is.null(loc.p))
       return(NULL)
-    }
     
-    plotSilhAvg()
+    return(loc.p)
   })
 
   
   # Display wss
   output$outPlotWss <- renderPlot({
-    locBut = input$butPlotRel
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotWss: Go button not pressed\n')
-      
+    loc.p = plotWss()
+    if(is.null(loc.p))
       return(NULL)
-    }
     
-    plotWss()
+    return(loc.p)
+  })
+  
+  # Display PCA of clustering
+  output$outPlotClPCA <- renderPlot({
+    # This is required to avoid
+    # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
+    # When running on a server. Based on:
+    # https://github.com/ropensci/plotly/issues/494
+    # if (names(dev.cur()) != "null device")
+    #   dev.off()
+    # pdf(NULL)
+    
+    loc.p = plotClPCA()
+    if(is.null(loc.p))
+      return(NULL)
+    
+    return(loc.p)
   })
   
   # Display tree
   output$outPlotTree <- renderPlot({
-    locBut = input$butPlotInt
+    # This is required to avoid
+    # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
+    # When running on a server. Based on:
+    # https://github.com/ropensci/plotly/issues/494
+    # if (names(dev.cur()) != "null device")
+    #   dev.off()
+    # pdf(NULL)
     
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotTree: Go button not pressed\n')
-      
+    loc.p = plotTree()
+    if(is.null(loc.p))
       return(NULL)
-    }
     
-    plotTree()
+    return(loc.p)
   })
   
   # Display silhouette for a dendrogram cut
   output$outPlotSilhForCut <- renderPlot({
-    locBut = input$butPlotInt
+    # This is required to avoid
+    # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
+    # When running on a server. Based on:
+    # https://github.com/ropensci/plotly/issues/494
+    # if (names(dev.cur()) != "null device")
+    #   dev.off()
+    # pdf(NULL)
     
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotSilhForCut: Go button not pressed\n')
-      
+    loc.p = plotSilhForCut()
+    if(is.null(loc.p))
       return(NULL)
-    }
     
-    plotSilhForCut()
+    return(loc.p)
   })
   
   # Pop-overs ----
