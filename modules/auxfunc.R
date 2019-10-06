@@ -129,30 +129,42 @@ l.col.pal.dend.2 = list(
 
 # Help text ----
 helpText.server = c(
-  alDataFormat =  paste0("<p>Switch between long and wide formats of input data. ",
-                           "TCI accepts CSV or compressed CSV files (gz or bz2).</p>",
-                           "<p><b>Long format</b> - a row is a single data point and consecutive time series are arranged vertically. ",
-                           "Data file should contain at least 3 columns separated with a comma:</p>",
-                           "<li>Identifier of a time series</li>",
-                           "<li>Time points</li>",
-                           "<li>A time-varying variable</li>",
-                           "<br>",
-                           "<p><b>Wide format</b> - a row is a time series with columns as time points.",
-                           "At least 3 columns shuold be present:</p>",
-                           "<li>First two columns in wide format should contain grouping and track IDs</li>",
-                           "<li>A column with a time point. Headers of columns with time points need to be numeric</li>"),
-  inDataGen1 =   paste0("Generate 3 groups with 20 random synthetic time series. ",
-                        "Every time series contains 101 time points. ",
-                        "Track IDs are unique across entire dataset."),
-  chBtrajRem =   paste0("Load CSV file with a column of track IDs for removal. ",
-                        "IDs should correspond to those used for plotting."),
-  chBstim =      paste0("Load CSV file with stimulation pattern. Should contain 5 columns: ",
-                        "grouping, start and end time points of stimulation, start and end of y-position, dummy column with ID."),
-  chBtrajInter = paste0("Interpolate missing measurements indicated with NAs in the data file. ",
-                        "In addition, interpolate a row that is completely missing from the data. ",
-                        "The interval of the time column must be provided to know which rows are missing."),
-  chBtrackUni =  paste0("If the track ID in the uploaded dataset is unique only within a group (e.g. an experimental condition), ",
-                        "make it unique by prepending other columns to the track ID (typically a grouping column)."), 
+  alDataFormat =  paste0(
+    "<p>Switch between long and wide formats of input data. ",
+    "TCI accepts CSV or compressed CSV files (gz or bz2).</p>",
+    "<p><b>Long format</b> - a row is a single data point and consecutive time series are arranged vertically. ",
+    "Data file should contain at least 3 columns separated with a comma:</p>",
+    "<li>Identifier of a time series</li>",
+    "<li>Time points</li>",
+    "<li>A time-varying variable</li>",
+    "<br>",
+    "<p><b>Wide format</b> - a row is a time series with columns as time points.",
+    "At least 3 columns shuold be present:</p>",
+    "<li>First two columns in wide format should contain grouping and track IDs</li>",
+    "<li>A column with a time point. Headers of columns with time points need to be numeric</li>"
+  ),
+  inDataGen1 =   paste0(
+    "Generate 3 groups with 20 random synthetic time series. ",
+    "Every time series contains 101 time points. ",
+    "Track IDs are unique across entire dataset."
+  ),
+  chBtrajRem =   paste0(
+    "Load CSV file with a column of track IDs for removal. ",
+    "IDs should correspond to those used for plotting."
+  ),
+  chBstim =      paste0(
+    "Load CSV file with stimulation pattern. Should contain 5 columns: ",
+    "grouping, start and end time points of stimulation, start and end of y-position, dummy column with ID."
+  ),
+  chBtrajInter = paste0(
+    "Interpolate missing measurements indicated with NAs in the data file. ",
+    "In addition, interpolate a row that is completely missing from the data. ",
+    "The interval of the time column must be provided to know which rows are missing."
+  ),
+  chBtrackUni =  paste0(
+    "If the track ID in the uploaded dataset is unique only within a group (e.g. an experimental condition), ",
+    "make it unique by prepending other columns to the track ID (typically a grouping column)."
+  ),
   chBgroup    = "Select columns to group data according to treatment, condition, etc.",
   inSelMath   = "Select math operation to perform on a single or two measurement columns,",
   chBtimeTrim = "Trim time for further processing.",
@@ -192,14 +204,19 @@ helpText.server = c(
 #'
 #' # calculate the mean and CI along the time course
 #' calcTrajCI(dt.tmp, 'objCyto_Intensity_MeanIntensity_imErkCor', 'Metadata_RealTime')
-LOCcalcTrajCI = function(in.dt, in.col.meas, in.col.by = NULL, in.type = c('normal', 'boot'), ...) {
+LOCcalcTrajCI = function(in.dt,
+                         in.col.meas,
+                         in.col.by = NULL,
+                         in.type = c('normal', 'boot'),
+                         ...) {
   in.type = match.arg(in.type)
   
   if (in.type %like% 'normal')
-    loc.dt = in.dt[, as.list(smean.cl.normal(get(in.col.meas), ...)), by = in.col.by] else
-      loc.dt = in.dt[, as.list(smean.cl.boot(get(in.col.meas), ...)), by = in.col.by]
-    
-    return(loc.dt)
+    loc.dt = in.dt[, as.list(smean.cl.normal(get(in.col.meas), ...)), by = in.col.by]
+  else
+    loc.dt = in.dt[, as.list(smean.cl.boot(get(in.col.meas), ...)), by = in.col.by]
+  
+  return(loc.dt)
 }
 
 
@@ -212,11 +229,11 @@ LOCcalcTrajCI = function(in.dt, in.col.meas, in.col.by = NULL, in.type = c('norm
 #' @export
 #'
 #' @examples
-LOCstderr = function(x, na.rm=FALSE) {
-  if (na.rm) 
+LOCstderr = function(x, na.rm = FALSE) {
+  if (na.rm)
     x = na.omit(x)
   
-  return(sqrt(var(x)/length(x)))
+  return(sqrt(var(x) / length(x)))
 }
 
 #' Calculate the power spectrum density for time-series
@@ -235,38 +252,40 @@ LOCstderr = function(x, na.rm=FALSE) {
 #'
 #' @examples
 LOCcalcPSD <- function(in.dt,
-                    in.col.meas,
-                    in.col.id,
-                    in.col.by,
-                    in.method = "pgram",
-                    in.return.period = TRUE,
-                    in.time.btwPoints = 1,
-                    ...){
+                       in.col.meas,
+                       in.col.id,
+                       in.col.by,
+                       in.method = "pgram",
+                       in.return.period = TRUE,
+                       in.time.btwPoints = 1,
+                       ...) {
   require(data.table)
   # Method "ar" returns $spec as matrix whereas "pgram" returns a vector, custom function to homogenze output format
-  mySpectrum <- function(x, ...){
-    args_spec <- list(x=x, plot=FALSE)
+  mySpectrum <- function(x, ...) {
+    args_spec <- list(x = x, plot = FALSE)
     inargs <- list(...)
     args_spec[names(inargs)] <- inargs
     out <- do.call(spectrum, args_spec)
     out$spec <- as.vector(out$spec)
     return(out)
   }
-  if(!in.method %in% c("pgram", "ar")){
+  if (!in.method %in% c("pgram", "ar")) {
     stop('Method should be one of: c("pgram", "ar"')
   }
-  dt_spec <-  in.dt[, (mySpectrum(get(in.col.meas), plot = FALSE, method = in.method)[c("freq", "spec")]), by = in.col.id]
+  dt_spec <-
+    in.dt[, (mySpectrum(get(in.col.meas), plot = FALSE, method = in.method)[c("freq", "spec")]), by = in.col.id]
   dt_group <- in.dt[, .SD[1, get(in.col.by)], by = in.col.id]
   setnames(dt_group, "V1", in.col.by)
   dt_spec <- merge(dt_spec, dt_group, by = in.col.id)
-  dt_agg <- dt_spec[, .(spec = mean(spec)), by = c(in.col.by, "freq")]
-  if(in.return.period){
-    dt_agg[, period := 1/freq]
+  dt_agg <-
+    dt_spec[, .(spec = mean(spec)), by = c(in.col.by, "freq")]
+  if (in.return.period) {
+    dt_agg[, period := 1 / freq]
     dt_agg[, freq := NULL]
     # Adjust period unit to go from frame unit  to time unit
     dt_agg[, period := period * in.time.btwPoints]
   } else {
-    dt_agg[, freq := freq * (1/in.time.btwPoints)]
+    dt_agg[, freq := freq * (1 / in.time.btwPoints)]
     setnames(dt_agg, "freq", "frequency")
   }
   return(dt_agg)
@@ -286,133 +305,160 @@ LOCcalcPSD <- function(in.dt,
 #' @export
 #' @import data.table
 
-LOCgenTraj <- function(in.ntpts = 60, in.ntracks = 10, in.nfov = 6, in.nwells = 1, in.addna = NULL, in.addout = NULL) {
-  
-  x.rand.1 = c(rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.5, 0.1), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3,   1, 0.2), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3,  2, 0.5))
-  x.rand.2 = c(rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.25, 0.1), rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 0.5, 0.2),  rnorm(in.ntpts * in.ntracks * in.nfov * 1/3, 1, 0.2))
-  
-  # add NA's for testing
-  if (!is.null(in.addna)) {
-    locTabLen = length(x.rand.1)
-    x.rand.1[round(runif(in.addna) * locTabLen)] = NA
-    x.rand.2[round(runif(in.addna) * locTabLen)] = NA
+LOCgenTraj <-
+  function(in.ntpts = 60,
+           in.ntracks = 10,
+           in.nfov = 6,
+           in.nwells = 1,
+           in.addna = NULL,
+           in.addout = NULL) {
+    x.rand.1 = c(
+      rnorm(in.ntpts * in.ntracks * in.nfov * 1 / 3, 0.5, 0.1),
+      rnorm(in.ntpts * in.ntracks * in.nfov * 1 / 3,   1, 0.2),
+      rnorm(in.ntpts * in.ntracks * in.nfov * 1 / 3,  2, 0.5)
+    )
+    x.rand.2 = c(
+      rnorm(in.ntpts * in.ntracks * in.nfov * 1 / 3, 0.25, 0.1),
+      rnorm(in.ntpts * in.ntracks * in.nfov * 1 / 3, 0.5, 0.2),
+      rnorm(in.ntpts * in.ntracks * in.nfov * 1 / 3, 1, 0.2)
+    )
+    
+    # add NA's for testing
+    if (!is.null(in.addna)) {
+      locTabLen = length(x.rand.1)
+      x.rand.1[round(runif(in.addna) * locTabLen)] = NA
+      x.rand.2[round(runif(in.addna) * locTabLen)] = NA
+    }
+    
+    # add outliers for testing
+    if (!is.null(in.addout)) {
+      locTabLen = length(x.rand.1)
+      x.rand.1[round(runif(in.addout) * locTabLen)] = 5
+      x.rand.2[round(runif(in.addout) * locTabLen)] = 5
+    }
+    
+    x.arg = rep(seq(1, in.ntpts), in.ntracks * in.nfov)
+    
+    dt.nuc = data.table(
+      well = rep(LETTERS[1:in.nwells], each = in.ntpts * in.nfov * in.ntracks / in.nwells),
+      group = rep(1:in.nfov, each = in.ntpts * in.ntracks),
+      time = x.arg,
+      y1 = x.rand.1,
+      y2  = x.rand.2,
+      posx = runif(
+        in.ntpts * in.ntracks * in.nfov,
+        min = 0,
+        max = 1
+      ),
+      posy = runif(
+        in.ntpts * in.ntracks * in.nfov,
+        min = 0,
+        max = 1
+      ),
+      id = rep(1:(in.ntracks * in.nfov), each = in.ntpts)
+    )
+    
+    return(dt.nuc)
   }
-  
-  # add outliers for testing
-  if (!is.null(in.addout)) {
-    locTabLen = length(x.rand.1)
-    x.rand.1[round(runif(in.addout) * locTabLen)] = 5
-    x.rand.2[round(runif(in.addout) * locTabLen)] = 5
-  }
-  
-  x.arg = rep(seq(1, in.ntpts), in.ntracks * in.nfov)
-  
-  dt.nuc = data.table(well = rep(LETTERS[1:in.nwells], each = in.ntpts * in.nfov * in.ntracks / in.nwells),
-                      group = rep(1:in.nfov, each = in.ntpts * in.ntracks),
-                      time = x.arg,
-                      y1 = x.rand.1,
-                      y2  = x.rand.2,
-                      posx = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
-                      posy = runif(in.ntpts * in.ntracks * in.nfov, min = 0, max = 1),
-                      id = rep(1:(in.ntracks*in.nfov), each = in.ntpts))
-  
-  return(dt.nuc)
-}
 
-LOCgenTraj2 <- function(n_perGroup = 20, sd_noise = 0.01, sampleFreq = 0.2, endTime = 50)
-{
-  # Function definition ----------------------------------
-  sim_expodecay_lagged_stim <-
-    function (n,
-              noise,
-              interval.stim = 5,
-              lambda = 0.2,
-              freq = 0.2,
-              end = 40)
-    {
-      require(data.table)
-      tvec <- seq(0, end, by = freq)
-      stim_time <- seq(interval.stim, end, interval.stim)
-      stim_time_matrix <-
-        matrix(stim_time, nrow = length(stim_time),
-               ncol = n)
-      noise_matrix <- abs(replicate(n, rnorm(
-        n = length(stim_time),
-        mean = 0,
-        sd = noise
-      )))
-      stim_time_matrix <- stim_time_matrix + noise_matrix
-      trajs <- matrix(0, nrow = length(tvec), ncol = n)
-      for (col in 1:ncol(stim_time_matrix)) {
-        for (row in 1:nrow(stim_time_matrix)) {
-          index <- which(tvec >= stim_time_matrix[row, col])[1]
-          trajs[index, col] <- 1
-        }
-      }
-      decrease_factor <- exp(-lambda * freq)
-      for (col in 1:ncol(trajs)) {
-        for (row in 2:nrow(trajs)) {
-          if (trajs[row, col] != 1) {
-            trajs[row, col] <- trajs[row - 1, col] * decrease_factor
+LOCgenTraj2 <-
+  function(n_perGroup = 20,
+           sd_noise = 0.01,
+           sampleFreq = 0.2,
+           endTime = 50)
+  {
+    # Function definition ----------------------------------
+    sim_expodecay_lagged_stim <-
+      function (n,
+                noise,
+                interval.stim = 5,
+                lambda = 0.2,
+                freq = 0.2,
+                end = 40)
+      {
+        require(data.table)
+        tvec <- seq(0, end, by = freq)
+        stim_time <- seq(interval.stim, end, interval.stim)
+        stim_time_matrix <-
+          matrix(stim_time, nrow = length(stim_time),
+                 ncol = n)
+        noise_matrix <- abs(replicate(n, rnorm(
+          n = length(stim_time),
+          mean = 0,
+          sd = noise
+        )))
+        stim_time_matrix <- stim_time_matrix + noise_matrix
+        trajs <- matrix(0, nrow = length(tvec), ncol = n)
+        for (col in 1:ncol(stim_time_matrix)) {
+          for (row in 1:nrow(stim_time_matrix)) {
+            index <- which(tvec >= stim_time_matrix[row, col])[1]
+            trajs[index, col] <- 1
           }
         }
+        decrease_factor <- exp(-lambda * freq)
+        for (col in 1:ncol(trajs)) {
+          for (row in 2:nrow(trajs)) {
+            if (trajs[row, col] != 1) {
+              trajs[row, col] <- trajs[row - 1, col] * decrease_factor
+            }
+          }
+        }
+        trajs <- as.data.table(trajs)
+        trajs <- cbind(seq(0, end, by = freq), trajs)
+        colnames(trajs)[1] <- "Time"
+        trajs <- melt(trajs, id.vars = "Time")
+        return(trajs)
       }
-      trajs <- as.data.table(trajs)
-      trajs <- cbind(seq(0, end, by = freq), trajs)
-      colnames(trajs)[1] <- "Time"
-      trajs <- melt(trajs, id.vars = "Time")
-      return(trajs)
-    }
-  
-  
-  # Dataset creation -----------------------------------------------
-  dt1 <-
-    sim_expodecay_lagged_stim(
-      n = n_perGroup,
-      noise = 0.75,
-      interval.stim = 10,
-      lambda = 0.4,
-      freq = sampleFreq,
-      end = endTime
-    )
-  dt2 <-
-    sim_expodecay_lagged_stim(
-      n = n_perGroup,
-      noise = 0.75,
-      interval.stim = 10,
-      lambda = 0.1,
-      freq = sampleFreq,
-      end = endTime
-    )
-  dt3 <-
-    sim_expodecay_lagged_stim(
-      n = n_perGroup,
-      noise = 0.75,
-      interval.stim = 10,
-      lambda = 0.4,
-      freq = sampleFreq,
-      end = endTime
-    )
-  dt3[, value := value / 3]
-  
-  dt1[, Group := "fastDecay"]
-  dt2[, Group := "slowDecay"]
-  dt3[, Group := "lowAmplitude"]
-  
-  dt <- rbindlist(list(dt1, dt2, dt3))
-  dt[, ID := sprintf("%s_%02d", Group, as.integer(gsub('[A-Z]', '', variable)))]
-  dt[, variable := NULL]
-  dt[, Group := as.factor(Group)]
-  
-  dt[, value := value + runif(1, -0.1, 0.1), by = .(Group, ID)]
-  noise_vec <- rnorm(n = nrow(dt), mean = 0, sd = sd_noise)
-  dt[, value := value + noise_vec]
-  
-  setnames(dt, "value", "Meas")
-  setcolorder(dt, c("Group", "ID", "Time", "Meas"))
-  
-  return(dt)
-}
+    
+    
+    # Dataset creation -----------------------------------------------
+    dt1 <-
+      sim_expodecay_lagged_stim(
+        n = n_perGroup,
+        noise = 0.75,
+        interval.stim = 10,
+        lambda = 0.4,
+        freq = sampleFreq,
+        end = endTime
+      )
+    dt2 <-
+      sim_expodecay_lagged_stim(
+        n = n_perGroup,
+        noise = 0.75,
+        interval.stim = 10,
+        lambda = 0.1,
+        freq = sampleFreq,
+        end = endTime
+      )
+    dt3 <-
+      sim_expodecay_lagged_stim(
+        n = n_perGroup,
+        noise = 0.75,
+        interval.stim = 10,
+        lambda = 0.4,
+        freq = sampleFreq,
+        end = endTime
+      )
+    dt3[, value := value / 3]
+    
+    dt1[, Group := "fastDecay"]
+    dt2[, Group := "slowDecay"]
+    dt3[, Group := "lowAmplitude"]
+    
+    dt <- rbindlist(list(dt1, dt2, dt3))
+    dt[, ID := sprintf("%s_%02d", Group, as.integer(gsub('[A-Z]', '', variable)))]
+    dt[, variable := NULL]
+    dt[, Group := as.factor(Group)]
+    
+    dt[, value := value + runif(1, -0.1, 0.1), by = .(Group, ID)]
+    noise_vec <- rnorm(n = nrow(dt), mean = 0, sd = sd_noise)
+    dt[, value := value + noise_vec]
+    
+    setnames(dt, "value", "Meas")
+    setcolorder(dt, c("Group", "ID", "Time", "Meas"))
+    
+    return(dt)
+  }
 
 #' Normalize Trajectory
 #'
@@ -436,13 +482,13 @@ LOCgenTraj2 <- function(n_perGroup = 20, sd_noise = 0.01, sampleFreq = 0.2, endT
 #' @import data.table
 
 LOCnormTraj = function(in.dt,
-                    in.meas.col,
-                    in.rt.col = COLRT,
-                    in.rt.min = 10,
-                    in.rt.max = 20,
-                    in.by.cols = NULL,
-                    in.robust = TRUE,
-                    in.type = 'z.score') {
+                       in.meas.col,
+                       in.rt.col = COLRT,
+                       in.rt.min = 10,
+                       in.rt.max = 20,
+                       in.by.cols = NULL,
+                       in.robust = TRUE,
+                       in.type = 'z.score') {
   loc.dt <-
     copy(in.dt) # copy so as not to alter original dt object w intermediate assignments
   
@@ -540,67 +586,115 @@ getDataClSpar = function(in.dend, in.k, in.id) {
 # prepares a table with cluster numbers in 1st column and colour assignments in 2nd column
 # the number of rows is determined by dendrogram cut
 getClCol <- function(in.dend, in.k) {
-  
   loc.col_labels <- get_leaves_branches_col(in.dend)
   loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
   
   return(unique(
-    data.table(cl.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
-               cl.col = loc.col_labels)))
+    data.table(
+      cl.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
+      cl.col = loc.col_labels
+    )
+  ))
 }
 
 # Cluster validation ----
 
 #Customize factoextra functions to accept dissimilarity matrix from start. Otherwise can't use distance functions that are not in base R, like DTW.
 
-# Inherit and adapt hcut function to take input from UI, used for fviz_clust 
-LOChcut <- function(x, k = 2, isdiss = inherits(x, "dist"), hc_func = "hclust", hc_method = "average", hc_metric = "euclidean"){
-  if(!inherits(x, "dist")){stop("x must be a distance matrix")}
-  return(factoextra::hcut(x = x, k = k, isdiss = TRUE, hc_func = hc_func, hc_method = hc_method, hc_metric = hc_metric))
-}
+# Inherit and adapt hcut function to take input from UI, used for fviz_clust
+LOChcut <-
+  function(x,
+           k = 2,
+           isdiss = inherits(x, "dist"),
+           hc_func = "hclust",
+           hc_method = "average",
+           hc_metric = "euclidean") {
+    if (!inherits(x, "dist")) {
+      stop("x must be a distance matrix")
+    }
+    return(
+      factoextra::hcut(
+        x = x,
+        k = k,
+        isdiss = TRUE,
+        hc_func = hc_func,
+        hc_method = hc_method,
+        hc_metric = hc_metric
+      )
+    )
+  }
 
 # Modified from factoextra::fviz_nbclust
 # Allow (actually enforce) x to be a distance matrix; no GAP statistics for compatibility
-LOCnbclust <- function (x, FUNcluster = LOChcut, method = c("silhouette", "wss"), k.max = 10, verbose = FALSE, 
-          barfill = "steelblue", barcolor = "steelblue", linecolor = "steelblue", 
-          print.summary = TRUE, ...) 
-{
-  set.seed(123)
-  if (k.max < 2) 
-    stop("k.max must bet > = 2")
-  method = match.arg(method)
-  if (!inherits(x, c("dist")))
-    stop("x should be an object of class dist")
-  else if (is.null(FUNcluster)) 
-    stop("The argument FUNcluster is required. ", "Possible values are kmeans, pam, hcut, clara, ...")
-  else if (method %in% c("silhouette", "wss")) {
-    diss <- x  # x IS ENFORCED TO BE A DISSIMILARITY MATRIX
-    v <- rep(0, k.max)
-    if (method == "silhouette") {
-      for (i in 2:k.max) {
-        clust <- FUNcluster(x, i, ...)
-        v[i] <- factoextra:::.get_ave_sil_width(diss, clust$cluster)
+LOCnbclust <-
+  function (x,
+            FUNcluster = LOChcut,
+            method = c("silhouette", "wss"),
+            k.max = 10,
+            verbose = FALSE,
+            barfill = "steelblue",
+            barcolor = "steelblue",
+            linecolor = "steelblue",
+            print.summary = TRUE,
+            ...)
+  {
+    set.seed(123)
+    
+    if (k.max < 2)
+      stop("k.max must bet > = 2")
+    
+    method = match.arg(method)
+    
+    if (!inherits(x, c("dist")))
+      stop("x should be an object of class dist")
+    else if (is.null(FUNcluster))
+      stop(
+        "The argument FUNcluster is required. ",
+        "Possible values are kmeans, pam, hcut, clara, ..."
+      )
+    else if (method %in% c("silhouette", "wss")) {
+      diss <- x  # x IS ENFORCED TO BE A DISSIMILARITY MATRIX
+      v <- rep(0, k.max)
+      if (method == "silhouette") {
+        loc.mainlab = "Optimal number of clusters from silhouette analysis"
+        loc.ylab <- "Average silhouette width"
+        
+        for (i in 2:k.max) {
+          clust <- FUNcluster(x, i, ...)
+          v[i] <-
+            factoextra:::.get_ave_sil_width(diss, clust$cluster)
+        }
       }
-    }
-    else if (method == "wss") {
-      for (i in 1:k.max) {
-        clust <- FUNcluster(x, i, ...)
-        v[i] <- factoextra:::.get_withinSS(diss, clust$cluster)
+      else if (method == "wss") {
+        loc.mainlab = "Optimal number of clusters from within cluster sum of squares"
+        loc.ylab <- "Total within cluster sum of squares"
+        
+        for (i in 1:k.max) {
+          clust <- FUNcluster(x, i, ...)
+          v[i] <- factoextra:::.get_withinSS(diss, clust$cluster)
+        }
       }
+      
+      df <- data.frame(clusters = as.factor(1:k.max), y = v)
+      
+      p <- ggpubr::ggline(
+        df,
+        x = "clusters",
+        y = "y",
+        group = 1,
+        color = linecolor,
+        ylab = loc.ylab,
+        xlab = "Number of clusters",
+        main = loc.mainlab
+      )
+      
+      if (method == "silhouette")
+        p <- p + geom_vline(xintercept = which.max(v),
+                            linetype = 2,
+                            color = linecolor)
+      return(p)
     }
-    df <- data.frame(clusters = as.factor(1:k.max), y = v)
-    ylab <- "Total Within Sum of Square"
-    if (method == "silhouette") 
-      ylab <- "Average silhouette width"
-    p <- ggpubr::ggline(df, x = "clusters", y = "y", group = 1, 
-                        color = linecolor, ylab = ylab, xlab = "Number of clusters k", 
-                        main = "Optimal number of clusters")
-    if (method == "silhouette") 
-      p <- p + geom_vline(xintercept = which.max(v), linetype = 2, 
-                          color = linecolor)
-    return(p)
   }
-}
 
 
 # Custom plotting functions ----
@@ -620,10 +714,10 @@ LOCnbclust <- function (x, FUNcluster = LOChcut, method = c("silhouette", "wss")
 #' @examples
 #'
 LOCggplotTheme = function(in.font.base = 12,
-                       in.font.axis.text = 12,
-                       in.font.axis.title = 12,
-                       in.font.strip = 14,
-                       in.font.legend = 12) {
+                          in.font.axis.text = 12,
+                          in.font.axis.title = 12,
+                          in.font.strip = 14,
+                          in.font.legend = 12) {
   loc.theme =
     theme_bw(base_size = in.font.base, base_family = "Helvetica") +
     theme(
@@ -639,61 +733,96 @@ LOCggplotTheme = function(in.font.base = 12,
       legend.key = element_blank(),
       legend.text = element_text(size = in.font.legend),
       legend.key.height = unit(1, "lines"),
-      legend.key.width = unit(2, "lines"))
+      legend.key.width = unit(2, "lines")
+    )
   
   return(loc.theme)
 }
 
 # Build Function to Return Element Text Object
 # From: https://stackoverflow.com/a/36979201/1898713
-LOCrotatedAxisElementText = function(angle, position='x', size = 12){
-  angle     = angle[1]; 
+LOCrotatedAxisElementText = function(angle,
+                                     position = 'x',
+                                     size = 12) {
+  angle     = angle[1]
+  
   position  = position[1]
-  positions = list(x=0, y=90, top=180, right=270)
-  if(!position %in% names(positions))
-    stop(sprintf("'position' must be one of [%s]",paste(names(positions),collapse=", ")), call.=FALSE)
-  if(!is.numeric(angle))
-    stop("'angle' must be numeric",call.=FALSE)
-  rads = (-angle - positions[[ position ]])*pi/180
-  hjust = round((1 - sin(rads)))/2
-  vjust = round((1 + cos(rads)))/2
-  element_text(size = size, angle = angle, vjust = vjust, hjust = hjust)
+  positions = list(
+    x = 0,
+    y = 90,
+    top = 180,
+    right = 270
+  )
+  if (!position %in% names(positions))
+    stop(sprintf("'position' must be one of [%s]", paste(names(positions), collapse =
+                                                           ", ")), call. = FALSE)
+  if (!is.numeric(angle))
+    stop("'angle' must be numeric", call. = FALSE)
+  rads = (-angle - positions[[position]]) * pi / 180
+  hjust = round((1 - sin(rads))) / 2
+  vjust = round((1 + cos(rads))) / 2
+  element_text(
+    size = size,
+    angle = angle,
+    vjust = vjust,
+    hjust = hjust
+  )
 }
 
 # Plot individual time series
-LOCplotTraj = function(dt.arg, # input data table
-                        x.arg,  # string with column name for x-axis
-                        y.arg, # string with column name for y-axis
-                        group.arg, # string with column name for grouping time series (typicaly cell ID)
-                        facet.arg, # string with column name for facetting
-                        facet.ncol.arg = 2, # default number of facet columns
-                        facet.color.arg = NULL, # vector with list of colours for adding colours to facet names (currently a horizontal line on top of the facet is drawn)
-                        line.col.arg = NULL, # string with column name for colouring time series (typically when individual time series are selected in UI)
-                        xlab.arg = NULL, # string with x-axis label
-                        ylab.arg = NULL, # string with y-axis label
-                        plotlab.arg = NULL, # string with plot label
-                        dt.stim.arg = NULL, # plotting additional dataset; typically to indicate stimulations (not fully implemented yet, not tested!)
-                        x.stim.arg = c('tstart', 'tend'), # column names in stimulation dt with x and xend parameters
-                        y.stim.arg = c('ystart', 'yend'), # column names in stimulation dt with y and yend parameters
-                        tfreq.arg = 1, # unused
-                        xlim.arg = NULL, # limits of x-axis; for visualisation only, not trimmimng data
-                        ylim.arg = NULL, # limits of y-axis; for visualisation only, not trimmimng data
-                        stim.bar.width.arg = 0.5, # width of the stimulation line; plotted under time series
-                        aux.label1 = NULL, # 1st point label; used for interactive plotting; displayed in the tooltip; typically used to display values of column holding x & y coordinates
-                        aux.label2 = NULL,
-                        aux.label3 = NULL,
-                        stat.arg = c('', 'mean', 'CI', 'SE')) {
-  
+LOCplotTraj = function(dt.arg,
+                       # input data table
+                       x.arg,
+                       # string with column name for x-axis
+                       y.arg,
+                       # string with column name for y-axis
+                       group.arg,
+                       # string with column name for grouping time series (typicaly cell ID)
+                       facet.arg,
+                       # string with column name for facetting
+                       facet.ncol.arg = 2,
+                       # default number of facet columns
+                       facet.color.arg = NULL,
+                       # vector with list of colours for adding colours to facet names (currently a horizontal line on top of the facet is drawn)
+                       line.col.arg = NULL,
+                       # string with column name for colouring time series (typically when individual time series are selected in UI)
+                       xlab.arg = NULL,
+                       # string with x-axis label
+                       ylab.arg = NULL,
+                       # string with y-axis label
+                       plotlab.arg = NULL,
+                       # string with plot label
+                       dt.stim.arg = NULL,
+                       # plotting additional dataset; typically to indicate stimulations (not fully implemented yet, not tested!)
+                       x.stim.arg = c('tstart', 'tend'),
+                       # column names in stimulation dt with x and xend parameters
+                       y.stim.arg = c('ystart', 'yend'),
+                       # column names in stimulation dt with y and yend parameters
+                       tfreq.arg = 1,
+                       # unused
+                       xlim.arg = NULL,
+                       # limits of x-axis; for visualisation only, not trimmimng data
+                       ylim.arg = NULL,
+                       # limits of y-axis; for visualisation only, not trimmimng data
+                       stim.bar.width.arg = 0.5,
+                       # width of the stimulation line; plotted under time series
+                       aux.label1 = NULL,
+                       # 1st point label; used for interactive plotting; displayed in the tooltip; typically used to display values of column holding x & y coordinates
+                       aux.label2 = NULL,
+                       aux.label3 = NULL,
+                       stat.arg = c('', 'mean', 'CI', 'SE')) {
   # match arguments for stat plotting
   loc.stat = match.arg(stat.arg, several.ok = TRUE)
-
+  
   
   # aux.label12 are required for plotting XY positions in the tooltip of the interactive (plotly) graph
   p.tmp = ggplot(dt.arg,
-                 aes_string(x = x.arg,
-                            y = y.arg,
-                            group = group.arg,
-                            label = group.arg))
+                 aes_string(
+                   x = x.arg,
+                   y = y.arg,
+                   group = group.arg,
+                   label = group.arg
+                 ))
   #,
   #                          label  = aux.label1,
   #                          label2 = aux.label2,
@@ -701,23 +830,29 @@ LOCplotTraj = function(dt.arg, # input data table
   
   if (is.null(line.col.arg)) {
     p.tmp = p.tmp +
-      geom_line(alpha = 0.25, 
-                              size = 0.25)
+      geom_line(alpha = 0.25,
+                size = 0.25)
   }
   else {
-    p.tmp = p.tmp + 
-      geom_line(aes_string(colour = line.col.arg), 
-                              alpha = 0.5, 
-                              size = 0.5) +
-      scale_color_manual(name = '', 
-                         values =c("FALSE" = rhg_cols[7], "TRUE" = rhg_cols[3], "SELECTED" = 'green', "NOT SEL" = rhg_cols[7]))
+    p.tmp = p.tmp +
+      geom_line(aes_string(colour = line.col.arg),
+                alpha = 0.5,
+                size = 0.5) +
+      scale_color_manual(
+        name = '',
+        values = c(
+          "FALSE" = rhg_cols[7],
+          "TRUE" = rhg_cols[3],
+          "SELECTED" = 'green',
+          "NOT SEL" = rhg_cols[7]
+        )
+      )
   }
-
+  
   # this is temporary solution for adding colour according to cluster number
   # use only when plotting traj from clustering!
   # a horizontal line is added at the top of data
   if (!is.null(facet.color.arg)) {
-
     loc.y.max = max(dt.arg[, c(y.arg), with = FALSE])
     loc.dt.cl = data.table(xx = 1:length(facet.color.arg), yy = loc.y.max)
     setnames(loc.dt.cl, 'xx', facet.arg)
@@ -725,16 +860,21 @@ LOCplotTraj = function(dt.arg, # input data table
     # adjust facet.color.arg to plot
     
     p.tmp = p.tmp +
-      geom_hline(data = loc.dt.cl, colour = facet.color.arg, yintercept = loc.y.max, size = 4) +
+      geom_hline(
+        data = loc.dt.cl,
+        colour = facet.color.arg,
+        yintercept = loc.y.max,
+        size = 4
+      ) +
       scale_colour_manual(values = facet.color.arg,
                           name = '')
   }
   
   if ('mean' %in% loc.stat)
-    p.tmp = p.tmp + 
+    p.tmp = p.tmp +
     stat_summary(
       aes_string(y = y.arg, group = 1),
-      fun.y = mean, 
+      fun.y = mean,
       na.rm = T,
       colour = 'red',
       linetype = 'solid',
@@ -742,9 +882,9 @@ LOCplotTraj = function(dt.arg, # input data table
       geom = "line",
       group = 1
     )
-
+  
   if ('CI' %in% loc.stat)
-    p.tmp = p.tmp + 
+    p.tmp = p.tmp +
     stat_summary(
       aes_string(y = y.arg, group = 1),
       fun.data = mean_cl_normal,
@@ -756,7 +896,7 @@ LOCplotTraj = function(dt.arg, # input data table
     )
   
   if ('SE' %in% loc.stat)
-    p.tmp = p.tmp + 
+    p.tmp = p.tmp +
     stat_summary(
       aes_string(y = y.arg, group = 1),
       fun.data = mean_se,
@@ -769,85 +909,107 @@ LOCplotTraj = function(dt.arg, # input data table
   
   
   
-  p.tmp = p.tmp + 
+  p.tmp = p.tmp +
     facet_wrap(as.formula(paste("~", facet.arg)),
                ncol = facet.ncol.arg,
                scales = "free_x")
-
+  
   # plot stimulation bars underneath time series
   # dt.stim.arg is read separately and should contain 4 columns with
   # xy positions of beginning and end of the bar
-  if(!is.null(dt.stim.arg)) {
-    p.tmp = p.tmp + geom_segment(data = dt.stim.arg,
-                                 aes_string(x = x.stim.arg[1],
-                                            xend = x.stim.arg[2],
-                                            y = y.stim.arg[1],
-                                            yend = y.stim.arg[2],
-                                            group = 'group'),
-                                 colour = rhg_cols[[3]],
-                                 size = stim.bar.width.arg) 
+  if (!is.null(dt.stim.arg)) {
+    p.tmp = p.tmp + geom_segment(
+      data = dt.stim.arg,
+      aes_string(
+        x = x.stim.arg[1],
+        xend = x.stim.arg[2],
+        y = y.stim.arg[1],
+        yend = y.stim.arg[2],
+        group = 'group'
+      ),
+      colour = rhg_cols[[3]],
+      size = stim.bar.width.arg
+    )
   }
   
   p.tmp = p.tmp + coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
   
-  p.tmp = p.tmp + 
+  p.tmp = p.tmp +
     xlab(paste0(xlab.arg, "\n")) +
     ylab(paste0("\n", ylab.arg)) +
     ggtitle(plotlab.arg) +
-    LOCggplotTheme(in.font.base = PLOTFONTBASE, 
-                   in.font.axis.text = PLOTFONTAXISTEXT, 
-                   in.font.axis.title = PLOTFONTAXISTITLE, 
-                   in.font.strip = PLOTFONTFACETSTRIP, 
-                   in.font.legend = PLOTFONTLEGEND) + 
+    LOCggplotTheme(
+      in.font.base = PLOTFONTBASE,
+      in.font.axis.text = PLOTFONTAXISTEXT,
+      in.font.axis.title = PLOTFONTAXISTITLE,
+      in.font.strip = PLOTFONTFACETSTRIP,
+      in.font.legend = PLOTFONTLEGEND
+    ) +
     theme(legend.position = "top")
   
   return(p.tmp)
 }
 
 # Plot average time series with CI together in one facet
-LOCplotTrajRibbon = function(dt.arg, # input data table
-                          x.arg, # string with column name for x-axis
-                          y.arg, # string with column name for y-axis
-                          group.arg = NULL, # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
-                          col.arg = NULL, # colour pallette for individual time series
-                          dt.stim.arg = NULL, # data table with stimulation pattern
-                          x.stim.arg = c('tstart', 'tend'), # column names in stimulation dt with x and xend parameters
-                          y.stim.arg = c('ystart', 'yend'), # column names in stimulation dt with y and yend parameters
-                          stim.bar.width.arg = 0.5,
-                          xlim.arg = NULL, # limits of x-axis; for visualisation only, not trimmimng data
-                          ylim.arg = NULL, # limits of y-axis; for visualisation only, not trimmimng data
-                          ribbon.lohi.arg = c('Lower', 'Upper'), # column names containing lower and upper bound for plotting the ribbon, e.g. for CI; set to NULL to avoid plotting the ribbon
-                          ribbon.fill.arg = 'grey50',
-                          ribbon.alpha.arg = 0.5,
-                          xlab.arg = NULL,
-                          ylab.arg = NULL,
-                          plotlab.arg = NULL) {
-  
+LOCplotTrajRibbon = function(dt.arg,
+                             # input data table
+                             x.arg,
+                             # string with column name for x-axis
+                             y.arg,
+                             # string with column name for y-axis
+                             group.arg = NULL,
+                             # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
+                             col.arg = NULL,
+                             # colour pallette for individual time series
+                             dt.stim.arg = NULL,
+                             # data table with stimulation pattern
+                             x.stim.arg = c('tstart', 'tend'),
+                             # column names in stimulation dt with x and xend parameters
+                             y.stim.arg = c('ystart', 'yend'),
+                             # column names in stimulation dt with y and yend parameters
+                             stim.bar.width.arg = 0.5,
+                             xlim.arg = NULL,
+                             # limits of x-axis; for visualisation only, not trimmimng data
+                             ylim.arg = NULL,
+                             # limits of y-axis; for visualisation only, not trimmimng data
+                             ribbon.lohi.arg = c('Lower', 'Upper'),
+                             # column names containing lower and upper bound for plotting the ribbon, e.g. for CI; set to NULL to avoid plotting the ribbon
+                             ribbon.fill.arg = 'grey50',
+                             ribbon.alpha.arg = 0.5,
+                             xlab.arg = NULL,
+                             ylab.arg = NULL,
+                             plotlab.arg = NULL) {
   p.tmp = ggplot(dt.arg, aes_string(x = x.arg, group = group.arg))
   
   if (!is.null(ribbon.lohi.arg))
-    p.tmp = p.tmp + 
-      geom_ribbon(aes_string(ymin = ribbon.lohi.arg[1], ymax = ribbon.lohi.arg[2]),
-                fill = ribbon.fill.arg,
-                alpha = ribbon.alpha.arg)
+    p.tmp = p.tmp +
+      geom_ribbon(
+        aes_string(ymin = ribbon.lohi.arg[1], ymax = ribbon.lohi.arg[2]),
+        fill = ribbon.fill.arg,
+        alpha = ribbon.alpha.arg
+      )
   
   p.tmp = p.tmp + geom_line(aes_string(y = y.arg, colour = group.arg))
   
-
+  
   # plot stimulation bars underneath time series
   # dt.stim.arg is read separately and should contain 4 columns with
   # xy positions of beginning and end of the bar
-  if(!is.null(dt.stim.arg)) {
-    p.tmp = p.tmp + geom_segment(data = dt.stim.arg,
-                                 aes_string(x = x.stim.arg[1],
-                                     xend = x.stim.arg[2],
-                                     y = y.stim.arg[1],
-                                     yend = y.stim.arg[2]),
-                                 colour = rhg_cols[[3]],
-                                 size = stim.bar.width.arg,
-                                 group = 1) 
+  if (!is.null(dt.stim.arg)) {
+    p.tmp = p.tmp + geom_segment(
+      data = dt.stim.arg,
+      aes_string(
+        x = x.stim.arg[1],
+        xend = x.stim.arg[2],
+        y = y.stim.arg[1],
+        yend = y.stim.arg[2]
+      ),
+      colour = rhg_cols[[3]],
+      size = stim.bar.width.arg,
+      group = 1
+    )
   }
-
+  
   p.tmp = p.tmp + coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
   
   if (is.null(col.arg)) {
@@ -869,25 +1031,32 @@ LOCplotTrajRibbon = function(dt.arg, # input data table
 }
 
 # Plot average power spectrum density per facet
-LOCplotPSD <- function(dt.arg, # input data table
-                    x.arg, # string with column name for x-axis
-                    y.arg, # string with column name for y-axis
-                    group.arg=NULL, # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
-                    xlab.arg = x.arg,
-                    ylab.arg = y.arg,
-                    facet.color.arg = NULL){
+LOCplotPSD <- function(dt.arg,
+                       # input data table
+                       x.arg,
+                       # string with column name for x-axis
+                       y.arg,
+                       # string with column name for y-axis
+                       group.arg = NULL,
+                       # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
+                       xlab.arg = x.arg,
+                       ylab.arg = y.arg,
+                       facet.color.arg = NULL) {
   require(ggplot2)
-  if(length(setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))) > 0){
-    stop(paste("Missing columns in dt.arg: ", setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))))
+  if (length(setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))) > 0) {
+    stop(paste("Missing columns in dt.arg: ", setdiff(
+      c(x.arg, y.arg, group.arg), colnames(dt.arg)
+    )))
   }
-  p.tmp <- ggplot(dt.arg, aes_string(x=x.arg, y=y.arg)) +
+  p.tmp <- ggplot(dt.arg, aes_string(x = x.arg, y = y.arg)) +
     geom_line() +
-    geom_rug(sides="b", alpha = 1, color = "lightblue") +
+    geom_rug(sides = "b",
+             alpha = 1,
+             color = "lightblue") +
     facet_wrap(group.arg) +
     labs(x = xlab.arg, y = ylab.arg)
   
   if (!is.null(facet.color.arg)) {
-    
     loc.y.max = max(dt.arg[, c(y.arg), with = FALSE])
     loc.dt.cl = data.table(xx = 1:length(facet.color.arg), yy = loc.y.max)
     setnames(loc.dt.cl, 'xx', group.arg)
@@ -895,7 +1064,12 @@ LOCplotPSD <- function(dt.arg, # input data table
     # adjust facet.color.arg to plot
     
     p.tmp = p.tmp +
-      geom_hline(data = loc.dt.cl, colour = facet.color.arg, yintercept = loc.y.max, size = 4) +
+      geom_hline(
+        data = loc.dt.cl,
+        colour = facet.color.arg,
+        yintercept = loc.y.max,
+        size = 4
+      ) +
       scale_colour_manual(values = facet.color.arg,
                           name = '')
   }
@@ -906,28 +1080,27 @@ LOCplotPSD <- function(dt.arg, # input data table
 #' Plot a scatter plot with an optional linear regression
 #'
 #' @param dt.arg input of data.table with 2 columns with x and y coordinates
-#' @param facet.arg 
-#' @param facet.ncol.arg 
-#' @param xlab.arg 
-#' @param ylab.arg 
-#' @param plotlab.arg 
-#' @param alpha.arg 
-#' @param trend.arg 
-#' @param ci.arg 
+#' @param facet.arg
+#' @param facet.ncol.arg
+#' @param xlab.arg
+#' @param ylab.arg
+#' @param plotlab.arg
+#' @param alpha.arg
+#' @param trend.arg
+#' @param ci.arg
 
-LOCggplotScat = function(dt.arg, 
-                        facet.arg = NULL,
-                        facet.ncol.arg = 2,
-                        xlab.arg = NULL,
-                        ylab.arg = NULL,
-                        plotlab.arg = NULL,
-                        alpha.arg = 1,
-                        trend.arg = T,
-                        ci.arg = 0.95) {
-  
+LOCggplotScat = function(dt.arg,
+                         facet.arg = NULL,
+                         facet.ncol.arg = 2,
+                         xlab.arg = NULL,
+                         ylab.arg = NULL,
+                         plotlab.arg = NULL,
+                         alpha.arg = 1,
+                         trend.arg = T,
+                         ci.arg = 0.95) {
   p.tmp = ggplot(dt.arg, aes(x = x, y = y, label = id)) +
     geom_point(alpha = alpha.arg)
-
+  
   if (trend.arg) {
     p.tmp = p.tmp +
       stat_smooth(
@@ -937,7 +1110,7 @@ LOCggplotScat = function(dt.arg,
         colour = 'blue'
       )
   }
-
+  
   if (!is.null(facet.arg)) {
     p.tmp = p.tmp +
       facet_wrap(as.formula(paste("~", facet.arg)),
@@ -958,41 +1131,42 @@ LOCggplotScat = function(dt.arg,
       ggtitle(paste0(plotlab.arg, "\n"))
   
   p.tmp = p.tmp +
-    LOCggplotTheme(in.font.base = PLOTFONTBASE, 
-                   in.font.axis.text = PLOTFONTAXISTEXT, 
-                   in.font.axis.title = PLOTFONTAXISTITLE, 
-                   in.font.strip = PLOTFONTFACETSTRIP, 
-                   in.font.legend = PLOTFONTLEGEND) + 
+    LOCggplotTheme(
+      in.font.base = PLOTFONTBASE,
+      in.font.axis.text = PLOTFONTAXISTEXT,
+      in.font.axis.title = PLOTFONTAXISTITLE,
+      in.font.strip = PLOTFONTFACETSTRIP,
+      in.font.legend = PLOTFONTLEGEND
+    ) +
     theme(legend.position = "none")
-
+  
   return(p.tmp)
 }
 
 
 LOCplotHeatmap <- function(data.arg,
-                          dend.arg,
-                          palette.arg,
-                          palette.rev.arg = TRUE,
-                          dend.show.arg = TRUE,
-                          key.show.arg = TRUE,
-                          margin.x.arg = 5,
-                          margin.y.arg = 20,
-                          nacol.arg = 0.5,
-                          colCol.arg = NULL,
-                          labCol.arg = NULL,
-                          font.row.arg = 1,
-                          font.col.arg = 1,
-                          breaks.arg = NULL,
-                          title.arg = 'Clustering') {
-  
+                           dend.arg,
+                           palette.arg,
+                           palette.rev.arg = TRUE,
+                           dend.show.arg = TRUE,
+                           key.show.arg = TRUE,
+                           margin.x.arg = 5,
+                           margin.y.arg = 20,
+                           nacol.arg = 0.5,
+                           colCol.arg = NULL,
+                           labCol.arg = NULL,
+                           font.row.arg = 1,
+                           font.col.arg = 1,
+                           breaks.arg = NULL,
+                           title.arg = 'Clustering') {
   loc.n.colbreaks = 99
   
   if (palette.rev.arg)
     my_palette <-
-    rev(colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks))
+      rev(colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks))
   else
     my_palette <-
-    colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks)
+      colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks)
   
   
   col_labels <- get_leaves_branches_col(dend.arg)
@@ -1031,7 +1205,10 @@ LOCplotHeatmap <- function(data.arg,
     main = title.arg,
     symbreaks = FALSE,
     symkey = FALSE,
-    breaks = if (is.null(breaks.arg)) NULL else seq(breaks.arg[1], breaks.arg[2], length.out = loc.n.colbreaks+1)
+    breaks = if (is.null(breaks.arg))
+      NULL
+    else
+      seq(breaks.arg[1], breaks.arg[2], length.out = loc.n.colbreaks + 1)
   )
   
   return(loc.p)
