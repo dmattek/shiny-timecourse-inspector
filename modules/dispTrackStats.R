@@ -38,8 +38,8 @@ modTrackStats = function(input, output, session,
                    DT::dataTableOutput(ns('outTabStatsMeas'))),
           tabPanel("Duplicated IDs",         
                    DT::dataTableOutput(ns('outTabStatsDup')))
-          )
         )
+      )
     }
   })
   
@@ -60,7 +60,7 @@ modTrackStats = function(input, output, session,
   })
   
   
-  # caclulate stats of the measurement (column Y) per group
+  # calculate stats of the measurement (column Y) per group
   calcStatsMeas = reactive({
     cat(file = stderr(), 'modTrackStats:calsStats\n')
     loc.dt = in.data()
@@ -83,7 +83,7 @@ modTrackStats = function(input, output, session,
     return(loc.dt.aggr)
   })
   
-  # caclulate stats of tracks per group
+  # calculate stats of tracks per group
   calcStatsTracks = reactive({
     cat(file = stderr(), 'modTrackStats:calsStats\n')
     loc.dt = in.data()
@@ -94,10 +94,10 @@ modTrackStats = function(input, output, session,
     loc.dt.aggr = loc.dt[, 
                          .(nTpts = .N), 
                          by = c(in.bycols, COLID)][, .(tracksN = .N,
-                                                   tracksLenMean = mean(nTpts),
-                                                   tracksLenSD = sd(nTpts),
-                                                   tracksLenMedian = median(as.double(nTpts)),
-                                                   tracksLenIQR = IQR(nTpts)), by = c(in.bycols)]
+                                                       tracksLenMean = mean(nTpts),
+                                                       tracksLenSD = sd(nTpts),
+                                                       tracksLenMedian = median(as.double(nTpts)),
+                                                       tracksLenIQR = IQR(nTpts)), by = c(in.bycols)]
     
     setnames(loc.dt.aggr, c(in.bycols, 'nTracks', 'Mean Length', 'SD', 'Median Length', 'IQR'))
     
@@ -109,8 +109,9 @@ modTrackStats = function(input, output, session,
     cat(file = stderr(), 'modTrackStats:outTabStats\n')
     loc.dt = calcStatsTracks()
     
-    if (is.null(loc.dt))
-      return(NULL)
+    validate(
+      need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
+    )
     
     if (nrow(loc.dt))
       datatable(loc.dt, 
@@ -141,8 +142,9 @@ modTrackStats = function(input, output, session,
     cat(file = stderr(), 'modTrackStats:outTabMeas\n')
     loc.dt = calcStatsMeas()
     
-    if (is.null(loc.dt))
-      return(NULL)
+    validate(
+      need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
+    )
     
     if (nrow(loc.dt))
       datatable(loc.dt, 
@@ -174,35 +176,39 @@ modTrackStats = function(input, output, session,
     cat(file = stderr(), 'modTrackStats:outTabStatsDup\n')
     loc.dt = in.data()
     
-    if (is.null(loc.dt))
-      return(NULL)
+    validate(
+      need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
+    )
     
     # Look whether there were more objects with the same track ID in the frame
     # Such track IDs will have TRUE assigned in 'dup' column
     # Keep only s.track column with dup=TRUE
-    loc.duptracks = loc.dt[, .(dup = (sum(duplicated(get(COLRT))) > 0)), by = COLID][dup == TRUE, COLID, with = FALSE]
+    loc.duptracks = loc.dt[, 
+                           .(dup = (sum(duplicated(get(COLRT))) > 0)), 
+                           by = COLID][dup == TRUE, COLID, with = FALSE]
     
-    if (nrow(loc.duptracks))
-      datatable(loc.duptracks, 
-                caption = paste0("Track IDs with duplicated objects in a group. ",
-                                 "To avoid, create a data-wide unique track ID in ",
-                                 "the panel on the left or in your input data."),
-                rownames = TRUE,
-                extensions = 'Buttons', 
-                options = list(
-                  dom = 'Bfrtip',
-                  buttons = list('copy', 
-                                 'print', 
-                                 list(extend = 'collection',
-                                      buttons = list(list(extend='csv',
-                                                          filename = 'hitStats'),
-                                                     list(extend='excel',
-                                                          filename = 'hitStats'),
-                                                     list(extend='pdf',
-                                                          filename= 'hitStats')),
-                                      text = 'Download')))) %>% formatRound(3:6)
-    else
-      return(NULL)
+    DT::datatable(loc.duptracks, 
+                  caption = paste0("Time series with duplicated track IDs. ",
+                                   "To avoid, create a data-wide unique track ID in ",
+                                   "the panel on the left or in your input data."),
+                  rownames = TRUE,
+                  extensions = 'Buttons', 
+                  options = list(
+                    dom = 'Bfrtip',
+                    buttons = list('copy', 
+                                   'print', 
+                                   list(extend = 'collection',
+                                        buttons = list(list(extend='csv',
+                                                            filename = 'hitStats'),
+                                                       list(extend='excel',
+                                                            filename = 'hitStats'),
+                                                       list(extend='pdf',
+                                                            filename= 'hitStats')),
+                                        text = 'Download')),
+                    language = list(
+                      zeroRecords = "No records to display")
+                  )
+    ) %>% formatRound(3:6)
   })
   
 }
