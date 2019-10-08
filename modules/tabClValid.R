@@ -5,7 +5,8 @@
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
 helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected distance measure will work, ",
-                                              "however caution is recommended. Consider interpolation of NAs and missing data in the left panel."),
+                                              "however PCA will not be avaliable."),
+                     alertClValidNAsPresentDTW = paste0("NAs present. DTW distance measure will NOT work."),
                     alLearnMore = paste0("<p><a href=http://www.sthda.com/english/wiki/print.php?id=241 title=\"External link\">Clustering</a> ",
                                          "is an <b>unsupervised</b> machine learning method for partitioning ",
                                          "dataset into a set of groups or clusters. The procedure will return clusters ",
@@ -60,7 +61,8 @@ clustValidUI <- function(id, label = "Validation") {
                choices = list("Euclidean" = "euclidean",
                               "Manhattan" = "manhattan",
                               "Maximum"   = "maximum",
-                              "Canberra"  = "canberra"),
+                              "Canberra"  = "canberra",
+                              "DTW"       = "DTW"),
                selected = "euclidean"
              ),
              bsAlert("alertAnchorClValidNAsPresent")
@@ -134,27 +136,39 @@ clustValidUI <- function(id, label = "Validation") {
                         )
                ),
                br(),
-               withSpinner(plotOutput(ns('outPlotClPCA'))),
-               br(),
                withSpinner(plotOutput(ns('outPlotTree'))),
                br(),
-               withSpinner(plotOutput(ns('outPlotSilhForCut')))
+               withSpinner(plotOutput(ns('outPlotSilhForCut'))),
+               br(),
+               withSpinner(plotOutput(ns('outPlotClPCA')))
       )
     )
   )
 }
 
 # SERVER ----
-clustValid <- function(input, output, session, in.data4clust) {
+clustValid <- function(input, output, session, in.dataWide) {
 
   ns = session$ns
   
+  # Return the number of clusters from the slider 
+  # and delay by a constant in milliseconds defined in auxfunc.R
+  returnNclust = reactive({
+    return(input$slClValidNclust)
+  }) %>% debounce(MILLIS)
+  
+  # Return max number of clusters from the slider 
+  # and delay by a constant in milliseconds defined in auxfunc.R
+  returnMaxNclust = reactive({
+    return(input$slClValidMaxClust)
+  }) %>% debounce(MILLIS)
+  
   # calculate distance matrix for further clustering
   # time series arranged in rows with columns corresponding to time points
-  userFitDistHier <- reactive({
-    cat(file = stderr(), 'clustValid:userFitDistHier \n')
+  calcDist <- reactive({
+    cat(file = stderr(), 'clustValid:calcDist \n')
     
-    loc.dm = in.data4clust()
+    loc.dm = in.dataWide()
     
     if (is.null(loc.dm)) {
       return(NULL)
@@ -163,68 +177,50 @@ clustValid <- function(input, output, session, in.data4clust) {
     # Throw some warnings if NAs present in the dataset.
     # DTW cannot compute distance when NA's are preset.
     # Other distance measures can be calculated but caution is required with interpretation.
-    print(sum(is.na(loc.dm)))
+    # NAs in the wide format can result from explicit NAs in the measurment column or
+    # from missing rows that cause NAs to appear when convertinf from long to wide (dcast)
     if(sum(is.na(loc.dm)) > 0) {
+      if (input$selectDiss == "DTW") {
+        createAlert(session, "alertAnchorClValidNAsPresent", "alertClValidNAsPresentDTW", title = "Error",
+                    content = helpText.clValid[["alertClValidNAsPresentDTW"]], 
+                    append = FALSE,
+                    style = "danger")
+        closeAlert(session, 'alertClValidNAsPresent')
+        
+        return(NULL)
+        
+      } else {
         createAlert(session, "alertAnchorClValidNAsPresent", "alertClValidNAsPresent", title = "Warning",
                     content = helpText.clValid[["alertClValidNAsPresent"]], 
                     append = FALSE, 
                     style = "warning")
+        closeAlert(session, 'alertClValidNAsPresentDTW')
+      }
     } else {
+      closeAlert(session, 'alertClValidNAsPresentDTW')
       closeAlert(session, 'alertClValidNAsPresent')
-    }
+    }    
+    
     
     # calculate distance matrix
-    
-    return(dist(loc.dm, method = input$selectPlotHierDiss))
+    return(proxy::dist(loc.dm, method = input$selectDiss))
   })
   
-  
+  # calculate dendrogram for a chosen number of clusters and the linkage method
   calcDendCut = reactive({
     cat(file = stderr(), 'clustValid:calcDendCut \n')
     
-    loc.dm = returnDMwithChecks()
+    loc.dist = calcDist()
     
-    if (is.null(loc.dm)) {
+    if (is.null(loc.dist)) {
       return(NULL)
     }
     
-    return(factoextra::eclust(x = loc.dm, 
+    return(factoextra::hcut(x = loc.dist,
+                            k = returnNclust(),
                               FUNcluster = "hclust",
-                              k = input$slClValidNclust, 
                               hc_method = input$selectLinkage, 
-                              hc_metric = input$selectDiss,
                               graph = FALSE))
-  })
-  
-  # Return a matrix with time series in wide format
-  # If data contains NAs (from explicit NAs or due to missing time points, 
-  # or due to missing time points after outlier removal),
-  # some warnings are thrown. E.g. DTW cannot caluclate distance if NAs are present.
-  returnDMwithChecks = reactive({
-    cat(file = stderr(), 'clustValid:returnDMwithChecks \n')
-    
-    loc.dm = in.data4clust()
-    
-    if (is.null(loc.dm)) {
-      return(NULL)
-    }
-    
-    # Throw some warnings if NAs present in the dataset.
-    # DTW cannot compute distance when NA's are preset.
-    # Other distance measures can be calculated but caution is required with interpretation.
-    print(sum(is.na(loc.dm)))
-    
-    if(sum(is.na(loc.dm)) > 0) {
-        createAlert(session, "alertAnchorClValidNAsPresent", "alertClValidNAsPresent", 
-                    title = "Warning",
-                    content = helpText.clValid[["alertClValidNAsPresent"]], 
-                    append = FALSE, 
-                    style = "warning")
-    } else {
-      closeAlert(session, 'alertClValidNAsPresent')
-    }
-    
-    return(loc.dm)
   })
   
   # Plotting ----
@@ -234,23 +230,22 @@ clustValid <- function(input, output, session, in.data4clust) {
   
   # plot average silhouette
   plotSilhAvg <- function() {
-
+    cat(file = stderr(), 'plotSilhAvg: in\n')
+    
+    # make the f-n dependent on the button click
     locBut = input$butPlotRel
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotSilhAvg: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    loc.dm = returnDMwithChecks()
-    if (is.null(loc.dm)) {
-      return(NULL)
-    }
-    
-    loc.p = factoextra::fviz_nbclust(loc.dm,
-                                     hcut, 
+
+    # Check if required data exists
+    # Thanks to isolate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.dist = isolate(calcDist())
+    validate(
+      need(!is.null(loc.dist), "Nothing to plot. Load data first!")
+    )    
+
+    loc.p = LOCnbclust(loc.dist,
                                      method = "silhouette",
-                                     k.max = input$slClValidMaxClust,
+                                     k.max = returnMaxNclust(),
                                      hc_metric = input$selectDiss,
                                      hc_method = input$selectLinkage) +
       xlab("Number of clusters") +
@@ -266,23 +261,22 @@ clustValid <- function(input, output, session, in.data4clust) {
 
   # plot Ws
   plotWss <- function() {
+    cat(file = stderr(), 'plotWss: in\n')
     
+    # make the f-n dependent on the button click
     locBut = input$butPlotRel
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotWss: Go button not pressed\n')
-      
-      return(NULL)
-    }
     
-    loc.dm = returnDMwithChecks()
-    if (is.null(loc.dm)) {
-      return(NULL)
-    }
+    # Check if required data exists
+    # Thanks to isolate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.dist = isolate(calcDist())
+    validate(
+      need(!is.null(loc.dist), "Nothing to plot. Load data first!")
+    )    
     
-    loc.p = factoextra::fviz_nbclust(loc.dm,
-                                     hcut, 
+    loc.p = LOCnbclust(loc.dist,
                                      method = "wss",
-                                     k.max = input$slClValidMaxClust,
+                                     k.max = returnMaxNclust(),
                                      hc_metric = input$selectDiss,
                                      hc_method = input$selectLinkage) +
       xlab("Number of clusters") +
@@ -299,18 +293,18 @@ clustValid <- function(input, output, session, in.data4clust) {
 
   # plot dendrogram tree
   plotTree <- function() {
+    cat(file = stderr(), 'plotTree: in\n')
     
+    # make the f-n dependent on the button click
     locBut = input$butPlotInt
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotTree: Go button not pressed\n')
-      
-      return(NULL)
-    }
     
-    loc.part = calcDendCut()
-    if (is.null(loc.part)) {
-      return(NULL)
-    }
+    # Check if required data exists
+    # Thanks to isolate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.part = isolate(calcDendCut())
+    validate(
+      need(!is.null(loc.part), "Nothing to plot. Load data first!")
+    )    
     
     loc.p = factoextra::fviz_dend(loc.part, 
                                   show_labels = F,
@@ -329,42 +323,56 @@ clustValid <- function(input, output, session, in.data4clust) {
   
   # PCA visualization of partitioning methods 
   plotClPCA <- function() {
+    cat(file = stderr(), 'plotTree: in\n')
     
+    # make the f-n dependent on the button click
     locBut = input$butPlotInt
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotClPCA: Go button not pressed\n')
-      
-      return(NULL)
-    }
     
-    loc.part = calcDendCut()
-    if (is.null(loc.part)) {
+    # Check if required data exists
+    # Thanks to isolate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.part = isolate(calcDendCut())
+    loc.dm = in.dataWide()
+    print(sum(is.na(loc.dm)))
+    
+    validate(
+      need(!is.null(loc.part), "Nothing to plot. Load data first!"),
+      need(!is.null(loc.dm),   "Nothing to plot. Load data first!"),
+      need(sum(is.na(loc.dm)), "Cannot calculate PCA in the presence of missing data and/or NAs.")
+    )    
+    
+    if (sum(is.na(loc.dm)) > 0)
       return(NULL)
-    }
     
     loc.p = factoextra::fviz_cluster(loc.part, 
+                                     data = loc.dm,
                                      geom = "point",
-                                     elipse.type = "norm", 
+                                     elipse.type = "convex", 
                                      main = "Principle components"
-                                     )
+                                     )+
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND)
     
     return(loc.p)
   }
   
   # plot silhouetts for a particular dendrogram cut
   plotSilhForCut <- function() {
+    cat(file = stderr(), 'plotSilhForCut: in\n')
     
+    # make the f-n dependent on the button click
     locBut = input$butPlotInt
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotSilhForCut: Go button not pressed\n')
-      
-      return(NULL)
-    }
     
-    loc.part = calcDendCut()
-    if (is.null(loc.part)) {
-      return(NULL)
-    }
+    # Check if required data exists
+    # Thanks to isolate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.part = isolate(calcDendCut())
+    validate(
+      need(!is.null(loc.part), "Nothing to plot. Load data first!")
+    )    
     
     loc.p = factoextra::fviz_silhouette(loc.part, 
                                         print.summary = FALSE, 
