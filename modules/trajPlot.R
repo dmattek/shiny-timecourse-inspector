@@ -79,6 +79,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
     uiOutput(ns('uiPlotTraj')),
     br(),
     modTrackStatsUI(ns('dispTrackStats')),
+    br(),
     downPlotUI(ns('downPlotTraj'), "Download Plot")
   )
 }
@@ -238,25 +239,19 @@ modTrajPlot = function(input, output, session,
   
   plotTraj <- function() {
     cat(file = stderr(), 'plotTraj: in\n')
+    
+    # make the f-n dependent on the button click
     locBut = input$butPlotTraj
     
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotTraj: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    # check main data exists
+    # Check if main data exists
+    # Thanks to solate all mods in the left panel are delayed 
+    # until clicking the Plot button
     loc.dt = isolate(in.data())
-    
-    cat("plotTraj: on to plot\n\n")
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotTraj: dt is NULL\n')
-      return(NULL)
-    }
+    validate(
+      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+    )
     
     cat(file = stderr(), 'plotTraj: dt not NULL\n')
-    
     
     # check if stim data exists
     loc.dt.stim = isolate(in.data.stim())
@@ -266,8 +261,6 @@ modTrajPlot = function(input, output, session,
     } else {
       cat(file = stderr(), 'plotTraj: dt.stim not NULL\n')
     }
-    
-    
     
     # Future: change such that a column with colouring status is chosen by the user
     # colour trajectories, if dataset contains mid.in column

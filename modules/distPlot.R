@@ -168,12 +168,6 @@ modDistPlot = function(input, output, session,
   
   # Boxplot - display
   output$outPlotBox = renderPlot({
-    locBut = input$butPlot
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'boxPlot:Go button not pressed\n')
-      return(NULL)
-    }
     
     plotBox()
     
@@ -181,12 +175,6 @@ modDistPlot = function(input, output, session,
   
   
   output$outPlotBoxInt = renderPlotly({
-    locBut = input$butPlot
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'boxPlot:Go button not pressed\n')
-      return(NULL)
-    }
     
     # This is required to avoid 
     # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
@@ -222,14 +210,15 @@ modDistPlot = function(input, output, session,
   
   plotBox <- function() {
     cat(file = stderr(), 'plotBox\n')
+    locBut = input$butPlot
     
-    loc.dt = in.data()
-    
-    cat(file = stderr(), "plotBox: on to plot\n\n")
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotBox: dt is NULL\n')
-      return(NULL)
-    }
+    # Check if main data exists
+    # Thanks to solate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.dt = isolate(in.data())
+    validate(
+      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+    )    
     
     cat(file = stderr(), 'plotBox:dt not NULL\n')
     

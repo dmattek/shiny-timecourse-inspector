@@ -68,7 +68,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
     uiOutput(ns('uiPlotTraj')),
     br(),
     modTrackStatsUI(ns('dispTrackStats')),
-    
+    br(),
     downPlotUI(ns('downPlotTraj'), "Download Plot")
   )
 }
@@ -232,23 +232,15 @@ modTrajRibbonPlot = function(input, output, session,
     cat(file = stderr(), 'plotTrajRibbon: in\n')
     locBut = input$butPlotTraj
     
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotTrajRibbon: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    # check if main data exists
+    # Check if main data exists
+    # Thanks to solate all mods in the left panel are delayed 
+    # until clicking the Plot button
     loc.dt = isolate(in.data())
-    
-    cat("plotTrajRibbon: on to plot\n\n")
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotTrajRibbon: dt is NULL\n')
-      return(NULL)
-    }
+    validate(
+      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+    )    
     
     cat(file = stderr(), 'plotTrajRibbon: dt not NULL\n')
-    
     
     # check if stim data exists
     loc.dt.stim = isolate(in.data.stim())

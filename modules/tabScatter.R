@@ -130,7 +130,7 @@ tabScatterPlotUI <-
       checkboxInput(ns('plotInt'),
                     'Interactive Plot',
                     value = FALSE),
-      actionButton(ns('butGoScatter'), 'Plot!'),
+      actionButton(ns('butPlot'), 'Plot!'),
       uiOutput(ns("plotInt_ui")),
       downPlotUI(ns('downPlotScatter'), "Download Plot")
     )
@@ -286,19 +286,17 @@ tabScatterPlot <-
     
     plotScatter <- function() {
       cat(file = stderr(), "plotScatter\n")
+      locBut = input$butPlot
       
-      # isolate because calculations & plotting take a while
-      # re-plotting done upon button press
-      loc.dt = isolate(data4scatterPlot())
-      
-      cat("plotScatter on to plot\n\n")
-      if (is.null(loc.dt)) {
-        cat(file = stderr(), 'plotScatter: dt is NULL\n')
-        return(NULL)
-      }
+      # Check if main data exists
+      # Thanks to solate all mods in the left panel are delayed 
+      # until clicking the Plot button
+      loc.dt = isolate(in.data())
+      validate(
+        need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+      )    
       
       cat(file = stderr(), 'plotScatter:dt not NULL\n')
-      
       
       p.out = LOCggplotScat(
         dt.arg = loc.dt,
@@ -314,14 +312,6 @@ tabScatterPlot <-
     
     # Plot rendering ----
     output$outPlotScatter <- renderPlot({
-      locBut = input$butGoScatter
-      
-      if (locBut == 0) {
-        cat(file = stderr(), 'plotScatter: Go button not pressed\n')
-        
-        return(NULL)
-      }
-      
       plotScatter()
     })
     
@@ -330,12 +320,6 @@ tabScatterPlot <-
       # "Warning: Error in <Anonymous>: cannot open file 'Rplots.pdf'"
       # When running on a server. Based on:
       # https://github.com/ropensci/plotly/issues/494
-      
-      locBut = input$butGoScatter
-      if (locBut == 0) {
-        cat(file = stderr(), 'plotScatterInt Go button not pressed\n')
-        return(NULL)
-      }
       
       if (names(dev.cur()) != "null device")
         dev.off()
