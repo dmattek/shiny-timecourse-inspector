@@ -314,6 +314,7 @@ shinyServer(function(input, output, session) {
   })
   
   # UI-side-panel-trim x-axis (time) ----
+  
   output$uiSlTimeTrim = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:uiSlTimeTrim\n')
@@ -337,7 +338,13 @@ shinyServer(function(input, output, session) {
       )
       
     }
-  })
+  }) 
+  
+  # Return the value of slider for trimming time; 
+  # output delayed by MILLIS
+  returnValSlTimeTrim = reactive({
+    return(input$slTimeTrim)
+  }) %>% debounce(MILLIS)
   
   # UI-side-panel-normalization ----
   
@@ -389,6 +396,13 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # Return the value of slider for normalisation time; 
+  # output delayed by MILLIS
+  returnValSlNormRtMinMax = reactive({
+    return(input$slNormRtMinMax)
+  }) %>% debounce(MILLIS)
+  
+  
   # use robust stats (median instead of mean, mad instead of sd)
   output$uiChBnormRobust = renderUI({
     if (DEB)
@@ -432,6 +446,7 @@ shinyServer(function(input, output, session) {
 
   # Processing-data ----
   
+  # Obtain data either from an upload or by generating a synthetic dataset
   dataInBoth <- reactive({
     # Without direct references to inDataGen1,2 and inFileLoad, inDataGen2
     #    does not trigger running this reactive once inDataGen1 is used.
@@ -535,20 +550,9 @@ shinyServer(function(input, output, session) {
     return(dm)
   })
   
-  # return column names of the main dt
-  getDataNucCols <- reactive({
-    if (DEB)
-      cat(file = stdout(), 'server:getDataNucCols: in\n')
-    
-    loc.dt = dataInBoth()
-    
-    if (is.null(loc.dt))
-      return(NULL)
-    else
-      return(colnames(loc.dt))
-  })
-  
-  # return dt with an added column with unique track object label
+  # Return a dt with mods depending on UI options::
+  # - an added column with unique track object label created from the existing track id and prepended with columns chosen in the UI
+  # - removed track IDs based on a separate file uploaded; the file should contain a single column with a header and unique track IDs
   dataMod <- reactive({
     if (DEB)
       cat(file = stdout(), 'server:dataMod\n')
@@ -562,10 +566,9 @@ shinyServer(function(input, output, session) {
       # create unique track ID based on columns specified in input$inSelSite field and combine with input$inSelTrackLabel
       loc.dt[, (COLIDUNI) := do.call(paste, c(.SD, sep = "_")), .SDcols = c(input$inSelSite, input$inSelTrackLabel) ]
     } else {
-      # stay with track ID provided in the loaded dataset; has to be unique
+      # Leave track ID provided in the loaded dataset; has to be unique
       loc.dt[, (COLIDUNI) := get(input$inSelTrackLabel)]
     }
-    
     
     # remove trajectories based on uploaded csv
     if (input$chBtrajRem) {
@@ -576,43 +579,8 @@ shinyServer(function(input, output, session) {
       loc.dt = loc.dt[!(trackObjectsLabelUni %in% loc.dt.rem[[1]])]
     }
     
-    # check if NAs present
-    
-    
     return(loc.dt)
   })
-  
-  # return all unique track object labels (created in dataMod)
-  # This will be used to display in UI for trajectory highlighting
-  getDataTrackObjLabUni <- reactive({
-    if (DEB)
-      cat(file = stdout(), 'server:getDataTrackObjLabUni\n')
-    
-    loc.dt = dataMod()
-    
-    if (is.null(loc.dt))
-      return(NULL)
-    else
-      return(unique(loc.dt$trackObjectsLabelUni))
-  })
-  
-  
-  # return all unique time points (real time)
-  # This will be used to display in UI for box-plot
-  # These timepoints are from the original dt and aren't affected by trimming of x-axis
-  getDataTpts <- reactive({
-    if (DEB)
-      cat(file = stdout(), 'server:getDataTpts\n')
-    
-    loc.dt = dataMod()
-    
-    if (is.null(loc.dt))
-      return(NULL)
-    else
-      return(unique(loc.dt[[input$inSelTime]]))
-  })
-  
-  
   
   # prepare data for plotting time courses
   # returns dt with these columns:
@@ -627,9 +595,9 @@ shinyServer(function(input, output, session) {
   #               (column created if mid.in present in uploaded data or tracks are selected in the UI)
   #    obj.num  - created if ObjectNumber column present in the input data 
   #    pos.x,y  - created if columns with x and y positions present in the input data
-  data4trajPlot <- reactive({
+  dataLong <- reactive({
     if (DEB)
-      cat(file = stdout(), 'server:data4trajPlot\n')
+      cat(file = stdout(), 'server:dataLong\n')
     
     loc.dt = dataMod()
     if (is.null(loc.dt))
@@ -672,7 +640,7 @@ shinyServer(function(input, output, session) {
     loc.s.pos.y = names(loc.dt)[grep('(L|l)ocation.*Y|(P|p)os.y|(P|p)osy', names(loc.dt))[1]]
     
     if (DEB)
-      cat('server:data4trajPlot:\n   Position columns: ', loc.s.pos.x, loc.s.pos.y, '\n')
+      cat('server:dataLong:\n   Position columns: ', loc.s.pos.x, loc.s.pos.y, '\n')
     
     if (!is.na(loc.s.pos.x) & !is.na(loc.s.pos.y))
       locPos = TRUE
@@ -684,7 +652,7 @@ shinyServer(function(input, output, session) {
     # This is different from TrackObject_Label and is handy to keep
     # because labels on segmented images are typically ObjectNumber
     loc.s.objnum = names(loc.dt)[grep('(O|o)bject(N|n)umber', names(loc.dt))[1]]
-    #cat('data4trajPlot::loc.s.objnum ', loc.s.objnum, '\n')
+    #cat('dataLong::loc.s.objnum ', loc.s.objnum, '\n')
     if (is.na(loc.s.objnum)) {
       locObjNum = FALSE
     }
@@ -756,7 +724,8 @@ shinyServer(function(input, output, session) {
     # or the frame number metadata can be missing, as is the case for tCourseSelected files that already have realtime column.
     # Therefore, we cannot rely on that info to get time frequency; user must provide this number!
     
-    # check if NA's present
+    # Check for explicit NA's in the measurement columns
+    # Has to be here (and not in dataMod()) because we need to know the name of the measurement column (COLY)
     if (sum(is.na(loc.out[[COLY]])))
       createAlert(session, "alertAnchorSidePanelNAsPresent", "alertNAsPresent", title = "Warning",
                   content = helpText.server[["alertNAsPresent"]], 
@@ -777,7 +746,7 @@ shinyServer(function(input, output, session) {
       
       # x-check: print all rows with NA's
       if (DEB) {
-        cat(file = stdout(), 'server:data4trajPlot: Rows with NAs:\n')
+        cat(file = stdout(), 'server:dataLong: Rows with NAs:\n')
         print(loc.out[rowSums(is.na(loc.out)) > 0, ])
       }
       
@@ -817,7 +786,7 @@ shinyServer(function(input, output, session) {
     
     ## Trim x-axis (time)
     if(input$chBtimeTrim) {
-      loc.out = loc.out[get(COLRT) >= input$slTimeTrim[[1]] & get(COLRT) <= input$slTimeTrim[[2]] ]
+      loc.out = loc.out[get(COLRT) >= returnValSlTimeTrim()[[1]] & get(COLRT) <= returnValSlTimeTrim()[[2]] ]
     }
     
     ## Normalization
@@ -827,15 +796,15 @@ shinyServer(function(input, output, session) {
         in.dt = loc.out,
         in.meas.col = COLY,
         in.rt.col = COLRT,
-        in.rt.min = input$slNormRtMinMax[1],
-        in.rt.max = input$slNormRtMinMax[2],
+        in.rt.min = returnValSlNormRtMinMax()[1],
+        in.rt.max = returnValSlNormRtMinMax()[2],
         in.type = input$rBnormMeth,
         in.robust = input$chBnormRobust,
         in.by.cols = if(input$chBnormGroup %in% 'none') NULL else input$chBnormGroup
       )
       
       # Column with normalized data is renamed to the original name
-      # Further code assumes column name y produced by data4trajPlot
+      # Further code assumes column name y produced by dataLong
       
       loc.out[, c(COLY) := NULL]
       setnames(loc.out, 'y.norm', COLY)
@@ -845,15 +814,15 @@ shinyServer(function(input, output, session) {
   })
   
   
-  # prepare data for clustering
-  # convert from long to wide; return a matrix with:
-  # cells as columns
-  # time points as rows
-  data4clust <- reactive({
+  # Prepare data in wide format, ready for distance calculation in clustering
+  # Return a matrix with:
+  # - time series as rows
+  # - time points as columns
+  dataWide <- reactive({
     if (DEB)  
-      cat(file = stdout(), 'server:data4clust\n')
+      cat(file = stdout(), 'server:dataWide\n')
     
-    loc.dt = data4trajPlotNoOut()
+    loc.dt = dataLongNoOut()
     if (is.null(loc.dt))
       return(NULL)
     
@@ -871,53 +840,99 @@ shinyServer(function(input, output, session) {
     # assign row names to the matrix
     rownames(loc.m.out) = loc.rownames
     
+    # Check for missing time points
+    # Missing rows in the long format give rise to NAs during dcast
+    # Here, we are not checking for explicit NAs in COLY column
+    if ((sum(is.na(loc.dt[[COLY]])) == 0) & (sum(is.na(loc.dt.wide)) > 0)) {
+      createAlert(session, "alertAnchorSidePanelNAsPresent", "alertNAsPresentLong2WideConv", title = "Warning",
+                  content = helpText.server[["alertNAsPresentLong2WideConv"]], 
+                  append = FALSE,
+                  style = "warning")
+    } else {
+      closeAlert(session, "alertNAsPresentLong2WideConv")
+    }
+    
     return(loc.m.out)
   }) 
   
   
-  # prepare data with stimulation pattern
-  # this dataset is displayed underneath of trajectory plot (modules/trajPlot.R) as geom_segment
-  data4stimPlot <- reactive({
+  # Prepare data with stimulation pattern
+  # This dataset is displayed underneath of trajectory plot (modules/trajPlot.R) as geom_segment
+  dataStim <- reactive({
     if (DEB)  
-      cat(file = stdout(), 'server:data4stimPlot\n')
+      cat(file = stdout(), 'server:dataStim\n')
     
     if (input$chBstim) {
       if (DEB)  
-        cat(file = stdout(), 'server:data4stimPlot: stim not NULL\n')
+        cat(file = stdout(), 'server:dataStim: stim not NULL\n')
       
       loc.dt.stim = dataLoadStim()
       return(loc.dt.stim)
     } else {
       if (DEB)  
-        cat(file = stdout(), 'server:data4stimPlot: stim is NULL\n')
+        cat(file = stdout(), 'server:dataStim: stim is NULL\n')
       
       return(NULL)
     }
   })
   
-  # prepare y-axis label in time series plots, depending on UI setting
+  # Return all unique track object labels (created in dataMod)
+  # Used to display track IDs in UI for trajectory highlighting
+  getDataTrackObjLabUni <- reactive({
+    if (DEB)
+      cat(file = stdout(), 'server:getDataTrackObjLabUni\n')
+    
+    loc.dt = dataMod()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    else
+      return(unique(loc.dt[[COLIDUNI]]))
+  })
   
+  
+  # Return all unique time points (real time)
+  # Used to set limits of sliders for trimming time and for normalisation
+  # These timepoints are from the original dt and aren't affected by trimming of x-axis
+  getDataTpts <- reactive({
+    if (DEB)
+      cat(file = stdout(), 'server:getDataTpts\n')
+    
+    loc.dt = dataMod()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    else
+      return(unique(loc.dt[[input$inSelTime]]))
+  })
+  
+  
+  # Return column names of the main dt
+  # Used to fill UI input fields with a choice of column names
+  getDataNucCols <- reactive({
+    if (DEB)
+      cat(file = stdout(), 'server:getDataNucCols: in\n')
+    
+    loc.dt = dataInBoth()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    else
+      return(colnames(loc.dt))
+  })
+  
+  # Unfinished f-n!
+  # prepare y-axis label in time series plots, depending on UI setting
   createYaxisLabel = reactive({
     locLabel = input$inSelMeas1
-    
-    
     
     return(locLabel)
   })
   
-  # download data as prepared for plotting
-  # after all modification
-  output$downloadDataClean <- downloadHandler(
-    filename = FCSVTCCLEAN,
-    content = function(file) {
-      write.csv(data4trajPlotNoOut(), file, row.names = FALSE)
-    }
-  )
-  
   # Plotting-trajectories ----
 
   # UI for selecting trajectories
-  # The output data table of data4trajPlot is modified based on inSelHighlight field
+  # The output data table of dataLong is modified based on inSelHighlight field
   output$varSelHighlight = renderUI({
     if (DEB)  
       cat(file = stdout(), 'server:varSelHighlight\n')
@@ -938,44 +953,55 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # Modules within main window ----
+  
+  # download data as prepared for plotting
+  # after all modification
+  output$downloadDataClean <- downloadHandler(
+    filename = FCSVTCCLEAN,
+    content = function(file) {
+      write.csv(dataLongNoOut(), file, row.names = FALSE)
+    }
+  )
+
   # Taking out outliers 
-  data4trajPlotNoOut = callModule(modSelOutliers, 'returnOutlierIDs', data4trajPlot)
+  dataLongNoOut = callModule(modSelOutliers, 'returnOutlierIDs', dataLong)
   
   # Trajectory plotting - ribbon
   callModule(modTrajRibbonPlot, 'modTrajRibbon', 
-             in.data = data4trajPlotNoOut,
-             in.data.stim = data4stimPlot,
+             in.data = dataLongNoOut,
+             in.data.stim = dataStim,
              in.fname = function() return(FPDFTCMEAN))
   
   # Trajectory plotting - individual
   callModule(modTrajPlot, 'modTrajPlot', 
-             in.data = data4trajPlotNoOut, 
-             in.data.stim = data4stimPlot,
+             in.data = dataLongNoOut, 
+             in.data.stim = dataStim,
              in.fname = function() {return(FPDFTCSINGLE)},
              in.ylab = createYaxisLabel)
   
   # Trajectory plotting - PSD
   callModule(modPSDPlot, 'modPSDPlot',
-             in.data = data4trajPlotNoOut,
+             in.data = dataLongNoOut,
              in.fname = function() {return(FPDFTCPSD)})
   
   
   # Tabs ----
   ###### AUC calculation and plotting
-  callModule(tabAUCplot, 'tabAUC', data4trajPlotNoOut, in.fname = function() return(FPDFBOXAUC))
+  callModule(tabAUCplot, 'tabAUC', dataLongNoOut, in.fname = function() return(FPDFBOXAUC))
   
   ###### Box-plot
-  callModule(tabDistPlot, 'tabDistPlot', data4trajPlotNoOut, in.fname = function() return(FPDFBOXTP))
+  callModule(tabDistPlot, 'tabDistPlot', dataLongNoOut, in.fname = function() return(FPDFBOXTP))
   
   ###### Scatter plot
-  callModule(tabScatterPlot, 'tabScatter', data4trajPlotNoOut, in.fname = function() return(FPDFSCATTER))
+  callModule(tabScatterPlot, 'tabScatter', dataLongNoOut, in.fname = function() return(FPDFSCATTER))
   
-  ##### Hierarchical estimation
-  callModule(clustValid, 'tabClValid', data4clust)
+  ##### Hierarchical validation
+  callModule(clustValid, 'tabClValid', dataWide)
 
   ##### Hierarchical clustering
-  callModule(clustHier, 'tabClHier', data4clust, data4trajPlotNoOut, data4stimPlot)
+  callModule(clustHier, 'tabClHier', dataWide, dataLongNoOut, dataStim)
   
   ##### Sparse hierarchical clustering using sparcl
-  callModule(clustHierSpar, 'tabClHierSpar', data4clust, data4trajPlotNoOut, data4stimPlot)
+  callModule(clustHierSpar, 'tabClHierSpar', dataWide, dataLongNoOut, dataStim)
 })
