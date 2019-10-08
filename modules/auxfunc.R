@@ -14,7 +14,9 @@ library(Hmisc) # for CI calculation
 
 
 # Global parameters ----
-
+# number of miliseconds to delay reactions to changes in the UI
+# used to delay output from sliders
+MILLIS = 1000
 
 # if true, additional output printed to R console
 DEB = T
@@ -174,7 +176,8 @@ helpText.server = c(
   chBnormRobust  = "Calculate fold-change and z-score using the median and Median Absolute Deviation, instead of the mean and standard deviation.",
   chBnormGroup   = "Normalise to mean/median of selected time calculated globally, per group, or for individual time series.",
   downloadDataClean = "Download all time series after modifications in this panel.",
-  alertNAsPresent            = "NAs present in the measurement column. Consider interpolation.",
+  alertNAsPresent              = "NAs present in the measurement column. Consider interpolation.",
+  alertNAsPresentLong2WideConv = "Missing rows. Consider interpolation.",
   alertWideMissesNumericTime = "Non-numeric headers of time columns. Data in wide format should have numeric column headers corresponding to time points.",
   alertWideTooFewColumns     = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point."
 )
@@ -530,6 +533,110 @@ LOCnormTraj = function(in.dt,
 }
 
 
+# Cluster validation ----
+
+#Customize factoextra functions to accept dissimilarity matrix from start. Otherwise can't use distance functions that are not in base R, like DTW.
+# Inherit and adapt hcut function to take input from UI, used for fviz_clust
+
+LOChcut <-
+function(x,
+         k = 2,
+         isdiss = inherits(x, "dist"),
+         hc_func = "hclust",
+         hc_method = "average",
+         hc_metric = "euclidean") {
+
+    if (!inherits(x, "dist")) {
+    stop("x must be a distance matrix")
+  }
+  return(
+    factoextra::hcut(
+      x = x,
+      k = k,
+      isdiss = TRUE,
+      hc_func = hc_func,
+      hc_method = hc_method,
+      hc_metric = hc_metric
+    )
+  )
+}
+
+# Modified from factoextra::fviz_nbclust
+# Allow (actually enforce) x to be a distance matrix; no GAP statistics for compatibility
+
+LOCnbclust <-
+  function (x,
+            FUNcluster = LOChcut,
+            method = c("silhouette", "wss"),
+            k.max = 10,
+            verbose = FALSE,
+            barfill = "steelblue",
+            barcolor = "steelblue",
+            linecolor = "steelblue",
+            print.summary = TRUE,
+            ...)
+  {
+    set.seed(123)
+    
+    if (k.max < 2)
+      stop("k.max must bet > = 2")
+    
+    method = match.arg(method)
+    
+    if (!inherits(x, c("dist")))
+      stop("x should be an object of class dist")
+    
+    else if (is.null(FUNcluster))
+      stop(
+        "The argument FUNcluster is required. ",
+        "Possible values are kmeans, pam, hcut, clara, ..."
+      )
+    
+    else if (method %in% c("silhouette", "wss")) {
+      diss <- x  # x IS ENFORCED TO BE A DISSIMILARITY MATRIX
+      
+      v <- rep(0, k.max)
+      
+      if (method == "silhouette") {
+        loc.mainlab = "Optimal number of clusters from silhouette analysis"
+        loc.ylab <- "Average silhouette width"
+        for (i in 2:k.max) {
+          clust <- FUNcluster(x, i, ...)
+          v[i] <-
+            factoextra:::.get_ave_sil_width(diss, clust$cluster)
+        }
+      }
+      else if (method == "wss") {
+        loc.mainlab = "Optimal number of clusters from within cluster sum of squares"
+        
+        loc.ylab <- "Total within cluster sum of squares"
+        
+        for (i in 1:k.max) {
+          clust <- FUNcluster(x, i, ...)
+          v[i] <- factoextra:::.get_withinSS(diss, clust$cluster)
+        }
+      }
+      
+      df <- data.frame(clusters = as.factor(1:k.max), y = v)
+      
+      p <- ggpubr::ggline(
+        df,
+        x = "clusters",
+        y = "y",
+        group = 1,
+        color = linecolor,
+        ylab = loc.ylab,
+        xlab = "Number of clusters",
+        main = loc.mainlab
+      )
+      
+      if (method == "silhouette")
+        p <- p + geom_vline(xintercept = which.max(v),
+                            linetype = 2,
+                            color = linecolor)
+      return(p)
+    }
+  }
 
 # Clustering ----
 
