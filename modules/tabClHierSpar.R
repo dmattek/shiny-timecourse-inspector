@@ -171,7 +171,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
                ),
                
                br(),
-               actionButton(ns('butPlotHierSparHeatMap'), 'Plot!'),
+               actionButton(ns('butPlot'), 'Plot!'),
                downPlotUI(ns('downPlotHierSparHM'), "Download Plot"),
                withSpinner(plotOutput(ns('outPlotHierSpar')))
 
@@ -198,11 +198,17 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
 
 # SERVER ----
 clustHierSpar <- function(input, output, session, 
-                          in.data4clust, 
+                          in.dataWide, 
                           in.data4trajPlot, 
                           in.data4stimPlot) {
   
   ns = session$ns
+  
+  # Return the number of clusters from the slider 
+  # and delay by a constant in milliseconds defined in auxfunc.R
+  returnNclust = reactive({
+    return(input$inPlotHierSparNclust)
+  }) %>% debounce(MILLIS)
   
   # UI for advanced options
   output$uiPlotHierSparNperms = renderUI({
@@ -284,7 +290,7 @@ clustHierSpar <- function(input, output, session,
   userFitHierSpar <- reactive({
     cat(file = stderr(), 'userFitHierSpar \n')
     
-    dm.t = in.data4clust()
+    dm.t = in.dataWide()
     if (is.null(dm.t)) {
       return()
     }
@@ -299,7 +305,7 @@ clustHierSpar <- function(input, output, session,
       dissimilarity = input$selectPlotHierSparDiss
     )
     
-    sparsehc <- HierarchicalSparseCluster(
+    loc.hc <- HierarchicalSparseCluster(
       dists = perm.out$dists,
       wbound = perm.out$bestw,
       niter = ifelse(input$inHierSparAdv, input$inPlotHierSparNiter, 1),
@@ -307,22 +313,22 @@ clustHierSpar <- function(input, output, session,
       dissimilarity = input$selectPlotHierSparDiss
     )
     
-    #cat('=============\nsparsehc:\n')
-    #print(sparsehc$hc)
+    #cat('=============\nloc.hc:\n')
+    #print(loc.hc$hc)
     
-    return(sparsehc)
+    return(loc.hc)
   })
   
   
   
   # return dendrogram colour coded according to the cut level of the dendrogram
   userFitDendHierSpar <- reactive({
-    sparsehc = userFitHierSpar()
-    if (is.null(sparsehc)) {
+    loc.hc = userFitHierSpar()
+    if (is.null(loc.hc)) {
       return()
     }
 
-    # number of clusters at which dendrigram is cut
+    # number of clusters at which dendrogram is cut
     loc.k = input$inPlotHierSparNclust
     
     # make a palette with the amount of colours equal to the number of clusters
@@ -330,7 +336,7 @@ clustHierSpar <- function(input, output, session,
     loc.col = ggthemes::tableau_color_pal(input$selectPlotHierSparPaletteDend)(n = loc.k)
     
     
-    dend <- as.dendrogram(sparsehc$hc)
+    dend <- as.dendrogram(loc.hc$hc)
     dend <- color_branches(dend, 
                            col = loc.col,
                            k = loc.k)
@@ -358,7 +364,7 @@ clustHierSpar <- function(input, output, session,
   # This will be used to display in UI for trajectory highlighting
   getDataTrackObjLabUni_afterTrim <- reactive({
     cat(file = stderr(), 'getDataTrackObjLabUni_afterTrim\n')
-    loc.dt = in.data4clust()
+    loc.dt = in.dataWide()
     
     if (is.null(loc.dt))
       return(NULL)
@@ -394,7 +400,7 @@ clustHierSpar <- function(input, output, session,
     
     cat(file = stderr(), 'data4trajPlotClSpar: dt not NULL\n')
     
-    #cat('rownames: ', rownames(in.data4clust()), '\n')
+    #cat('rownames: ', rownames(in.dataWide()), '\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
     loc.dt.cl = getDataClSpar(userFitDendHierSpar(), 
@@ -485,28 +491,44 @@ clustHierSpar <- function(input, output, session,
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
   plotHierSpar <- function() {
+    cat(file = stderr(), 'plotHierSpar: in\n')
     
-    loc.dm = in.data4clust()
-    if (is.null(loc.dm)) {
-      return()
-    }
+    # make the f-n dependent on the button click
+    locBut = input$butPlot
     
-    sparsehc <- userFitHierSpar()
-    loc.dend <- userFitDendHierSpar()
+    # Check if main data exists
+    # Thanks to solate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.dm = isolate(in.dataWide())
+    loc.hc = isolate(userFitHierSpar())
+    loc.dend = isolate(userFitDendHierSpar())
     
-    loc.colnames = paste0(ifelse(sparsehc$ws == 0, "",
+    validate(
+      need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
+      need(!is.null(loc.hc), "Did not cluster"),
+      need(!is.null(loc.dend), "Did not create dendrogram")
+    )
+    
+    # Dummy dependency to redraw the heatmap without clicking Plot
+    # when changing the number of clusters to highlight
+    loc.k = returnNclust()
+    
+    
+    # create column labels according to importance weights
+    loc.colnames = paste0(ifelse(loc.hc$ws == 0, "",
                                  ifelse(
-                                   sparsehc$ws <= 0.1,
+                                   loc.hc$ws <= 0.1,
                                    "* ",
-                                   ifelse(sparsehc$ws <= 0.5, "** ", "*** ")
+                                   ifelse(loc.hc$ws <= 0.5, "** ", "*** ")
                                  )),  colnames(loc.dm))
     
-    loc.colcol   = ifelse(sparsehc$ws == 0,
+    # add color to column labels according to importance weights
+    loc.colcol   = ifelse(loc.hc$ws == 0,
                           "black",
                           ifelse(
-                            sparsehc$ws <= 0.1,
+                            loc.hc$ws <= 0.1,
                             "blue",
-                            ifelse(sparsehc$ws <= 0.5, "green", "red")
+                            ifelse(loc.hc$ws <= 0.5, "green", "red")
                           ))
     
     loc.col.bounds = NULL
@@ -625,14 +647,6 @@ clustHierSpar <- function(input, output, session,
   
   # Sparse Hierarchical - display heatmap
   output$outPlotHierSpar <- renderPlot({
-    locBut = input$butPlotHierSparHeatMap
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotHierSpar: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
     plotHierSpar()
   }, height = getPlotHierSparHeatMapHeight)
 

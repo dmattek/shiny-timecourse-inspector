@@ -56,7 +56,7 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
       ),
       column(6,
              sliderInput(
-               ns('inPlotHierNclust'),
+               ns('slPlotHierNclust'),
                'Number of dendrogram branches to cut',
                min = 1,
                max = 20,
@@ -95,10 +95,10 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
                         checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
                         
                         fluidRow(
-                          column(3,
+                          column(5,
                                  uiOutput(ns('uiSetColBoundsLow'))
                           ),
-                          column(3,
+                          column(5,
                                  uiOutput(ns('uiSetColBoundsHigh'))
                           )
                         )
@@ -191,16 +191,23 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
 }
 
 # SERVER ----
-clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, in.data4stimPlot) {
+clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataStim) {
   
+  # Return the number of clusters from the slider 
+  # and delay by a constant in milliseconds defined in auxfunc.R
+  returnNclust = reactive({
+    return(input$slPlotHierNclust)
+  }) %>% debounce(MILLIS)
+  
+  # not functional; see th note in UI
   output$uiPlotHierClAss = renderUI({
     ns <- session$ns
     
     if(input$chBPlotHierClAss) {
       selectInput(ns('inPlotHierClAss'), 'Assign cluster order', 
-                  choices = seq(1, input$inPlotHierNclust, 1),
+                  choices = seq(1, returnNclust(), 1),
                   multiple = TRUE, 
-                  selected = seq(1, input$inPlotHierNclust, 1))
+                  selected = seq(1, returnNclust(), 1))
     }
   })
   
@@ -209,11 +216,13 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
     if(input$chBPlotHierClSel) {
       selectInput(ns('inPlotHierClSel'), 'Select clusters to display', 
-                  choices = seq(1, input$inPlotHierNclust, 1),
+                  choices = seq(1, returnNclust(), 1),
                   multiple = TRUE, 
                   selected = 1)
     }
   })
+  
+  
   
   # UI for setting lower and upper bounds for heat map colour scale  
   output$uiSetColBoundsLow = renderUI({
@@ -221,13 +230,15 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
     if(input$chBsetColBounds) {
       
-      loc.dt = in.data4trajPlot()
+      loc.dt = in.dataLong()
+      if (is.null(loc.dt))
+        return(NULL)
       
       numericInput(
         ns('inSetColBoundsLow'),
         label = 'Lower',
         step = 0.1, 
-        value = floor(min(loc.dt[['y']], na.rm = T))
+        value = signif(min(loc.dt[['y']], na.rm = T), digits = 3)
       )
     }
   })
@@ -238,30 +249,61 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
     if(input$chBsetColBounds) {
       
-      loc.dt = in.data4trajPlot()
+      loc.dt = in.dataLong()
+      if (is.null(loc.dt))
+        return(NULL)
       
       numericInput(
         ns('inSetColBoundsHigh'),
         label = 'Upper',
         step = 0.1, 
-        value = ceil(max(loc.dt[['y']], na.rm = T))
+        value = signif(max(loc.dt[['y']], na.rm = T), digits = 3)
       )
     }
   })
+  
   
   # calculate distance matrix for further clustering
   # time series arranged in rows with columns corresponding to time points
   userFitDistHier <- reactive({
     cat(file = stderr(), 'userFitDistHier \n')
     
-    dm.t = in.data4clust()
+    loc.dm = in.dataWide()
     
-    if (is.null(dm.t)) {
+    if (is.null(loc.dm)) {
       return(NULL)
     }
     
+    # Throw some warnings if NAs present in the dataset.
+    # DTW cannot compute distance when NA's are preset.
+    # Other distance measures can be calculated but caution is required with interpretation.
+    # NAs in the wide format can result from explicit NAs in the measurment column or
+    # from missing rows that cause NAs to appear when convertinf from long to wide (dcast)
+    if(sum(is.na(loc.dm)) > 0) {
+      if (input$selectPlotHierDiss == "DTW") {
+        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentDTW", title = "Error",
+                    content = helpText.clHier[["alertNAsPresentDTW"]], 
+                    append = FALSE,
+                    style = "danger")
+        closeAlert(session, 'alertNAsPresent')
+        
+        return(NULL)
+        
+      } else {
+        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresent", title = "Warning",
+                    content = helpText.clHier[["alertNAsPresent"]], 
+                    append = FALSE, 
+                    style = "warning")
+        closeAlert(session, 'alertNAsPresentDTW')
+      }
+    } else {
+      closeAlert(session, 'alertNAsPresentDTW')
+      closeAlert(session, 'alertNAsPresent')
+    }
+    
+    
     #pr_DB$set_entry(FUN = fastDTW, names = c("fastDTW"))
-    cl.dist = dist(dm.t, method = input$selectPlotHierDiss)
+    cl.dist = proxy::dist(loc.dm, method = input$selectPlotHierDiss)
     
     return(cl.dist)
   })
@@ -271,16 +313,17 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   userFitDendHier <- reactive({
     cat(file = stderr(), 'userFitDendHier \n')
     
-    dm.dist = userFitDistHier()
+    # calculate distance matrix
+    loc.dm.dist = userFitDistHier()
     
-    if (is.null(dm.dist)) {
+    if (is.null(loc.dm.dist)) {
       return(NULL)
     }
     
-    cl.hc = hclust(dm.dist, method = input$selectPlotHierLinkage)
+    loc.cl.hc = hclust(loc.dm.dist, method = input$selectPlotHierLinkage)
     
     # number of clusters at which dendrigram is cut
-    loc.k = input$inPlotHierNclust
+    loc.k = returnNclust()
     
     # make a palette with the amount of colours equal to the number of clusters
     #loc.col = get(input$selectPlotHierPaletteDend)(n = loc.k)
@@ -292,13 +335,13 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     #  loc.col = loc.col[as.numeric(input$inPlotHierClAss)]
     #}
     
-    dend <- as.dendrogram(cl.hc)
-    dend <- color_branches(dend, 
+    loc.dend <- as.dendrogram(loc.cl.hc)
+    loc.dend <- color_branches(loc.dend, 
                            col = loc.col, 
                            k = loc.k)
     
-    return(dend)
-  })
+    return(loc.dend)
+  }) 
   
   
   # returns table prepared with f-n getClCol
@@ -310,7 +353,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     if (is.null(loc.dend))
       return(NULL)
     
-    loc.dt = getClCol(loc.dend, input$inPlotHierNclust)
+    loc.dt = getClCol(loc.dend, returnNclust())
     
     # Display clusters specified in the inPlotHierClSel field
     # Data is ordered according to the order of clusters specified in this field
@@ -325,11 +368,11 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   
   
   
-  # return all unique track object labels (created in dataMod)
+  # Return all unique track object labels (created in dataMod)
   # This will be used to display in UI for trajectory highlighting
   getDataTrackObjLabUni_afterTrim <- reactive({
     cat(file = stderr(), 'getDataTrackObjLabUni_afterTrim\n')
-    loc.dt = in.data4trajPlot()
+    loc.dt = in.dataLong()
     
     if (is.null(loc.dt))
       return(NULL)
@@ -341,7 +384,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   # The condition is the column defined by facet groupings
   getDataCond <- reactive({
     cat(file = stderr(), 'getDataCond\n')
-    loc.dt = in.data4trajPlot()
+    loc.dt = in.dataLong()
     
     if (is.null(loc.dt))
       return(NULL)
@@ -356,7 +399,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   data4trajPlotCl <- reactive({
     cat(file = stderr(), 'data4trajPlotCl: in\n')
     
-    loc.dt = in.data4trajPlot()
+    loc.dt = in.dataLong()
     
     if (is.null(loc.dt)) {
       cat(file = stderr(), 'data4trajPlotCl: dt is NULL\n')
@@ -366,7 +409,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     cat(file = stderr(), 'data4trajPlotCl: dt not NULL\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(userFitDendHier(), input$inPlotHierNclust)
+    loc.dt.cl = getDataCl(userFitDendHier(), returnNclust())
     
     # add the column with cluster assignemnt to the main dataset
     loc.dt = merge(loc.dt, loc.dt.cl, by = COLID)
@@ -385,7 +428,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   data4stimPlotCl <- reactive({
     cat(file = stderr(), 'data4stimPlotCl: in\n')
     
-    loc.dt = in.data4stimPlot()
+    loc.dt = in.dataStim()
     
     if (is.null(loc.dt)) {
       cat(file = stderr(), 'data4stimPlotCl: dt is NULL\n')
@@ -406,7 +449,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     },
     
     content = function(file) {
-      write.csv(x = getDataCl(userFitDendHier(), input$inPlotHierNclust), file = file, row.names = FALSE)
+      write.csv(x = getDataCl(userFitDendHier(), returnNclust()), file = file, row.names = FALSE)
     }
   )
   
@@ -422,7 +465,7 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     }
     
     # get cell id's with associated cluster numbers
-    loc.dt.cl = getDataCl(loc.dend, input$inPlotHierNclust)
+    loc.dt.cl = getDataCl(loc.dend, returnNclust())
     
     # get cellIDs with condition name
     loc.dt.gr = getDataCond()
@@ -447,52 +490,33 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
     
   })
   
-  createMethodStr = reactive({
-    
-    paste0(input$selectPlotHierDiss,
-           '_',
-           input$selectPlotHierLinkage)
-    
-  })
-  
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
   plotHier <- function() {
+    cat(file = stderr(), 'plotHier: in\n')
     
-    loc.dm = in.data4clust()
-    if (is.null(loc.dm))
-      return(NULL)
+    # make the f-n dependent on the button click
+    locBut = input$butPlotHierHeatMap
     
-    # Throw some warnings if NAs present in the dataset.
-    # DTW cannot compute distance when NA's are preset.
-    # Other distance measures can be calculated but caution is required with interpretation.
-    if(sum(is.na(loc.dm)) > 0) {
-      if (input$selectPlotHierDiss == "DTW") {
-      createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentDTW", title = "Error",
-                  content = helpText.clHier[["alertNAsPresentDTW"]], 
-                  append = FALSE,
-                  style = "danger")
-      return(NULL)
-      } else {
-        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresent", title = "Warning",
-                    content = helpText.clHier[["alertNAsPresent"]], 
-                    append = FALSE, 
-                    style = "warning")
-        closeAlert(session, 'alertNAsPresentDTW')
-        }
-    } else {
-      closeAlert(session, 'alertNAsPresentDTW')
-      closeAlert(session, 'alertNAsPresent')
-    }
+    # Check if main data exists
+    # Thanks to solate all mods in the left panel are delayed 
+    # until clicking the Plot button
+    loc.dm = isolate(in.dataWide())
+    loc.dend = isolate(userFitDendHier())
+    validate(
+      need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
+      need(!is.null(loc.dend), "Did not create dendrogram")
+    )
     
-    loc.dend <- userFitDendHier()
-    if (is.null(loc.dend))
-      return(NULL)
+    # Dummy dependency to redraw the heatmap without clicking Plot
+    # when changing the number of clusters to highlight
+    loc.k = returnNclust()
     
     loc.col.bounds = NULL
     if (input$chBsetColBounds)
-      loc.col.bounds = c(input$inSetColBoundsLow, input$inSetColBoundsHigh)
+      loc.col.bounds = c(input$inSetColBoundsLow, 
+                         input$inSetColBoundsHigh)
     else 
       loc.col.bounds = NULL
     
@@ -527,13 +551,6 @@ clustHier <- function(input, output, session, in.data4clust, in.data4trajPlot, i
   }
   
   output$outPlotHier <- renderPlot({
-    locBut = input$butPlotHierHeatMap
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotHier: Go button not pressed\n')
-      
-      return(NULL)
-    }
     
     plotHier()
   }, height = getPlotHierHeatMapHeight)
