@@ -18,6 +18,9 @@ library(Hmisc) # for CI calculation
 # used to delay output from sliders
 MILLIS = 1000
 
+# Number of significant digits to display in table stats
+SIGNIFDIGITSINTAB = 3
+
 # if true, additional output printed to R console
 DEB = T
 
