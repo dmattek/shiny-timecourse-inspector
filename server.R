@@ -140,7 +140,10 @@ shinyServer(function(input, output, session) {
       fileInput(
         'inFileLoadTrajRem',
         "Select file and click Load Data",
-        accept = c('text/csv', 'text/comma-separated-values,text/plain')
+        accept = c("text/csv", 
+                   "text/comma-separated-values,text/plain", 
+                   "application/gzip", 
+                   "application/bz2"), 
       )
   })
   
@@ -161,7 +164,10 @@ shinyServer(function(input, output, session) {
       fileInput(
         'inFileLoadStim',
         "Select file and click Load Data",
-        accept = c('text/csv', 'text/comma-separated-values,text/plain')
+        accept = c("text/csv", 
+                   "text/comma-separated-values,text/plain", 
+                   "application/gzip", 
+                   "application/bz2"), 
       )
   })
   

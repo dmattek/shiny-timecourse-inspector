@@ -24,7 +24,10 @@ shinyUI(fluidPage(
       fileInput(
         'inFileLoadNuc',
         "Select data file and click Load Data",
-        accept = c('text/csv', 'text/comma-separated-values,text/plain', "application/gzip", "application/bz2"), 
+        accept = c("text/csv", 
+                   "text/comma-separated-values,text/plain", 
+                   "application/gzip", 
+                   "application/bz2"), 
       ),
 
       radioButtons("inRbutLongWide", actionLink("alDataFormat", "Data Format:"), c("Long" = 0, "Wide" = 1), inline = T),
