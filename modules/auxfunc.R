@@ -632,11 +632,7 @@ LOCnbclust <-
         xlab = "Number of clusters",
         main = loc.mainlab
       )
-      
-      if (method == "silhouette")
-        p <- p + geom_vline(xintercept = which.max(v),
-                            linetype = 2,
-                            color = linecolor)
+
       return(p)
     }
   }
