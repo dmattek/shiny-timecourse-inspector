@@ -106,7 +106,8 @@ modStats = function(input, output, session,
                                                         filename = 'hitStats'),
                                                    list(extend='pdf',
                                                         filename= 'hitStats')),
-                                    text = 'Download')))) %>% formatRound(seq(loc.n.bycols + 2, loc.n.bycols + 1 + 5), 3)
+                                    text = 'Download')))) %>% formatSignif(seq(loc.n.bycols + 2, loc.n.bycols + 1 + 5), 
+                                                                           digits = SIGNIFDIGITSINTAB)
   })
   
 }

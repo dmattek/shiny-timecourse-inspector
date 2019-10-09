@@ -97,8 +97,8 @@ modTrackStats = function(input, output, session,
                                                        tracksLenMean = mean(nTpts),
                                                        tracksLenSD = sd(nTpts),
                                                        tracksLenMedian = median(as.double(nTpts)),
-                                                       tracksLenIQR = IQR(nTpts)), by = c(in.bycols)]
-    
+                                                       tracksLenIQR = IQR(as.double(nTpts))), by = c(in.bycols)]
+
     setnames(loc.dt.aggr, c(in.bycols, 'nTracks', 'Mean Length', 'SD', 'Median Length', 'IQR'))
     
     return(loc.dt.aggr)
@@ -131,7 +131,7 @@ modTrackStats = function(input, output, session,
                                                           filename = 'hitStats'),
                                                      list(extend='pdf',
                                                           filename= 'hitStats')),
-                                      text = 'Download'))))
+                                      text = 'Download')))) %>% formatSignif(3:4, digits = SIGNIFDIGITSINTAB)
     else
       return(NULL)
   })
@@ -166,7 +166,7 @@ modTrackStats = function(input, output, session,
                                                           filename = 'hitStats'),
                                                      list(extend='pdf',
                                                           filename= 'hitStats')),
-                                      text = 'Download')))) %>% formatRound(3:10)
+                                      text = 'Download')))) %>% formatSignif(3:10, digits = SIGNIFDIGITSINTAB)
     else
       return(NULL)
   })
@@ -208,7 +208,7 @@ modTrackStats = function(input, output, session,
                     language = list(
                       zeroRecords = "No records to display")
                   )
-    ) %>% formatRound(3:6)
+    )
   })
   
 }
