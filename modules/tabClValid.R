@@ -9,7 +9,7 @@ helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected 
                      alertClValidNAsPresentDTW = paste0("NAs present. DTW distance measure will NOT work."),
                     alLearnMore = paste0("<p><a href=http://www.sthda.com/english/wiki/print.php?id=241 title=\"External link\">Clustering</a> ",
                                          "is an <b>unsupervised</b> machine learning method for partitioning ",
-                                         "dataset into a set of groups or clusters. The procedure will return clusters ",
+                                         "dataset into a set of groups called clusters. The procedure will return clusters ",
                                          "even if the data <b>does not</b> contain any! ",
                                          "Therefore, it’s necessary to ",
                                          "assess clustering tendency before the analysis, and ",
@@ -18,23 +18,25 @@ helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected 
                     alLearnMoreRel = paste0("<p>Determine the optimal number of clusters by inspecting ",
                                             "the average silhouette width and the total within cluster sum of squares (WSS) ",
                                             "for a range of cluster numbers.</p>", 
-                                            "<p><b>Silhouette analysis</b> estimates the average distance between clusters. ",
-                                            "Larger silhouette widths indicate better.<p>",
+                                            "<p><b>Silhouette analysis</b> first computes how close each trajectory is with others in the cluster it is assigned to, ",
+                                            "this is then compared to closeness with trajectories in other clusters. ",
+                                            "Larger average silhouette widths usually indicate better clustering. To make sure averaging does not hide a locally bad",
+                                            "clustering, this should be inspected along with the silhouette plot in the \"Internal\" tab.<p>",
                                             "<p><b>WSS</b> evaluates the compactness of clusters. ",
                                             "Compact clusters achieve low WSS values. ",
-                                            "Look for the <i>knee</i> in the plot of WSS as function of cluster numbers.</p>"),
+                                            "Look for the <i>elbow</i> in the plot of WSS as function of cluster numbers.</p>"),
                     alLearnMoreInt = paste0("<p>Evaluate the goodness of a clustering structure by inspecting ",
-                                            "principle components, the dendrogram, ",
+                                            "principal components, the dendrogram, ",
                                             "and the silhouette for a given number of clusters.</p>",
-                                            "<p>Each point in the scatter plot of 2 principle components corresponds to a single time series. ",
+                                            "<p><b>Principal components:</b> Each point in the scatter plot corresponds to a single time series in the first 2 PCs space. ",
                                             "Points are coloured by cluster numbers. Compact, well separated clusters ",
-                                            "indicate good partitioning.</p>",
-                                            "<p>The height of dendrogram branches indicates how well clusters are separated.</p>",
-                                            "<p>The silhouette plot displays how close each time series in one cluster ", 
-                                            "is to time series in the neighboring clusters. ",
-                                            "A large positive silhouette (Si) indicates time series that are well clustered.",
-                                            "A negative Si indicates time series that are closer to ",
-                                            "a neighboring cluster, and are placed in the wrong cluster.</p>")
+                                            "indicate good partitioning. The percentage of total variance carried by each PC is indicated.</p>",
+                                            "<p><b>Dendrogram:</b> The height of branches indicates how well clusters are separated.</p>",
+                                            "<p><b>Silhouette plot:</b> The plot indicates for each series whether it is on average closer to series within its cluster ",
+                                            "or to series in other clusters. Each bar represents the <a href=https://en.wikipedia.org/wiki/Silhouette_(clustering) title=\"External link\">silhouette score</a> ",
+                                            "(Si) for one series. The height of the bars varies ",
+                                            "between 1 (the series is much closer to series in its cluster) and -1 (the series is much closer to series in an other cluster). ",
+                                            "Hence, large positive values of Si are usually associated with better clustering, while negative values are associated with worse clustering.")
                     )
 
 
@@ -250,7 +252,7 @@ clustValid <- function(input, output, session, in.dataWide) {
                                      hc_method = input$selectLinkage) +
       xlab("Number of clusters") +
       ylab("Average silhouette width") +
-      ggtitle("Optimal number of clusters from silhouette analysis") +
+      ggtitle("Average silhouette width for different cluster numbers") +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
@@ -301,7 +303,7 @@ clustValid <- function(input, output, session, in.dataWide) {
     # Check if required data exists
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.part = isolate(calcDendCut())
+    loc.part = calcDendCut()
     validate(
       need(!is.null(loc.part), "Nothing to plot. Load data first!")
     )    
@@ -331,7 +333,7 @@ clustValid <- function(input, output, session, in.dataWide) {
     # Check if required data exists
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.part = isolate(calcDendCut())
+    loc.part = calcDendCut()
     loc.dm = in.dataWide()
     print(sum(is.na(loc.dm)))
     
@@ -348,7 +350,7 @@ clustValid <- function(input, output, session, in.dataWide) {
                                      data = loc.dm,
                                      geom = "point",
                                      elipse.type = "convex", 
-                                     main = "Principle components"
+                                     main = "Principal components"
                                      )+
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
@@ -369,7 +371,7 @@ clustValid <- function(input, output, session, in.dataWide) {
     # Check if required data exists
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.part = isolate(calcDendCut())
+    loc.part = calcDendCut()
     validate(
       need(!is.null(loc.part), "Nothing to plot. Load data first!")
     )    
