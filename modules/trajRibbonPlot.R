@@ -313,7 +313,7 @@ modTrajRibbonPlot = function(input, output, session,
     
     if(input$rBPlotTrajStat == "Mean") {
       # calculate the mean
-      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY))), by = c(in.facet, COLRT)]
+      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY), na.rm = T)), by = c(in.facet, COLRT)]
       
     } else if(input$rBPlotTrajStat == "CI") {
       # calculate the mean and the confidence intervals
@@ -326,9 +326,10 @@ modTrajRibbonPlot = function(input, output, session,
       
     } else if(input$rBPlotTrajStat == "SE") {
       # calculate the mean and the standard error of the mean
-      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY)),
-                               Lower = mean(get(COLY)) - LOCstderr(get(COLY)),
-                               Upper = mean(get(COLY)) + LOCstderr(get(COLY))), by = c(in.facet, COLRT)]
+      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY), na.rm = T),
+                               Lower = mean(get(COLY), na.rm = T) - LOCstderr(get(COLY), na.rm = T),
+                               Upper = mean(get(COLY), na.rm = T) + LOCstderr(get(COLY), na.rm = T)), 
+                           by = c(in.facet, COLRT)]
       
       loc.ribbon.lohi = c('Lower', 'Upper')
     }
