@@ -322,7 +322,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     
     loc.cl.hc = hclust(loc.dm.dist, method = input$selectPlotHierLinkage)
     
-    # number of clusters at which dendrigram is cut
+    # number of clusters at which dendrogram is cut
     loc.k = returnNclust()
     
     # make a palette with the amount of colours equal to the number of clusters
@@ -336,9 +336,9 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     #}
     
     loc.dend <- as.dendrogram(loc.cl.hc)
-    loc.dend <- color_branches(loc.dend, 
-                           col = loc.col, 
-                           k = loc.k)
+    loc.dend <- dendextend::color_branches(loc.dend, 
+                                           col = loc.col, 
+                                           k = loc.k)
     
     return(loc.dend)
   }) 
