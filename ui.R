@@ -54,11 +54,6 @@ shinyUI(fluidPage(
       uiOutput('uiButLoadStim'),
       
       #tags$hr(),
-      checkboxInput('chBtrajInter', 'Interpolate NAs and missing data', value = F),
-      bsAlert("alertAnchorSidePanelNAsPresent"),
-      bsTooltip('chBtrajInter', helpText.server[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL),
-      uiOutput('varSelTimeFreq'),
-
       checkboxInput('chBtrackUni', 'Create unique track ID', F),
       bsTooltip('chBtrackUni', helpText.server[["chBtrackUni"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('varSelSite'),
@@ -94,6 +89,11 @@ shinyUI(fluidPage(
       bsTooltip('chBtimeTrim', helpText.server[["chBtimeTrim"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('uiSlTimeTrim'),
 
+      checkboxInput('chBtrajInter', 'Interpolate NAs and missing data', value = F),
+      bsAlert("alertAnchorSidePanelNAsPresent"),
+      bsTooltip('chBtrajInter', helpText.server[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL),
+      uiOutput('varSelTimeFreq'),
+      
       checkboxInput('chBnorm', 'Normalization', FALSE),
       bsTooltip('chBnorm', helpText.server[["chBnorm"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('uiChBnorm'),
