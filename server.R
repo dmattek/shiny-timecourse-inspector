@@ -182,6 +182,8 @@ shinyServer(function(input, output, session) {
 
   
   # UI-side-panel-column-selection ----
+  
+  # Select a column with time series ID
   output$varSelTrackLabel = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:varSelTrackLabel\n')
@@ -198,6 +200,7 @@ shinyServer(function(input, output, session) {
     )
   })
   
+  # Select a column with time
   output$varSelTime = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:varSelTime\n')
@@ -214,22 +217,6 @@ shinyServer(function(input, output, session) {
     )
   })
 
-  output$varSelTimeFreq = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:varSelTimeFreq\n')
-    
-    if (input$chBtrajInter) {
-      numericInput(
-        'inSelTimeFreq',
-        'Interval between 2 time points',
-        min = 1,
-        step = 1,
-        width = '100%',
-        value = 1
-      )
-    }
-  })
-  
   # This is the main field to select plot facet grouping
   # It's typically a column with the entire experimental description,
   # e.g.1 Stim_All_Ch or Stim_All_S.
@@ -279,7 +266,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  
+  # Select a column with the measurement
   output$varSelMeas1 = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:varSelMeas1\n')
@@ -298,7 +285,8 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  
+  # Select a column with the 2nd measurement.
+  # Some simple operations can be performed betwee the two meaurements
   output$varSelMeas2 = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:varSelMeas2\n')
@@ -351,6 +339,24 @@ shinyServer(function(input, output, session) {
   returnValSlTimeTrim = reactive({
     return(input$slTimeTrim)
   }) %>% debounce(MILLIS)
+  
+  # UI-side-panel-interpolation ----
+  # Provide interval between 2 time points (for interpolation of NAs and missing time points)
+  output$varSelTimeFreq = renderUI({
+    if (DEB)
+      cat(file = stdout(), 'server:varSelTimeFreq\n')
+    
+    if (input$chBtrajInter) {
+      numericInput(
+        'inSelTimeFreq',
+        'Interval between 2 time points',
+        min = 0,
+        step = 1,
+        width = '100%',
+        value = 1
+      )
+    }
+  })
   
   # UI-side-panel-normalization ----
   
@@ -740,55 +746,46 @@ shinyServer(function(input, output, session) {
     else
       closeAlert(session, "alertNAsPresent")
     
+    # check if time between 2 time points provided
+    if(input$chBtrajInter) {
+      if (input$inSelTimeFreq == 0)
+        createAlert(session = session, 
+                    anchorId = "alertAnchorSidePanelNAsPresent", 
+                    alertId = "alertTimeFreq0", 
+                    title = "Error",
+                    content = helpText.server[["alertTimeFreq0"]], 
+                    append = FALSE,
+                    style = "danger")
+      else
+        closeAlert(session, "alertTimeFreq0")
+    }
+    
+    # required for subsetting downstream
     setkeyv(loc.out, c(COLGR, COLID, COLRT))
 
-    if (input$chBtrajInter) {
-      # here we fill missing rows with NA's
-      loc.out = loc.out[setkeyv(loc.out[, 
-                                        .(seq(min(get(COLRT), na.rm = T), 
-                                              max(get(COLRT), na.rm = T), 
-                                              input$inSelTimeFreq)), 
-                                        by = c(COLGR, COLID)], c(COLGR, COLID, 'V1'))]
-      
-      # x-check: print all rows with NA's
-      if (DEB) {
-        cat(file = stdout(), 'server:dataLong: Rows with NAs:\n')
-        print(loc.out[rowSums(is.na(loc.out)) > 0, ])
+    if (input$chBtrajInter) 
+      if (input$inSelTimeFreq > 0) {
+        # NA's may be already present in the dataset'.
+        # Interpolate (linear) them with na.interpolate as well
+        if(locPos)
+          s.cols = c(COLY, COLPOSX, COLPOSY)
+        else
+          s.cols = c(COLY)
+        
+        loc.out = LOCinterpolate(loc.out, COLGR, COLID, COLRT, s.cols, input$inSelTimeFreq, T)
+        
+        # !!! Current issue with interpolation:
+        # The column mid.in is not taken into account.
+        # If a trajectory is selected in the UI,
+        # the mid.in column is added (if it doesn't already exist in the dataset),
+        # and for the interpolated point, it will still be NA. Not really an issue.
+        #
+        # Also, think about the current option of having mid.in column in the uploaded dataset.
+        # Keep it? Expand it?
+        # Create a UI filed for selecting the column with mid.in data.
+        # What to do with that column during interpolation (see above)
+        
       }
-      
-      # NA's may be already present in the dataset'.
-      # Interpolate (linear) them with na.interpolate as well
-      if(locPos)
-        s.cols = c(COLY, COLPOSX, COLPOSY)
-      else
-        s.cols = c(COLY)
-      
-      # Interpolated columns should be of type numeric (float)
-      # This is to ensure that interpolated columns are of porper type.
-      
-      # Apparently the loop is faster than lapply+SDcols
-      for(col in s.cols) {
-        #loc.out[, (col) := as.numeric(get(col))]
-        data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
-
-        loc.out[, (col) := na_interpolation(get(col)), by = c(COLID)]        
-      }
-      
-      # loc.out[, (s.cols) := lapply(.SD, na.interpolation), by = c(COLID), .SDcols = s.cols]
-      
-      
-      # !!! Current issue with interpolation:
-      # The column mid.in is not taken into account.
-      # If a trajectory is selected in the UI,
-      # the mid.in column is added (if it doesn't already exist in the dataset),
-      # and for the interpolated point, it will still be NA. Not really an issue.
-      #
-      # Also, think about the current option of having mid.in column in the uploaded dataset.
-      # Keep it? Expand it?
-      # Create a UI filed for selecting the column with mid.in data.
-      # What to do with that column during interpolation (see above)
-      
-    }    
     
     ## Trim x-axis (time)
     if(input$chBtimeTrim) {
