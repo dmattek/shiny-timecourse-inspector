@@ -181,6 +181,7 @@ helpText.server = c(
   downloadDataClean = "Download all time series after modifications in this panel.",
   alertNAsPresent              = "NAs present in the measurement column. Consider interpolation.",
   alertNAsPresentLong2WideConv = "Missing rows. Consider interpolation.",
+  alertTimeFreq0 = "The interval between 2 time points has to be greater than 0.",
   alertWideMissesNumericTime = "Non-numeric headers of time columns. Data in wide format should have numeric column headers corresponding to time points.",
   alertWideTooFewColumns     = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point."
 )
@@ -536,6 +537,111 @@ LOCnormTraj = function(in.dt,
 }
 
 
+#' Interpolate missing rows in time series
+#'
+#' @param inDT Data.table in long format with time series
+#' @param inColGr Name of the grouipng column
+#' @param inColID Name of the column with unique time series IDs
+#' @param inColT Name of the column with time
+#' @param inColY Name of the column(s) with variables to interpolate
+#' @param inTfreq Interval between two time points
+#' @param inDeb Debugging, extended output
+#'
+#' @return Data.table with interpolated missing time points
+#' @export
+#'
+#' @examples
+LOCinterpolate = function(inDT, inColGr, inColID, inColT, inColY, inTfreq = 1, inDeb = F) {
+  
+  if(is.null(inDT))
+    return(NULL)
+  else
+    loc.out = inDT
+  
+  # Stretch time series by every time series' min/max time
+  # Gaps filled with NA's
+  setkeyv(loc.out, c(inColGr, inColID, inColT))
+  loc.out = loc.out[setkeyv(loc.out[, 
+                                    .(seq(min(get(inColT), na.rm = T), 
+                                          max(get(inColT), na.rm = T), 
+                                          inTfreq)), 
+                                    by = c(inColGr, inColID)], c(inColGr, inColID, 'V1'))]
+  
+  # x-check: print all rows with NA's
+  if (inDeb) {
+    cat(file = stdout(), '\nLOCinterpolate: Rows with NAs to interpolate:\n')
+    print(loc.out[rowSums(is.na(loc.out)) > 0, ])
+  }
+  
+  # Apparently the loop is faster than lapply+SDcols
+  for(col in inColY) {
+    if(inDeb)
+      cat(file = stdout(), sprintf("Interpolating NAs in column: %s\n", col))
+    
+    # Interpolated columns should be of type numeric (float)
+    # This is to ensure that interpolated columns are of porper type.
+    data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
+    
+    loc.out[, (col) := na_interpolation(get(col)), by = c(inColID)]        
+  }
+  
+  return(loc.out)
+}
+
+#' Remove outlier time points and/or tracks depdending on maximum permissible gap length due to outliers
+#'
+#' @param inDT Data.table in long format with main dataset
+#' @param inDTout Data.table in long format with rows of inDT that include outlier time points
+#' @param inColID Name of the column with unique time series IDs
+#' @param inGapLen Length of the maximum allowed gap. Tracks with gaps longer than threshold will be removed. Shorter gaps will be interpolated
+#' @param inDeb Debugging, extended output
+#'
+#' @return Data.table with time points and/or time series removed
+#' @export
+#'
+#' @examples
+LOCremoveOutTracks = function(inDT, inDTout, inColID, inGapLen = 0, inDeb = F) {
+  
+  if(is.null(inDT))
+    return(NULL)
+  else
+    loc.out = inDT
+  
+  # add index column per trajecory
+  loc.out[, myColIdx := 1:.N, by = c(inColID)]
+  
+  # remove single outlier points (anti-join)
+  # From: https://stackoverflow.com/a/46333620/1898713
+  loc.out = loc.out[!inDTout, on = names(inDTout)]
+  
+  # calculate diff on index column to see the length of gaps due to removed points
+  # the value of that column corresponds to the gap length (hence the "-1")
+  loc.out[, 
+          myColIdxDiff := c(1, diff(myColIdx)) - 1, 
+          by = c(inColID)]
+  
+  # get track ids where the max gap is longer than the threshold
+  loc.idgaps = loc.out[, 
+                       max(myColIdxDiff), 
+                       by = c(inColID)][V1 > inGapLen, get(inColID)]
+  
+  if (inDeb) {
+    cat(file = stdout(), sprintf('\nLOCremoveTracks: Track IDs with max gap >= %d:\n', inGapLen))
+    if (length(loc.idgaps) > 0)
+      print(loc.idgaps) else
+        cat("none\n")
+  }
+  
+  # remove outlier tracks with gaps longer than the value set in slOutliersGapLen
+  if (length(loc.idgaps) > 0)
+    loc.out = loc.out[!(get(inColID) %in% unique(loc.idgaps))]
+  
+  # clean
+  loc.out[, `:=`(myColIdx = NULL, myColIdxDiff = NULL)]
+  
+  return(loc.out)
+}
+
 # Cluster validation ----
 
 #Customize factoextra functions to accept dissimilarity matrix from start. Otherwise can't use distance functions that are not in base R, like DTW.
@@ -692,7 +798,7 @@ getDataClSpar = function(in.dend, in.k, in.id) {
 # prepares a table with cluster numbers in 1st column and colour assignments in 2nd column
 # the number of rows is determined by dendrogram cut
 getClCol <- function(in.dend, in.k) {
-  loc.col_labels <- get_leaves_branches_col(in.dend)
+  loc.col_labels <- dendextend::get_leaves_branches_col(in.dend)
   loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
   
   return(unique(
