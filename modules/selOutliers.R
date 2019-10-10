@@ -7,15 +7,18 @@
 
 helpText.selOutliers = c(chbRemoveOut = "Remove outlier time points. Gaps created by removing outliers can be interpolated or you can choose to remove entire trajectories that contain outlier time points.",
                          numOutliersPerc = 'Percentage of data points to remove from pooled data from all time points.',
-                         chBtrajInter = 'Linearly interpolate gaps created after removing outlier time points.',
+                         chBtrajInter = "Linearly interpolate gaps created after removing outlier time points. This option will also interpolate pre-existing NAs and missing time points.",
                          rbOutliersType = 'Choose whether to remove outliers from the top, bottom, or both ends of the pooled data distribution.',
-                         slOutliersGapLen = 'Duration of a maximum allowed gap created by removing outlier time points. Time series with gaps longer than the set threshold will be removed entirely. ',
+                         slOutliersGapLen = paste0("Time series with gaps longer than the threshold will be removed entirely. ",
+                                                   "Shorter gaps can be interpolated or can remain in time series."),
                          chBplotDist = 'Visualise a distribution of pooled data points. Red regions indicate the percentage of data set for removal.'
 )
 
 # UI-remove-outliers ----
 modSelOutliersUI = function(id, label = "Outlier Selection") {
   ns <- NS(id)
+  
+  shinyjs::useShinyjs()
   
   tagList(
     checkboxInput(ns('chbRemoveOut'), 'Remove outliers', value = F),
@@ -27,7 +30,9 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
 
 # Server-remove-outliers ----
 modSelOutliers = function(input, output, session, in.data) {
-
+  
+  ns = session$ns
+  
   # reactive counter to hold number of tracks before and after outlier removal
   nCellsCounter <- reactiveValues(
     nCellsOrig = 0,
@@ -39,7 +44,7 @@ modSelOutliers = function(input, output, session, in.data) {
   vOut = reactiveValues(
     id = NULL
   )
-
+  
   # UI for the entire module
   output$uiSelOutliers = renderUI({
     cat(file = stderr(), 'modSelOutliers:uiSelOutliers\n')
@@ -47,57 +52,74 @@ modSelOutliers = function(input, output, session, in.data) {
     
     if(input$chbRemoveOut) {
       tagList(
-      fluidRow(
-        column(2, 
-               numericInput(ns('numOutliersPerc'),
-                            label = '% of data',
-                            min = 0,
-                            max = 100,
-                            value = 0, 
-                            step = 0.05, width = '100px'),
-               bsTooltip(ns('numOutliersPerc'), helpText.selOutliers[["numOutliersPerc"]], placement = "top", trigger = "hover", options = NULL),
-               
-               checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F),
-               bsTooltip(ns('chBtrajInter'), helpText.selOutliers[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL)
+        fluidRow(
+          column(2, 
+                 numericInput(ns('numOutliersPerc'),
+                              label = '% of data',
+                              min = 0,
+                              max = 100,
+                              value = 0, 
+                              step = 0.05, width = '100px'),
+                 bsTooltip(ns('numOutliersPerc'), helpText.selOutliers[["numOutliersPerc"]], placement = "top", trigger = "hover", options = NULL),
+                 
+                 checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F),
+                 bsTooltip(ns('chBtrajInter'), helpText.selOutliers[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL),
+                 uiOutput(ns('varSelTimeFreq'))
+          ),
+          column(2, 
+                 radioButtons(ns('rbOutliersType'), 
+                              label = 'From', 
+                              choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot')),
+                 bsTooltip(ns('rbOutliersType'), helpText.selOutliers[["rbOutliersType"]], placement = "top", trigger = "hover", options = NULL)
+          ),
+          column(3,
+                 sliderInput(ns('slOutliersGapLen'),
+                             label = 'Max allowed gap duration',
+                             min = 0,
+                             max = 10,
+                             value = 0, 
+                             step = 1),
+                 bsTooltip(ns('slOutliersGapLen'), helpText.selOutliers[["slOutliersGapLen"]], placement = "top", trigger = "hover", options = NULL)
+          ),
+          column(3,
+                 downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
+                 htmlOutput(ns("txtOutliersPerc"))
+          )
         ),
-        column(2, 
-               radioButtons(ns('rbOutliersType'), 
-                            label = 'From', 
-                            choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot')),
-               bsTooltip(ns('rbOutliersType'), helpText.selOutliers[["rbOutliersType"]], placement = "top", trigger = "hover", options = NULL)
-        ),
-        column(3,
-               sliderInput(ns('slOutliersGapLen'),
-                           label = 'Max allowed gap duration',
-                           min = 0,
-                           max = 10,
-                           value = 0, 
-                           step = 1),
-               bsTooltip(ns('slOutliersGapLen'), helpText.selOutliers[["slOutliersGapLen"]], placement = "top", trigger = "hover", options = NULL)
-        ),
-        column(3,
-               downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
-               htmlOutput(ns("txtOutliersPerc"))
-        )
-      ),
-      checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
-      bsTooltip(ns('chBplotDist'), helpText.selOutliers[["chBplotDist"]], placement = "top", trigger = "hover", options = NULL),
-      
-      uiOutput(ns('uiDistPlot'))
+        checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
+        bsTooltip(ns('chBplotDist'), helpText.selOutliers[["chBplotDist"]], placement = "top", trigger = "hover", options = NULL),
+        
+        uiOutput(ns('uiDistPlot'))
       )
     }
   })
   
+  # Provide interval between 2 time points (for interpolation of NAs and missing time points)
+  output$varSelTimeFreq = renderUI({
+    if (DEB)
+      cat(file = stdout(), 'server:varSelTimeFreq\n')
+    
+    if (input$chBtrajInter & input$slOutliersGapLen > 0) {
+      numericInput(
+        ns('inSelTimeFreq'),
+        'Interval between 2 time points',
+        min = 0,
+        step = 1,
+        width = '100%',
+        value = 1
+      )
+    }
+  })
   
   # Display number of tracks and outliers  
   output$txtOutliersPerc <- renderText({ 
     cat(file = stdout(), 'modSelOutliers: txtOutliersPerc\n')
     
-      sprintf('<b>%d total track(s)<br>%d removed track(s)<br>%d removed point(s)</b><br>', 
+    sprintf('<b>%d total track(s)<br>%d removed track(s)<br>%d removed point(s)</b><br>', 
             nCellsCounter[['nCellsOrig']], 
             nCellsCounter[['nCellsOrig']] - nCellsCounter[['nCellsAfter']],
             nCellsCounter[['nOutlierTpts']])
-    })
+  })
   
   # button for downloading CSV with ids of removed tracks
   output$downOutlierCSV <- downloadHandler(
@@ -117,15 +139,15 @@ modSelOutliers = function(input, output, session, in.data) {
     ns <- session$ns
     
     if (input$chBplotDist) {
-
+      
       locDT = in.data()
       
       if (is.null(locDT)) {
         return(NULL)
       }
-
+      
       output$densPlot = renderPlot({
-
+        
         # main density plot
         locP = ggplot(locDT, aes_string(x = COLY)) +
           geom_density()
@@ -223,7 +245,17 @@ modSelOutliers = function(input, output, session, in.data) {
     plotOutput(ns('densPlot'))
   })
   
-# Identify outliers and remove them from dt
+  # Switch on the option to interpolate gaps only if "Max allowed gap duration" (slOutliersGapLen > 0)
+  observe({
+    shinyjs::toggleState("chBtrajInter", input$slOutliersGapLen > 0)
+  })
+  
+  # Identify outliers
+  # Outlier values are identified based on a distribution of pooled data from COLY column.
+  # There's an option to identify outliers at the left, right, or both ends of the distribution.
+  # Time points with outlier measurements are removed entirely.
+  # Depending on the length of a gap created by outlier removal, entire trajectories can be removed.
+  # The resulting gaps can be interpolated.
   dtReturn = reactive({ 
     cat(file = stdout(), 'modSelOutliers:dtReturn\n')
     
@@ -232,106 +264,66 @@ modSelOutliers = function(input, output, session, in.data) {
     if (is.null(loc.out)) {
       return(NULL)
     }
-
+    
     if (!input$chbRemoveOut) {
       return(loc.out)
     }
     
     # store the number of trajectories before prunning
-    nCellsCounter[['nCellsOrig']] = length(unique(loc.out[['id']]))
+    nCellsCounter[['nCellsOrig']] = length(unique(loc.out[[COLID]]))
     
     # Remove outliers if the field with percentage of data to remove is greater than 0
     if (input$numOutliersPerc > 0) {
       
       # scale all measurement points      
       loc.out[, y.sc := scale(get(COLY))]  
-
-      # Identify outlier points
-      # In the UI, user selectes percentage of data to remove from the bottom, middle, or top part.
-      # loc.outpts stores outlier points
+      
+      # Identify outlier time points
+      # In the UI, user selects the percentage of data to remove from the bottom and/or top of the pooled distribution
+      # loc.outpts is a datatable only with outlier time points
       # warning: quantile type = 3: SAS definition: nearest even order statistic.
       switch(input$rbOutliersType,
-        'top' = {loc.outpts = loc.out[ y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.01, na.rm = T, type = 3)]},
-        'mid' = {loc.outpts = loc.out[ y.sc < quantile(y.sc, input$numOutliersPerc * 0.005, na.rm = T, type = 3) | 
-                                     y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.005, na.rm = T, type = 3)]},
-        'bot' = {loc.outpts = loc.out[ y.sc < quantile(y.sc, input$numOutliersPerc * 0.01, na.rm = T, type = 3)]}
+             'top' = {loc.outpts = loc.out[ y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.010, na.rm = T, type = 3)]},
+             'mid' = {loc.outpts = loc.out[ y.sc < quantile(y.sc,     input$numOutliersPerc * 0.005, na.rm = T, type = 3) | 
+                                              y.sc > quantile(y.sc, 1 - input$numOutliersPerc * 0.005, na.rm = T, type = 3)]},
+             'bot' = {loc.outpts = loc.out[ y.sc < quantile(y.sc,     input$numOutliersPerc * 0.010, na.rm = T, type = 3)]}
       )
       
       if (DEB) {
         cat(file = stdout(), '\nmodSelOutliers:dtReturn: Outlier points:\n')
         print(loc.outpts)
       }
-        
+      
+      # remove tracks if gaps longer than a threshold; interpolate if UI set
+      # to do that, we need to calculate the ap length
       if (input$slOutliersGapLen > 0) {
         # remove tracks with gaps equal to or longer than the value set in slOutliersGapLen
         # shorter gaps are interpolated linearly
         
-        # add index column per trajecory
-        loc.out[, (COLIDX) := 1:.N, by = c(COLID)]
-
-        # remove single outlier points (anti-join)
-        # From: https://stackoverflow.com/a/46333620/1898713
-        loc.out = loc.out[!loc.outpts, on = names(loc.outpts)]
-
-        # calculate diff on index column to see the length of gaps due to removed points
-        # the value of that column corresponds to the gap length (hence the "-1")
-        loc.out[, (COLIDXDIFF) := c(1, diff(get(COLIDX))) - 1, by = c(COLID)]
-
-        # get track ids where the max gap is longer than the threshold
-        loc.idgaps = loc.out[, max(get(COLIDXDIFF)), by = c(COLID)][V1 > input$slOutliersGapLen, get(COLID)]
+        loc.out = LOCremoveOutTracks(loc.out, loc.outpts, COLID, input$slOutliersGapLen, T)
         
-        if (DEB) {
-          cat(file = stdout(), '\nmodSelOutliers:dtReturn: Track IDs with max gap >= threshold:\n')
-          if (length(loc.idgaps) > 0)
-            print(loc.idgaps) else
-              cat("none\n")
-        }
-        
-        # remove outlier tracks with gaps longer than the value set in slOutliersGapLen
-        if (length(loc.idgaps) > 0)
-          loc.out = loc.out[!(get(COLID) %in% unique(loc.idgaps))]
-
-        # clean
-        loc.out[, c(COLIDX, COLIDXDIFF) := NULL]
-
         # interpolate gaps due to outliers
         if (input$chBtrajInter) {
-          # fill removed outliers with NA's
-          setkeyv(loc.out, c(COLGR, COLID, COLRT))
-          loc.out = loc.out[setkeyv(loc.out[, .(seq(min(get(COLRT), na.rm = T), max(get(COLRT), na.rm = T), 1)), by = c(COLGR, COLID)], c(COLGR, COLID, 'V1'))]
-
-          # x-check: print all rows with NA's
-          if (DEB) {
-            cat(file = stdout(), '\nmodSelOutliers:dtReturn: Rows with NAs to interpolate:\n')
-            print(loc.out[rowSums(is.na(loc.out)) > 0, ])
-          }
-          
-          # NA's may be already present in the dataset'.
-          # Interpolate (linear) them with na.interpolate as well
-          if( (COLPOSX %in% names(loc.out)) & (COLPOSY %in% names(loc.out)) )
-            s.cols = c(COLY, COLPOSX, COLPOSY)
-          else
-            s.cols = c(COLY)
-          
-          
-          # Apparently the loop is faster than lapply+SDcols
-          for(col in s.cols) {
-            # Interpolated columns should be of type numeric (float)
-            # This is to ensure that interpolated columns are of porper type.
-            data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
+          # make sure that time interval is set correctly
+          if (input$inSelTimeFreq > 0) {
             
-            loc.out[, (col) := na_interpolation(get(col)), by = c(COLID)]        
-          }
-        } 
+            if( (COLPOSX %in% names(loc.out)) & (COLPOSY %in% names(loc.out)) )
+              s.cols = c(COLY, COLPOSX, COLPOSY)
+            else
+              s.cols = c(COLY)
+            
+            loc.out = LOCinterpolate(loc.out, COLGR, COLID, COLRT, s.cols, input$inSelTimeFreq, T)
+            
+          } # end: if (input$inSelTimeFreq > 0) 
+        } # if (input$chBtrajInter)
       } else {
-        # remove outlier tracks with gaps of length 1 time point
-        # !(input$slOutliersGapLen > 1)
+        # remove all tracks regardless of gap length (input$slOutliersGapLen == 0)
+        
         loc.out = loc.out[!(get(COLID) %in% unique(loc.outpts[[COLID]]))]
-      }
-
+      } # end if (input$slOutliersGapLen > 0)
+      
       # clean
       loc.out[, y.sc := NULL]
-
       
       # store a vector of outlier timepoints with the corresponding IDs
       vOut[['id']] = loc.outpts
@@ -340,8 +332,8 @@ modSelOutliers = function(input, output, session, in.data) {
       # !(input$numOutliersPerc > 0)
       loc.outpts = NULL
       vOut = NULL
-    }
-
+    } # end: if (input$numOutliersPerc > 0)
+    
     # count number of trajectories after removing outlier tracks
     nCellsCounter[['nCellsAfter']] = length(unique(loc.out[[COLID]]))
     
