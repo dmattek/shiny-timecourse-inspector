@@ -218,11 +218,12 @@ clustValid <- function(input, output, session, in.dataWide) {
       return(NULL)
     }
     
-    return(factoextra::hcut(x = loc.dist,
-                            k = returnNclust(),
-                              FUNcluster = "hclust",
-                              hc_method = input$selectLinkage, 
-                              graph = FALSE))
+    return(LOChcut(x = loc.dist,
+                   k = returnNclust(),
+                   hc_func = "hclust",
+                   hc_method = input$selectLinkage,
+                   hc_metric = input$selectDiss
+                   ))    
   })
   
   # Plotting ----
@@ -292,36 +293,6 @@ clustValid <- function(input, output, session, in.dataWide) {
     
     return(loc.p)
   }
-
-  # plot dendrogram tree
-  plotTree <- function() {
-    cat(file = stderr(), 'plotTree: in\n')
-    
-    # make the f-n dependent on the button click
-    locBut = input$butPlotInt
-    
-    # Check if required data exists
-    # Thanks to isolate all mods in the left panel are delayed 
-    # until clicking the Plot button
-    loc.part = calcDendCut()
-    validate(
-      need(!is.null(loc.part), "Nothing to plot. Load data first!")
-    )    
-    
-    loc.p = factoextra::fviz_dend(loc.part, 
-                                  show_labels = F,
-                                  rect = T,
-                                  xlab = "Time series", 
-                                  main = "Dendrogram") +
-      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
-                     in.font.axis.text = PLOTFONTAXISTEXT, 
-                     in.font.axis.title = PLOTFONTAXISTITLE, 
-                     in.font.strip = PLOTFONTFACETSTRIP, 
-                     in.font.legend = PLOTFONTLEGEND)
-    
-    return(loc.p)
-  }
-  
   
   # PCA visualization of partitioning methods 
   plotClPCA <- function() {
@@ -330,12 +301,11 @@ clustValid <- function(input, output, session, in.dataWide) {
     # make the f-n dependent on the button click
     locBut = input$butPlotInt
     
-    # Check if required data exists
-    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.part = calcDendCut()
     loc.dm = in.dataWide()
     print(sum(is.na(loc.dm)))
+
     
     validate(
       need(!is.null(loc.part), "Nothing to plot. Load data first!"),
@@ -357,19 +327,65 @@ clustValid <- function(input, output, session, in.dataWide) {
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND)
+
+    
+    # Retrieve association of cluster and colours and use it for dendrogram for color matching between dend, silhouette and PCA plot
+    temp = ggplot_build(loc.p)
+    map_individual = as.data.table(temp$data[[1]][, c("colour", "shape")])
+    map_cluster = map_individual[, .SD[1], by = shape]
+    map_cluster[, cluster := 1:nrow(map_cluster)]
+
+    return(list(plot = loc.p, mapping_individual = map_individual, mapping_cluster = map_cluster))
+  }
+  
+  
+  # plot dendrogram tree
+  plotTree <- function() {
+    cat(file = stderr(), 'plotTree: in\n')
+    
+    # make the f-n dependent on the button click
+    locBut = input$butPlotInt
+    
+    # Check if required data exists
+    loc.part = calcDendCut()
+    # Rerun the PCA plot to obtain clour mapping of clusters in PCA and silhouette plot and match it with dendrogram colors.
+    loc.map = plotClPCA()
+    validate(
+      need(!is.null(loc.part), "Nothing to plot. Load data first!"),
+      need(!is.null(loc.map), "Nothing to plot. Load data first!")
+    )    
+    
+    # Determine cluster order of occurence from left to right in the dendrogram
+    # This is necessary because fviz_dend colors clusters from left to right,
+    # whereas fviz_silhouette and fviz_cluster use the order of cluster first occurence in the list of individuals.
+    loc.mapClus = loc.map$mapping_cluster
+    ord.clusDend = unique(loc.part$cluster[loc.part$order])
+    col.clusDend = loc.mapClus[, colour][ord.clusDend]
+        
+    loc.p = factoextra::fviz_dend(loc.part,
+                                  k = returnNclust(),
+                                  k_colors = col.clusDend,
+                                  show_labels = F,
+                                  rect = T,
+                                  xlab = "Time series",
+                                  main = "Dendrogram") +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE,
+                     in.font.axis.text = PLOTFONTAXISTEXT,
+                     in.font.axis.title = PLOTFONTAXISTITLE,
+                     in.font.strip = PLOTFONTFACETSTRIP,
+                     in.font.legend = PLOTFONTLEGEND)
     
     return(loc.p)
   }
   
-  # plot silhouetts for a particular dendrogram cut
+  
+  # plot silhouettes for a particular dendrogram cut
   plotSilhForCut <- function() {
     cat(file = stderr(), 'plotSilhForCut: in\n')
     
     # make the f-n dependent on the button click
     locBut = input$butPlotInt
     
-    # Check if required data exists
-    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.part = calcDendCut()
     validate(
@@ -421,6 +437,7 @@ clustValid <- function(input, output, session, in.dataWide) {
     # pdf(NULL)
     
     loc.p = plotClPCA()
+    loc.p = loc.p$plot
     if(is.null(loc.p))
       return(NULL)
     
