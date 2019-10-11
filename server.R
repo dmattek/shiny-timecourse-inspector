@@ -736,35 +736,14 @@ shinyServer(function(input, output, session) {
     # or the frame number metadata can be missing, as is the case for tCourseSelected files that already have realtime column.
     # Therefore, we cannot rely on that info to get time frequency; user must provide this number!
     
-    # Check for explicit NA's in the measurement columns
-    # Has to be here (and not in dataMod()) because we need to know the name of the measurement column (COLY)
-    if (sum(is.na(loc.out[[COLY]])))
-      createAlert(session, "alertAnchorSidePanelNAsPresent", "alertNAsPresent", title = "Warning",
-                  content = helpText.server[["alertNAsPresent"]], 
-                  append = FALSE,
-                  style = "warning")
-    else
-      closeAlert(session, "alertNAsPresent")
-    
-    # check if time between 2 time points provided
-    if(input$chBtrajInter) {
-      if (input$inSelTimeFreq == 0)
-        createAlert(session = session, 
-                    anchorId = "alertAnchorSidePanelNAsPresent", 
-                    alertId = "alertTimeFreq0", 
-                    title = "Error",
-                    content = helpText.server[["alertTimeFreq0"]], 
-                    append = FALSE,
-                    style = "danger")
-      else
-        closeAlert(session, "alertTimeFreq0")
-    }
-    
     # required for subsetting downstream
     setkeyv(loc.out, c(COLGR, COLID, COLRT))
 
-    if (input$chBtrajInter) 
+    if (input$chBtrajInter) {
+      # check if time between 2 time points provided and greater than 0
       if (input$inSelTimeFreq > 0) {
+        closeAlert(session, "alertTimeFreq0")
+        
         # NA's may be already present in the dataset'.
         # Interpolate (linear) them with na.interpolate as well
         if(locPos)
@@ -784,8 +763,32 @@ shinyServer(function(input, output, session) {
         # Keep it? Expand it?
         # Create a UI filed for selecting the column with mid.in data.
         # What to do with that column during interpolation (see above)
-        
+      } else {
+        closeAlert(session, "alertNAsPresent")
+        createAlert(session = session, 
+                    anchorId = "alertAnchorSidePanelNAsPresent", 
+                    alertId = "alertTimeFreq0", 
+                    title = "Error",
+                    content = helpText.server[["alertTimeFreq0"]], 
+                    append = T,
+                    style = "danger")
       }
+    } else
+      closeAlert(session, "alertTimeFreq0")
+    
+    # Check for explicit NA's in the measurement columns
+    # Has to be here (and not in dataMod()) because we need to know the name of the measurement column (COLY)
+    if (sum(is.na(loc.out[[COLY]])))
+      createAlert(session, "alertAnchorSidePanelNAsPresent", 
+                  "alertNAsPresent", 
+                  title = "Warning",
+                  content = helpText.server[["alertNAsPresent"]], 
+                  append = T,
+                  style = "warning")
+    else
+      closeAlert(session, "alertNAsPresent")
+    
+    
     
     ## Trim x-axis (time)
     if(input$chBtimeTrim) {
@@ -846,15 +849,9 @@ shinyServer(function(input, output, session) {
     # Check for missing time points
     # Missing rows in the long format give rise to NAs during dcast
     # Here, we are not checking for explicit NAs in COLY column
-    if ((sum(is.na(loc.dt[[COLY]])) == 0) & (sum(is.na(loc.dt.wide)) > 0)) {
-      createAlert(session, "alertAnchorSidePanelNAsPresent", "alertNAsPresentLong2WideConv", title = "Warning",
-                  content = helpText.server[["alertNAsPresentLong2WideConv"]], 
-                  append = FALSE,
-                  style = "warning")
-    } else {
-      closeAlert(session, "alertNAsPresentLong2WideConv")
-    }
-    
+    if ((sum(is.na(loc.dt[[COLY]])) == 0) & (sum(is.na(loc.dt.wide)) > 0))
+      cat(stderr(), helpText.server[["alertNAsPresentLong2WideConv"]])
+
     return(loc.m.out)
   }) 
   
