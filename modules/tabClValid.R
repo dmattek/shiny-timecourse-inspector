@@ -242,8 +242,10 @@ clustValid <- function(input, output, session, in.dataWide) {
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dist = isolate(calcDist())
+    
     validate(
-      need(!is.null(loc.dist), "Nothing to plot. Load data first!")
+      need(!is.null(loc.dist), "Nothing to plot. Load data first!"),
+      need(returnMaxNclust() <  nrow(loc.dist), "Maximum number of clusters to conisder should be smaller than the number of time series.")
     )    
 
     loc.p = LOCnbclust(loc.dist,
@@ -273,8 +275,10 @@ clustValid <- function(input, output, session, in.dataWide) {
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dist = isolate(calcDist())
+    
     validate(
-      need(!is.null(loc.dist), "Nothing to plot. Load data first!")
+      need(!is.null(loc.dist), "Nothing to plot. Load data first!"),
+      need(returnMaxNclust() <  nrow(loc.dist), "Maximum number of clusters to conisder should be smaller than the number of time series.")
     )    
     
     loc.p = LOCnbclust(loc.dist,
@@ -304,8 +308,6 @@ clustValid <- function(input, output, session, in.dataWide) {
     # until clicking the Plot button
     loc.part = calcDendCut()
     loc.dm = in.dataWide()
-    print(sum(is.na(loc.dm)))
-
     
     validate(
       need(!is.null(loc.part), "Nothing to plot. Load data first!"),
@@ -348,11 +350,13 @@ clustValid <- function(input, output, session, in.dataWide) {
     
     # Check if required data exists
     loc.part = calcDendCut()
+    
     # Rerun the PCA plot to obtain clour mapping of clusters in PCA and silhouette plot and match it with dendrogram colors.
     loc.map = plotClPCA()
+    
     validate(
       need(!is.null(loc.part), "Nothing to plot. Load data first!"),
-      need(!is.null(loc.map), "Nothing to plot. Load data first!")
+      need(!is.null(loc.map),  "Cannot assign colours to clusters. Possible NAs in the dataset!")
     )    
     
     # Determine cluster order of occurence from left to right in the dendrogram
