@@ -4,10 +4,9 @@
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
-helpText.clHier = c(alertNAsPresentDTW = paste0("NAs present. DTW cannot calculate the distance. ",
-                                                "Consider interpolation of NAs and missing data in the left panel."),
-                    alertNAsPresent = paste0("NAs present. The selected distance measure will work, ",
-                                             "however caution is recommended. Consider interpolation of NAs and missing data the left panel."))
+helpText.clHier = c(alertNAsPresentClDTW = paste0("NAs (still) present. DTW cannot calculate the distance. ",
+                                                "If interpolation is active in the left panel, missing data can be due to removed outlier time points."),
+                    alertNAsPresentCl = paste0("NAs (still) present, caution recommended. If interpolation is active in the left panel, missing data can be due to removed outlier time points."))
 
 
 # UI ----
@@ -281,24 +280,24 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     # from missing rows that cause NAs to appear when convertinf from long to wide (dcast)
     if(sum(is.na(loc.dm)) > 0) {
       if (input$selectPlotHierDiss == "DTW") {
-        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentDTW", title = "Error",
-                    content = helpText.clHier[["alertNAsPresentDTW"]], 
+        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentClDTW", title = "Error",
+                    content = helpText.clHier[["alertNAsPresentClDTW"]], 
                     append = FALSE,
                     style = "danger")
-        closeAlert(session, 'alertNAsPresent')
+        closeAlert(session, 'alertNAsPresentCl')
         
         return(NULL)
         
       } else {
-        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresent", title = "Warning",
-                    content = helpText.clHier[["alertNAsPresent"]], 
+        createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentCl", title = "Warning",
+                    content = helpText.clHier[["alertNAsPresentCl"]], 
                     append = FALSE, 
                     style = "warning")
-        closeAlert(session, 'alertNAsPresentDTW')
+        closeAlert(session, 'alertNAsPresentClDTW')
       }
     } else {
-      closeAlert(session, 'alertNAsPresentDTW')
-      closeAlert(session, 'alertNAsPresent')
+      closeAlert(session, 'alertNAsPresentClDTW')
+      closeAlert(session, 'alertNAsPresentCl')
     }
     
     
@@ -506,7 +505,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     loc.dend = isolate(userFitDendHier())
     validate(
       need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
-      need(!is.null(loc.dend), "Did not create dendrogram")
+      need(!is.null(loc.dend), "Could not create dendrogram")
     )
     
     # Dummy dependency to redraw the heatmap without clicking Plot
