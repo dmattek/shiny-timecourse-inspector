@@ -32,17 +32,6 @@ modAUCplotUI =  function(id, label = "Plot AUC distributions") {
       ),
       column(
         4,
-        selectInput(
-          ns('selPlotLegendPos'),
-          label = 'Legend position',
-          choices = list(
-            "Top" = 'top',
-            "Right" = 'right',
-            "Bottom" = 'bottom'
-          ), 
-          width = "120px",
-          selected = 'top'
-        ),
         radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
                      c("horizontal" = 0,
                        "45 deg" = 45,
@@ -227,8 +216,7 @@ modAUCplot = function(input, output, session,
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) + 
-      theme(legend.position = input$selPlotLegendPos,
-            axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), 
+      theme(axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), 
                                                     size = PLOTFONTAXISTEXT))
     
     
