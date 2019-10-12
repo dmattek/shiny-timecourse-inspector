@@ -26,10 +26,15 @@ modClDistPlotUI =  function(id, label = "Plot distribution of clusters per group
 
 # Params:
 # in.data - data prepared with data4clDistPlot f-n
-# in.cols - table with 1st column as cluster number, 2nd column colour assignments
-#           prepared with getClColHier
+# in.colors - table with two columns:
+#             - gr.no - with group/cluster number, 
+#             - gr.col - with colour assignments
+#             prepared with getClColHier
 # in.fname - file name for plot download
-modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fname = 'clDist.pdf') {
+modClDistPlot = function(input, output, session, 
+                         in.data, 
+                         in.colors = NULL, 
+                         in.fname = 'clDist.pdf') {
   
   ns <- session$ns
  
@@ -38,26 +43,23 @@ modClDistPlot = function(input, output, session, in.data, in.cols = NULL, in.fna
     cat(file = stderr(), 'plotClDist: in\n')
     
     loc.dt = in.data()
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotClDist: dt is NULL\n')
-      return(NULL)
-    }
+    validate(
+      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+    )
     
     # Two statements: "position_fill(reverse = TRUE)" and "guide_legend(reverse = T)"
-    # result in  stacked bar plot with categories ordered from the bottom to top of the stacked bar
-    p.out = ggplot(loc.dt[], aes(x = group, y = nCells)) +
-      geom_bar(aes(fill = as.factor(cl)), stat = 'identity', position = position_fill(reverse = TRUE)) +
+    # result in a stacked bar plot with categories ordered from the bottom to top of the stacked bar
+    p.out = ggplot(loc.dt, aes_string(x = COLGR, y = COLNTRAJ)) +
+      geom_bar(aes_string(fill = paste0("as.factor(", COLCL, ")")), 
+               stat = 'identity', 
+               position = position_fill(reverse = TRUE)) +
       guides(fill = guide_legend(reverse = T))
     
-    if(is.null(in.cols))
+    if(is.null(in.colors))
       p.out = p.out + scale_fill_discrete(name = "Cluster no.")
     else
       p.out = p.out + scale_fill_manual(name = "Cluster no.", 
-                                        values = in.cols()$cl.col) #,
-                                        #breaks = in.cols()$cl.no,
-                                        #labels = in.cols()$cl.no,
-                                        #limits = in.cols()$cl.no)
-    
+                                        values = in.colors()[["gr.col"]])
     
     loc.rads = as.numeric(input$rBAxisLabelsRotate) * pi / 180
     loc.hjust = 0.5*(1-sin(loc.rads))

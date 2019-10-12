@@ -74,12 +74,30 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
 }
 
 
+#' Module for plotting an aggregated ribbon plot of time series
+#'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param in.data Data.table with individual (non-aggregated) times series in long format
+#' @param in.data.stim Optional long-format data.table for plotting stimulation segments
+#' @param in.group String with the name of a grouping column
+#' @param in.group.color Data.table with assignments of colours to groups in in.data. 
+#'                       Contains two columns: 
+#'                       gr.no - group id, 
+#'                       gr.col - colour assignments
+#' @param in.fname File name for saving the plot
+#'
+#' @return
+#' @export
+#'
+#' @examples
 modTrajRibbonPlot = function(input, output, session, 
                              in.data, 
-                             in.data.stim,
-                             in.facet = 'group', 
-                             in.facet.color = NULL, 
-                             in.fname) {
+                             in.data.stim = NULL,
+                             in.group = 'group', 
+                             in.group.color = NULL, 
+                             in.fname = "trajAverages.pdf") {
   
   ns <- session$ns
   
@@ -192,7 +210,7 @@ modTrajRibbonPlot = function(input, output, session,
   
   callModule(modTrackStats, 'dispTrackStats',
              in.data = in.data,
-             in.bycols = in.facet)
+             in.bycols = in.group)
   
   
   output$outPlotTraj <- renderPlot({
@@ -222,12 +240,6 @@ modTrajRibbonPlot = function(input, output, session,
   })
   
   
-  
-  # Trajectory plot - download pdf
-  callModule(downPlot, "downPlotTraj", 
-             in.fname = in.fname, 
-             plotTraj, TRUE)
-  
   plotTraj <- function() {
     cat(file = stderr(), 'plotTrajRibbon: in\n')
     locBut = input$butPlotTraj
@@ -249,7 +261,6 @@ modTrajRibbonPlot = function(input, output, session,
       cat(file = stderr(), 'plotTrajRibbon: stim is NULL\n')
     } else {
       cat(file = stderr(), 'plotTrajRibbon: stim not NULL\n')
-      
       # choose only 1st group of stimulation pattern for ribbon plot
       
       loc.groups = unique(loc.dt.stim[['group']])
@@ -258,8 +269,6 @@ modTrajRibbonPlot = function(input, output, session,
         loc.dt.stim = loc.dt.stim[group == loc.groups[1]]
       }
     }
-    
-    
     
     # Future: change such that a column with colouring status is chosen by the user
     # colour trajectories, if dataset contains mid.in column
@@ -284,42 +293,34 @@ modTrajRibbonPlot = function(input, output, session,
     else
       locObjNum = FALSE
     
+    # in.group.color is typically used when plotting time series within clusters.
+    # The number of colours in the palette has to be equal to the number of groups.
+    # This might differ if the user selects manually groups (e.g. clusters) to display.
     
+    # Get existing groups in dt for subsetting externally provided group-color table
+    loc.groups = unique(loc.dt[, ..in.group])
     
-    # If in.facet.color present,
-    # make sure to include the same number of colours in the palette,
-    # as the number of groups in dt.
-    # in.facet.color is typically used when plotting time series within clusters.
-    # Then, the number of colours in the palette has to be equal to the number of clusters (facetted according to in.facet variable).
-    # This might differ if the user selects manually clusters to display.
-    if (is.null(in.facet.color)) 
-      loc.facet.col = NULL 
-    else {
-      # get group numbers in dt; 
-      # loc.dt[, c(in.facet), with = FALSE] returns a data table with a single column
-      # [[1]] at the end extracts the first column and returns as a vector
-      loc.groups = unique(loc.dt[, c(in.facet), with = FALSE][[1]])
-      
-      # get colour palette
-      # the length is equal to the number of groups in the original dt.
-      # When plotting time series within clusters, the length equals the number of clusters.
-      loc.facet.col = in.facet.color()$cl.col
-      loc.facet.col = loc.facet.col[loc.groups]
+    if (is.null(in.group.color)) {
+      # Assign ColorBlind palette from Tableau
+      loc.group.color = LOCreturnTableauPalette("Color Blind", nrow(loc.groups))
+    } else {
+      # Use externally provided translation between groups/clusters and colors
+      # Subset group-color assignments with existing groups
+      loc.group.color = in.group.color()[loc.groups][["gr.col"]]
     }
-    
     
     # aggregate data; calculate Mean, CI or SE
     loc.ribbon.lohi = NULL
     
     if(input$rBPlotTrajStat == "Mean") {
       # calculate the mean
-      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY), na.rm = T)), by = c(in.facet, COLRT)]
+      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY), na.rm = T)), by = c(in.group, COLRT)]
       
     } else if(input$rBPlotTrajStat == "CI") {
       # calculate the mean and the confidence intervals
       loc.dt.aggr = LOCcalcTrajCI(in.dt = loc.dt, 
                                   in.col.meas = COLY, 
-                                  in.col.by = c(in.facet, COLRT), 
+                                  in.col.by = c(in.group, COLRT), 
                                   in.type = 'normal')
       
       loc.ribbon.lohi = c('Lower', 'Upper')
@@ -329,7 +330,7 @@ modTrajRibbonPlot = function(input, output, session,
       loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY), na.rm = T),
                                Lower = mean(get(COLY), na.rm = T) - LOCstderr(get(COLY), na.rm = T),
                                Upper = mean(get(COLY), na.rm = T) + LOCstderr(get(COLY), na.rm = T)), 
-                           by = c(in.facet, COLRT)]
+                           by = c(in.group, COLRT)]
       
       loc.ribbon.lohi = c('Lower', 'Upper')
     }
@@ -337,7 +338,7 @@ modTrajRibbonPlot = function(input, output, session,
     
     
     # set the grouing column to a factor (for plotting)
-    loc.dt.aggr[, (in.facet) := as.factor(get(in.facet))]
+    loc.dt.aggr[, (in.group) := as.factor(get(in.group))]
 
     # setting bounds for displaying of x and y axes
     loc.xlim.arg = NULL
@@ -350,19 +351,11 @@ modTrajRibbonPlot = function(input, output, session,
       loc.ylim.arg = c(input$inSetYboundsLow, input$inSetYboundsHigh)
     } 
     
-    # If more than max.col groups, cycle through the palette ("Color Blind" can return 10 colors at maximum)
-    loc.pal = "Color Blind"
-    max.col = attr(ggthemes::tableau_color_pal(loc.pal), "max_n")
-    loc.col = ggthemes::tableau_color_pal(loc.pal)(n = max.col)
-    ngroups = uniqueN(loc.dt.aggr[, ..in.facet]) - 1
-    loc.col = rep(loc.col, (ngroups %/% max.col) + 1)
-    loc.col = loc.col[1:(ngroups+1)]
-    
     p.out = LOCplotTrajRibbon(dt.arg = loc.dt.aggr, 
                            x.arg = COLRT, 
                            y.arg = 'Mean',
-                           col.arg = loc.facet.col,
-                           group.arg = in.facet,
+                           col.arg = loc.group.color,
+                           group.arg = in.group,
                            dt.stim.arg = loc.dt.stim,
                            x.stim.arg = c('tstart', 'tend'),
                            y.stim.arg = c('ystart', 'yend'), 
@@ -376,9 +369,14 @@ modTrajRibbonPlot = function(input, output, session,
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) + 
-      theme(legend.position = input$rBlegendPos) +
-      scale_colour_manual(values = loc.col)
+      theme(legend.position = input$rBlegendPos) 
     
     return(p.out)
   }
+  
+  # Trajectory plot - download pdf
+  callModule(downPlot, "downPlotTraj", 
+             in.fname = in.fname, 
+             plotTraj, TRUE)
+  
 }

@@ -971,6 +971,8 @@ shinyServer(function(input, output, session) {
   callModule(modTrajRibbonPlot, 'modTrajRibbon', 
              in.data = dataLongNoOut,
              in.data.stim = dataStim,
+             in.group = COLGR,
+             in.group.color = NULL,
              in.fname = function() return(FPDFTCMEAN))
   
   # Trajectory plotting - individual
@@ -988,13 +990,19 @@ shinyServer(function(input, output, session) {
   
   # Tabs ----
   ###### AUC calculation and plotting
-  callModule(tabAUCplot, 'tabAUC', dataLongNoOut, in.fname = function() return(FPDFBOXAUC))
+  callModule(tabAUCplot, 'tabAUC', 
+             dataLongNoOut, 
+             in.fname = function() return(FPDFBOXAUC))
   
   ###### Box-plot
-  callModule(tabDistPlot, 'tabDistPlot', dataLongNoOut, in.fname = function() return(FPDFBOXTP))
+  callModule(tabDistPlot, 'tabDistPlot', 
+             dataLongNoOut, 
+             in.fname = function() return(FPDFBOXTP))
   
   ###### Scatter plot
-  callModule(tabScatterPlot, 'tabScatter', dataLongNoOut, in.fname = function() return(FPDFSCATTER))
+  callModule(tabScatterPlot, 'tabScatter', 
+             dataLongNoOut, 
+             in.fname = function() return(FPDFSCATTER))
   
   ##### Hierarchical validation
   callModule(clustValid, 'tabClValid', dataWide)

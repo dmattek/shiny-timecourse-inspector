@@ -169,11 +169,11 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
                withSpinner(plotOutput(ns('outPlotHier')))
       ),
       
-      tabPanel('Averages',
+      tabPanel('Cluster averages',
                br(),
                modTrajRibbonPlotUI(ns('modPlotHierTrajRibbon'))),
       
-      tabPanel('Time series',
+      tabPanel('Time series in clusters',
                br(),
                modTrajPlotUI(ns('modPlotHierTraj'))),
       
@@ -343,8 +343,10 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   }) 
   
   
-  # returns table prepared with f-n getClCol
-  # for hierarchical clustering
+  # Returns a table prepared with f-n getClCol
+  # for hierarchical clustering.
+  # The table contains colours assigned to clusters.
+  # Colours are obtained from the dendrogram using dendextend::get_leaves_branches_col
   getClColHier <- reactive({
     cat(file = stderr(), 'getClColHier \n')
     
@@ -352,15 +354,19 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     if (is.null(loc.dend))
       return(NULL)
     
-    loc.dt = getClCol(loc.dend, returnNclust())
+    # obtain relations between cluster and colors from the dendrogram
+    loc.dt = LOCgetClCol(loc.dend, returnNclust())
     
     # Display clusters specified in the inPlotHierClSel field
     # Data is ordered according to the order of clusters specified in this field
     if(input$chBPlotHierClSel) {
-      loc.dt = loc.dt[cl.no %in% input$inPlotHierClSel]
-      loc.dt[, cl.no := factor(cl.no, levels = input$inPlotHierClSel)]
-      setkey(loc.dt, cl.no)
+      # kepp only clusters specified in input$inPlotHierClSel
+      loc.dt = loc.dt[gr.no %in% input$inPlotHierClSel]
+      loc.dt[, gr.no := factor(gr.no, levels = input$inPlotHierClSel)]
     }
+
+    # set the key to allow subsetting
+    setkey(loc.dt, gr.no)
     
     return(loc.dt)
   })
@@ -465,6 +471,10 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     
     # get cell id's with associated cluster numbers
     loc.dt.cl = getDataCl(loc.dend, returnNclust())
+    if (is.null(loc.dt.cl)) {
+      cat(file = stderr(), 'plotClDist: loc.dt.cl is NULL\n')
+      return(NULL)
+    }
     
     # get cellIDs with condition name
     loc.dt.gr = getDataCond()
@@ -473,17 +483,19 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
       return(NULL)
     }
     
+    # add grouping to clusters+ids
     loc.dt = merge(loc.dt.cl, loc.dt.gr, by = COLID)
     
-    
-    loc.dt.aggr = loc.dt[, .(nCells = .N), by = .(group, cl)]
+    # count number of time series per group, per cluster
+    loc.dt.aggr = loc.dt[, .(xxx = .N), by = c(COLGR, COLCL)]
+    setnames(loc.dt.aggr, "xxx", COLNTRAJ)
     
     # Display clusters specified in the inPlotHierClSel field
     # Data is ordered according to the order of clusters specified in this field
     if(input$chBPlotHierClSel) {
       loc.dt.aggr = loc.dt.aggr[cl %in% input$inPlotHierClSel]
-      loc.dt.aggr[, cl := factor(cl, levels = input$inPlotHierClSel)]
-      setkey(loc.dt.aggr, cl)
+      loc.dt.aggr[, (COLCL) := factor(get(COLCL), levels = input$inPlotHierClSel)]
+      setkeyv(loc.dt.aggr, COLCL)
     }
     return(loc.dt.aggr)
     
@@ -606,7 +618,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   callModule(modTrajPlot, 'modPlotHierTraj', 
              in.data = data4trajPlotCl, 
              in.data.stim = data4stimPlotCl,
-             in.facet = 'cl',  
+             in.facet = COLCL,  
              in.facet.color = getClColHier,
              in.fname = createFnameTrajPlot)
   
@@ -614,21 +626,21 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   callModule(modTrajRibbonPlot, 'modPlotHierTrajRibbon', 
              in.data = data4trajPlotCl, 
              in.data.stim = data4stimPlotCl,
-             in.facet = 'cl',  
-             in.facet.color = getClColHier,
+             in.group = COLCL,  
+             in.group.color = getClColHier,
              in.fname = createFnameRibbonPlot)
   
   # plot cluster PSD
   callModule(modPSDPlot, 'modPlotHierPsd',
              in.data = data4trajPlotCl,
-             in.facet = 'cl',
+             in.facet = COLCL,
              in.facet.color = getClColHier,
              in.fname = createFnamePsdPlot)
   
   # plot distribution barplot
   callModule(modClDistPlot, 'hierClDistPlot', 
              in.data = data4clDistPlot,
-             in.cols = getClColHier,
+             in.colors = getClColHier,
              in.fname = createFnameDistPlot)
   
   

@@ -62,6 +62,7 @@ COLPOSY = 'pos.y'
 COLIDX = 'IDX'
 COLIDXDIFF = 'IDXdiff'
 COLCL = 'cl'
+COLNTRAJ = "nCells"
 
 # file names
 FCSVOUTLIERS = 'outliers.csv'
@@ -795,19 +796,24 @@ getDataClSpar = function(in.dend, in.k, in.id) {
 
 
 
-# prepares a table with cluster numbers in 1st column and colour assignments in 2nd column
-# the number of rows is determined by dendrogram cut
-getClCol <- function(in.dend, in.k) {
+# Returns a table with 2 columns:
+# - gr.no - group numbers, e.g. cluster,
+# - gr.col - color assignments.
+# 
+# The number of rows is determined by dendrogram cut, parameter in.k.
+# Colours are obtained from the dendrogram, parameter in.dend, using dendextend::get_leaves_branches_col
+LOCgetClCol <- function(in.dend, in.k) {
   loc.col_labels <- dendextend::get_leaves_branches_col(in.dend)
   loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
   
   return(unique(
     data.table(
-      cl.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
-      cl.col = loc.col_labels
+      gr.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
+      gr.col = loc.col_labels
     )
   ))
 }
+
 
 # Custom plotting functions ----
 
@@ -880,6 +886,36 @@ LOCrotatedAxisElementText = function(angle,
     hjust = hjust
   )
 }
+
+#' Return recycled tableau palette
+#'
+#' Cycle through a tableau palette (e.g. "Color Blind") and return repeated 
+#' colours depending on the required number of colours
+#'
+#' @param inPalName Name of the tableau colour palette, e.g. "Color Blind"
+#' @param inNcolors Number of required colours, default 10
+#'
+#' @return A vector with a requested number of colors
+#' @export
+#'
+#' @examples
+#' # The Color Blind palette has only 10 colors; here the 11th will be recycled
+#' LOCreturnTableauPalette("Color Blind", 11)
+LOCreturnTableauPalette = function(inPalName, inNcolors = 10) {
+  
+  # get the max N of colours in the palette
+  loc.max.col = attr(ggthemes::tableau_color_pal(inPalName), "max_n")
+  
+  # get all colours in the palette
+  loc.col = ggthemes::tableau_color_pal(inPalName)(n = loc.max.col)
+  
+  # repeat the full palette for the required number of colours
+  loc.col = rep(loc.col, ((inNcolors-1) %/% loc.max.col) + 1)
+  
+  # return only the required number of colurs
+  return(loc.col[1:inNcolors])
+}
+
 
 # Plot individual time series
 LOCplotTraj = function(dt.arg,
@@ -1062,35 +1098,50 @@ LOCplotTraj = function(dt.arg,
   return(p.tmp)
 }
 
-# Plot average time series with CI together in one facet
+
+
+#' Plot average time series with CI together in one facet
+#'
+#' @param dt.arg Data.table with aggregated time series in long format
+#' @param x.arg String with column name for x-axis
+#' @param y.arg String with column name for y-axis
+#' @param group.arg String with column name for grouping time series (e.g. a column with grouping by condition)
+#' @param col.arg Colour pallette for individual time series
+#' @param dt.stim.arg Data.table with stimulation segments to plot under time series
+#' @param x.stim.arg Column names in stimulation dt with x and xend parameters, default c('tstart', 'tend')
+#' @param y.stim.arg Column names in stimulation dt with y and yend parameters, default c('ystart', 'yend')
+#' @param stim.bar.width.arg Width of the stimulation segment, default 0.5
+#' @param xlim.arg Limits of x-axis; for visualisation only, not trimmimng data
+#' @param ylim.arg Limits of y-axis; for visualisation only, not trimmimng data
+#' @param ribbon.lohi.arg Column names containing lower and upper bound for plotting the ribbon, e.g. for CI; default c('Lower', 'Upper'); set to NULL to avoid plotting the ribbon
+#' @param ribbon.fill.arg Color to fill the ribbon, default 'grey50'
+#' @param ribbon.alpha.arg Transparency of the ribbon, default 0.5
+#' @param xlab.arg X-axis label
+#' @param ylab.arg Y-axis label
+#' @param plotlab.arg Plot label
+#'
+#' @return Ggplot object
+#' @export
+#'
+#' @examples
 LOCplotTrajRibbon = function(dt.arg,
-                             # input data table
                              x.arg,
-                             # string with column name for x-axis
                              y.arg,
-                             # string with column name for y-axis
                              group.arg = NULL,
-                             # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
                              col.arg = NULL,
-                             # colour pallette for individual time series
                              dt.stim.arg = NULL,
-                             # data table with stimulation pattern
                              x.stim.arg = c('tstart', 'tend'),
-                             # column names in stimulation dt with x and xend parameters
                              y.stim.arg = c('ystart', 'yend'),
-                             # column names in stimulation dt with y and yend parameters
                              stim.bar.width.arg = 0.5,
                              xlim.arg = NULL,
-                             # limits of x-axis; for visualisation only, not trimmimng data
                              ylim.arg = NULL,
-                             # limits of y-axis; for visualisation only, not trimmimng data
                              ribbon.lohi.arg = c('Lower', 'Upper'),
-                             # column names containing lower and upper bound for plotting the ribbon, e.g. for CI; set to NULL to avoid plotting the ribbon
                              ribbon.fill.arg = 'grey50',
                              ribbon.alpha.arg = 0.5,
                              xlab.arg = NULL,
                              ylab.arg = NULL,
                              plotlab.arg = NULL) {
+  
   p.tmp = ggplot(dt.arg, aes_string(x = x.arg, group = group.arg))
   
   if (!is.null(ribbon.lohi.arg))

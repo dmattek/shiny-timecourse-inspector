@@ -344,8 +344,10 @@ clustHierSpar <- function(input, output, session,
     return(dend)
   })
   
-  # returns table prepared with f-n getClCol
-  # for sparse hierarchical clustering
+  # Returns a table prepared with f-n getClCol
+  # for hierarchical clustering.
+  # The table contains colours assigned to clusters.
+  # Colours are obtained from the dendrogram using dendextend::get_leaves_branches_col
   getClColHierSpar <- reactive({
     cat(file = stderr(), 'getClColHierSpar \n')
     
@@ -353,10 +355,13 @@ clustHierSpar <- function(input, output, session,
     if (is.null(loc.dend))
       return(NULL)
     
-    loc.cut = getClCol(loc.dend, input$inPlotHierSparNclust)
+    # obtain relations between cluster and colors from the dendrogram
+    loc.dt = LOCgetClCol(loc.dend, input$inPlotHierSparNclust)
     
+    # set the key to allow subsetting
+    setkey(loc.dt, gr.no)
     
-    return(loc.cut)
+    return(loc.dt)
   })
   
   
@@ -413,7 +418,7 @@ clustHierSpar <- function(input, output, session,
     ## the following merge won't work...
     ## No idea how to solve it
     
-    loc.dt = merge(loc.dt, loc.dt.cl, by = 'id')
+    loc.dt = merge(loc.dt, loc.dt.cl, by = COLID)
     
     # display only selected clusters
     if(input$chBPlotHierSparClSel)
@@ -512,7 +517,6 @@ clustHierSpar <- function(input, output, session,
     # Dummy dependency to redraw the heatmap without clicking Plot
     # when changing the number of clusters to highlight
     loc.k = returnNclust()
-    
     
     # create column labels according to importance weights
     loc.colnames = paste0(ifelse(loc.hc$ws == 0, "",
@@ -618,7 +622,7 @@ clustHierSpar <- function(input, output, session,
   callModule(modTrajPlot, 'modPlotHierSparTraj', 
              in.data = data4trajPlotClSpar, 
              in.data.stim = data4stimPlotClSpar,
-             in.facet = 'cl', 
+             in.facet = COLCL, 
              in.facet.color = getClColHierSpar,
              in.fname = createFnameTrajPlot)
   
@@ -626,21 +630,21 @@ clustHierSpar <- function(input, output, session,
   callModule(modTrajRibbonPlot, 'modPlotHierSparTrajRibbon', 
              in.data = data4trajPlotClSpar, 
              in.data.stim = data4stimPlotClSpar,
-             in.facet = 'cl',  
-             in.facet.color = getClColHierSpar,
+             in.group = COLCL,  
+             in.group.color = getClColHierSpar,
              in.fname = createFnameRibbonPlot)
   
   # plot cluster PSD
   callModule(modPSDPlot, 'modPlotHierSparPsd',
              in.data = data4trajPlotClSpar,
-             in.facet = 'cl',
+             in.facet = COLCL,
              in.facet.color = getClColHierSpar,
              in.fname = createFnamePsdPlot)
   
   # plot distribution barplot
   callModule(modClDistPlot, 'hierClSparDistPlot', 
              in.data = data4clSparDistPlot,
-             in.cols = getClColHierSpar,
+             in.colors = getClColHierSpar,
              in.fname = createFnameDistPlot)
   
   

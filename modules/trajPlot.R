@@ -285,27 +285,17 @@ modTrajPlot = function(input, output, session,
     else
       locObjNum = FALSE
     
-    
-    
-    # If in.facet.color present,
-    # make sure to include the same number of colours in the palette,
-    # as the number of groups in dt.
-    # in.facet.color is typically used when plotting time series within clusters.
-    # Then, the number of colours in the palette has to be equal to the number of clusters (facetted according to in.facet variable).
-    # This might differ if the user selects manually clusters to display.
-    if (is.null(in.facet.color)) 
-      loc.facet.col = NULL 
-    else {
-      # get group numbers in dt; 
-      # loc.dt[, c(in.facet), with = FALSE] returns a data table with a single column
-      # [[1]] at the end extracts the first column and returns as a vector
-      loc.groups = unique(loc.dt[, c(in.facet), with = FALSE][[1]])
+    # in.facet.color is typically used when plotting time series per clusters.
+    # The number of colours in the palette has to be equal to the number of groups.
+    # This might differ if the user selects manually groups (e.g. clusters) to display.
+    if (is.null(in.facet.color)) {
+      loc.facet.color = NULL
+    } else {
+      # get existing groups in dt;
+      loc.facets = unique(loc.dt[, ..in.facet])
       
-      # get colour palette
-      # the length is equal to the number of groups in the original dt.
-      # When plotting time series within clusters, the length equals the number of clusters.
-      loc.facet.col = in.facet.color()$cl.col
-      loc.facet.col = loc.facet.col[loc.groups]
+      # subset group-color assignments with existing groups
+      loc.facet.color = in.facet.color()[loc.facets][["gr.col"]]
     }
     
     
@@ -326,7 +316,7 @@ modTrajPlot = function(input, output, session,
       group.arg = COLID,
       facet.arg = in.facet,
       facet.ncol.arg = input$inPlotTrajFacetNcol,
-      facet.color.arg = loc.facet.col, 
+      facet.color.arg = loc.facet.color, 
       dt.stim.arg = loc.dt.stim, 
       x.stim.arg = c('tstart', 'tend'),
       y.stim.arg = c('ystart', 'yend'), 

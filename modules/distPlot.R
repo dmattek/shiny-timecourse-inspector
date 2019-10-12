@@ -274,15 +274,10 @@ modDistPlot = function(input, output, session,
         else
           NA
       ) 
-
     
-    # If more than max.col groups, cycle through the palette ("Color Blind" can return 10 colors at maximum)
-    loc.pal = "Color Blind"
-    max.col = attr(ggthemes::tableau_color_pal(loc.pal), "max_n")
-    loc.col = ggthemes::tableau_color_pal(loc.pal)(n = max.col)
-    ngroups = uniqueN(loc.dt[, get(in.cols$group)]) - 1
-    loc.col = rep(loc.col, (ngroups %/% max.col) + 1)
-    loc.col = loc.col[1:(ngroups+1)]
+    # Get a tableau "Color Blind" palette; recycle 10 available colours, if more groups
+    loc.ngroups = uniqueN(loc.dt[, get(in.cols$group)])
+    loc.col = LOCreturnTableauPalette("Color Blind", loc.ngroups)
     
     p.out = p.out +
       xlab(in.labels$x) +
@@ -295,7 +290,8 @@ modDistPlot = function(input, output, session,
       theme(legend.position = input$selPlotBoxLegendPos,
             axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), 
                                                     size = PLOTFONTAXISTEXT)) +
-      scale_fill_manual(name = in.labels$legend, values = loc.col)
+      scale_fill_manual(name = in.labels$legend, 
+                        values = loc.col)
     
     
     return(p.out)
