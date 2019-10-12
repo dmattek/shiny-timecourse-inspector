@@ -25,12 +25,14 @@ helpText.tabScatter = c(
     "(i.e. the amplitude at the second time point with respect to the value at the first time point)."
   ),
   chBregression = 'Add a line with linear regression and regions of 95% confidence interval.',
-  inNeighTpts = paste0(
-    "Window length in time points for smoothing with the average used before plotting the scatterplot. ",
-    "Useful to avoid artefacts in the scatterplot due to spurious variations at specific time points."
+  inAvgWin = paste0(
+    "Length of the averaging window to smooth data before plotting. ",
+    "Useful to avoid artefacts in due to spurious variations at specific time points."
   ),
   inPlotHeight = 'Height in pixels of the displayed plot',
-  inPlotNcolFacet = 'Number of facets in a row. Each facet displayes a scatter plot for a single group.'
+  inPlotNcolFacet = 'Number of facets in a row. Each facet displayes a scatter plot for a single group.',
+  alert2differentTpts = "Select two different time points.",
+  alertSmoothWrong = "Smoothing window smaller than the interval between existing time points."
 )
 
 # UI ----
@@ -53,7 +55,7 @@ tabScatterPlotUI <-
         column(
           4,
           numericInput(
-            ns('inNeighTpts'),
+            ns('inAvgWin'),
             'Smoothing',
             value = 0,
             step = 1,
@@ -61,8 +63,8 @@ tabScatterPlotUI <-
             width = "120px"
           ),
           bsTooltip(
-            ns('inNeighTpts'),
-            helpText.tabScatter[["inNeighTpts"]],
+            ns('inAvgWin'),
+            helpText.tabScatter[["inAvgWin"]],
             placement = "top",
             trigger = "hover",
             options = NULL
@@ -161,13 +163,14 @@ tabScatterPlot <-
       ns <- session$ns
       
       loc.v = getDataTpts()
+      
       if (!is.null(loc.v)) {
         selectInput(
           ns('inSelTptX'),
           'Time point for X-axis',
           loc.v,
           width = '180px',
-          selected = 0,
+          selected = loc.v[[1]],
           multiple = FALSE
         )
       }
@@ -179,19 +182,23 @@ tabScatterPlot <-
       ns <- session$ns
       
       loc.v = getDataTpts()
+      
       if (!is.null(loc.v)) {
         selectInput(
           ns('inSelTptY'),
           'Time point for Y-axis',
           loc.v,
           width = '180px',
-          selected = 1,
+          selected = ifelse(length(loc.v) > 1, loc.v[[2]], loc.v[[1]]), 
           multiple = FALSE
         )
       }
     })
     
-    
+    # prepare a dataset for scatter plot from long format
+    # picks y values from two time points as selected in the UI
+    # returns a dt with columns x, y, id, and grouping
+    # columns x and y containsmeasurments from two points
     data4scatterPlot <- reactive({
       cat(file = stderr(), 'data4scatterPlot\n')
       
@@ -200,16 +207,17 @@ tabScatterPlot <-
         return(NULL)
       
       # obtain selected time points from UI
-      loc.tpts.x = as.integer(input$inSelTptX)
-      loc.tpts.y = as.integer(input$inSelTptY)
+      loc.tpt.x = as.numeric(input$inSelTptX)
+      loc.tpt.y = as.numeric(input$inSelTptY)
       
-      if (loc.tpts.x == loc.tpts.y) {
+      # throw an error if both time points for the scatter plot are identical
+      if (loc.tpt.x == loc.tpt.y) {
         createAlert(
           session,
           "alertAnchor2differentTpts",
           "alert2differentTpts",
           title = "Error",
-          content = "Select two different time points.",
+          content = helpText.tabScatter[["alert2differentTpts"]],
           append = FALSE,
           style = "danger"
         )
@@ -219,58 +227,40 @@ tabScatterPlot <-
         closeAlert(session, "alert2differentTpts")
       }
       
-      # if neigbbouring points selected, obtain time points for which the aggregation will be calculated
-      if (input$inNeighTpts > 0) {
-        # get all time points in the dataset
-        loc.dt.in.tpts = unique(loc.dt.in[[COLRT]])
-        
-        # get indices of time points around selected time points
-        loc.tpts.x.id = seq(
-          which(loc.dt.in.tpts == loc.tpts.x) - input$inNeighTpts,
-          which(loc.dt.in.tpts == loc.tpts.x) + input$inNeighTpts,
-          1
-        )
-        loc.tpts.y.id = seq(
-          which(loc.dt.in.tpts == loc.tpts.y) - input$inNeighTpts,
-          which(loc.dt.in.tpts == loc.tpts.y) + input$inNeighTpts,
-          1
-        )
-        
-        # get only indices of time points that are greater than 0
-        loc.tpts.x.id = loc.tpts.x.id[loc.tpts.x.id > 0]
-        loc.tpts.y.id = loc.tpts.y.id[loc.tpts.y.id > 0]
-        
-        # update time points used for aggregation
-        loc.tpts.x = loc.dt.in.tpts[loc.tpts.x.id]
-        loc.tpts.y = loc.dt.in.tpts[loc.tpts.y.id]
-        
-        # aggregate separately each time point sets
-        loc.dt.x = loc.dt.in[get(COLRT) %in% loc.tpts.x, .(y.aggr = mean(get(COLY))), by = c(COLGR, COLID)]
-        loc.dt.y = loc.dt.in[get(COLRT) %in% loc.tpts.y, .(y.aggr = mean(get(COLY))), by = c(COLGR, COLID)]
-        
-        loc.dt = merge(loc.dt.x, loc.dt.y, by = COLID)
-        loc.dt[, group.y := NULL]
-        
-        setnames(loc.dt,
-                 c('group.x', 'y.aggr.x', 'y.aggr.y'),
-                 c(COLGR, 'x', 'y'))
-        
-        #cat(loc.tpts.x.id, '\n')
-        #cat(loc.tpts.y.id, '\n')
+      if (input$inAvgWin > 0) {
+        # aggregate time points within smoothing window
+        loc.winLen = input$inAvgWin
       } else {
         # get data from selected time points
-        loc.dt = loc.dt.in[get(COLRT) %in% c(loc.tpts.x, loc.tpts.y)]
-        
-        # convert to wide, such that two selected time points are in two columns
-        loc.dt = dcast(loc.dt[, c(COLGR, COLID, COLY, COLRT), with = F],
-                       as.formula(paste0(COLGR, "+", COLID, "~", COLRT)),
-                       value.var = COLY)
-        
-        setnames(loc.dt, c(COLGR, COLID, "x", "y"))
+        loc.winLen = .Machine$double.eps
       }
       
+      # x and y separate
+      # otherwise, a dcast w.r.t. time column would be required, 
+      # which is risky if time is a float
+      loc.dt.x = loc.dt.in[(get(COLRT) >= loc.tpt.x - 0.5*loc.winLen) & 
+                             (get(COLRT) <= loc.tpt.x + 0.5*loc.winLen), 
+                           .(y = mean(get(COLY), na.rm = T)), 
+                           by = c(COLGR, COLID)]
+      
+      loc.dt.y = loc.dt.in[(get(COLRT) >= loc.tpt.y - 0.5*loc.winLen) & 
+                             (get(COLRT) <= loc.tpt.y + 0.5*loc.winLen), 
+                           .(y = mean(get(COLY), na.rm = T)), 
+                           by = c(COLGR, COLID)]        
       
       
+      # merge measurements from two time points
+      loc.dt = merge(loc.dt.x, loc.dt.y, by = COLID)
+      loc.dt[, (paste0(COLGR, ".y")) := NULL]
+      
+      # setting new names; columns with measurements from two time points 
+      # are assigned x & y names, respectively (only for internal usage in this module)
+      setnames(loc.dt,
+               c(paste0(COLGR, '.x'), paste0(COLY, '.x'), paste0(COLY, '.y')),
+               c(COLGR, 'x', 'y'))
+      
+      
+      # calculating the fold change between two time points to display on the y axis
       if (input$rBfoldChange == "diff") {
         loc.dt[, y := y - x]
       }
@@ -291,7 +281,7 @@ tabScatterPlot <-
       # Check if main data exists
       # Thanks to solate all mods in the left panel are delayed 
       # until clicking the Plot button
-      loc.dt = isolate(in.data())
+      loc.dt = isolate(data4scatterPlot())
       validate(
         need(!is.null(loc.dt), "Nothing to plot. Load data first!")
       )    
