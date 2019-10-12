@@ -350,6 +350,14 @@ modTrajRibbonPlot = function(input, output, session,
       loc.ylim.arg = c(input$inSetYboundsLow, input$inSetYboundsHigh)
     } 
     
+    # If more than max.col groups, cycle through the palette ("Color Blind" can return 10 colors at maximum)
+    loc.pal = "Color Blind"
+    max.col = attr(ggthemes::tableau_color_pal(loc.pal), "max_n")
+    loc.col = ggthemes::tableau_color_pal(loc.pal)(n = max.col)
+    ngroups = uniqueN(loc.dt.aggr[, ..in.facet]) - 1
+    loc.col = rep(loc.col, (ngroups %/% max.col) + 1)
+    loc.col = loc.col[1:(ngroups+1)]
+    
     p.out = LOCplotTrajRibbon(dt.arg = loc.dt.aggr, 
                            x.arg = COLRT, 
                            y.arg = 'Mean',
@@ -368,7 +376,8 @@ modTrajRibbonPlot = function(input, output, session,
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) + 
-      theme(legend.position = input$rBlegendPos)
+      theme(legend.position = input$rBlegendPos) +
+      scale_colour_manual(values = loc.col)
     
     return(p.out)
   }

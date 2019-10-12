@@ -318,6 +318,9 @@ clustValid <- function(input, output, session, in.dataWide) {
     if (sum(is.na(loc.dm)) > 0)
       return(NULL)
     
+    loc.pal = ifelse(returnNclust() <= 10, "Color Blind", "Tableau 20")
+    loc.col = ggthemes::tableau_color_pal(loc.pal)(n = returnNclust())
+    
     loc.p = factoextra::fviz_cluster(loc.part, 
                                      data = loc.dm,
                                      geom = "point",
@@ -328,7 +331,9 @@ clustValid <- function(input, output, session, in.dataWide) {
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
-                     in.font.legend = PLOTFONTLEGEND)
+                     in.font.legend = PLOTFONTLEGEND) +
+      scale_fill_manual(values = loc.col) +
+      scale_colour_manual(values = loc.col)
 
     
     # Retrieve association of cluster and colours and use it for dendrogram for color matching between dend, silhouette and PCA plot
@@ -396,6 +401,9 @@ clustValid <- function(input, output, session, in.dataWide) {
       need(!is.null(loc.part), "Nothing to plot. Load data first!")
     )    
     
+    loc.pal = ifelse(returnNclust() <= 10, "Color Blind", "Tableau 20")
+    loc.col = ggthemes::tableau_color_pal(loc.pal)(n = returnNclust())
+    
     loc.p = factoextra::fviz_silhouette(loc.part, 
                                         print.summary = FALSE, 
                                         main = "Silhouette") +
@@ -405,7 +413,9 @@ clustValid <- function(input, output, session, in.dataWide) {
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) +
-      theme(axis.text.x = element_blank())
+      theme(axis.text.x = element_blank()) +
+      scale_fill_manual(values = loc.col) +
+      scale_colour_manual(values = loc.col)
     
     return(loc.p)
   }
