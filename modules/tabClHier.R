@@ -6,7 +6,17 @@
 
 helpText.clHier = c(alertNAsPresentClDTW = paste0("NAs (still) present. DTW cannot calculate the distance. ",
                                                 "If interpolation is active in the left panel, missing data can be due to removed outlier time points."),
-                    alertNAsPresentCl = paste0("NAs (still) present, caution recommended. If interpolation is active in the left panel, missing data can be due to removed outlier time points."))
+                    alertNAsPresentCl = paste0("NAs (still) present, caution recommended. If interpolation is active in the left panel, ",
+                                               "missing data can be due to removed outlier time points."),
+                    alLearnMore = paste0("<p>Clustering consists of two steps. First, a distance between all pairs ",
+                                         "of time series is calculated with one of the metrics, such as ",
+                                         "Euclidean (<a href=\"https://en.wikipedia.org/wiki/Euclidean_distance\" target=\"_blank\" title=\"External link\">L2 norm</a>) ",
+                                         "or Manhattan (<a href=\"https://en.wikipedia.org/wiki/Taxicab_geometry\" target=\"_blank\" title=\"External link\">L1 norm</a>) distance. ",
+                                         "<a href=\"https://en.wikipedia.org/wiki/Dynamic_time_warping\" target=\"_blank\" title=\"External link\">Dynamic Time Warping</a> (DTW) ",
+                                         "also quantifies similarity between two time series but ",
+                                         "contrary to other distance measures it accounts for the order of time points.</p>",
+                                         "<p>In the second step, distances are arranged hierarchicaly and visualised as a dendrogram ",
+                                         "using one of <a href=\"https://en.wikipedia.org/wiki/Hierarchical_clustering\" target=\"_blank\" title=\"External link\">linkage methods</a>.</p>"))
 
 
 # UI ----
@@ -18,12 +28,16 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
     p("Standard approach using R's ",
       a("dist", 
         href = "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/dist.html",
-        title="External link"),
+        title ="External link",
+        target = "_blank"),
       " and ",
       a("hclust", 
         href = "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/hclust.html",
-        title="External link"),
-      " functions."),
+        title = "External link", 
+        target = "_blank"),
+      " functions. ",
+      actionLink(ns("alLearnMore"), "Learn more")
+    ),
     br(),
     fluidRow(
       column(3,
@@ -192,6 +206,8 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
 # SERVER ----
 clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataStim) {
   
+  ns <- session$ns
+  
   # Return the number of clusters from the slider 
   # and delay by a constant in milliseconds defined in auxfunc.R
   returnNclust = reactive({
@@ -200,8 +216,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   # not functional; see th note in UI
   output$uiPlotHierClAss = renderUI({
-    ns <- session$ns
-    
+
     if(input$chBPlotHierClAss) {
       selectInput(ns('inPlotHierClAss'), 'Assign cluster order', 
                   choices = seq(1, returnNclust(), 1),
@@ -211,9 +226,8 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   })
   
   output$uiPlotHierClSel = renderUI({
-    ns <- session$ns
-    
-    if(input$chBPlotHierClSel) {
+
+      if(input$chBPlotHierClSel) {
       selectInput(ns('inPlotHierClSel'), 'Select clusters to display', 
                   choices = seq(1, returnNclust(), 1),
                   multiple = TRUE, 
@@ -225,8 +239,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   # UI for setting lower and upper bounds for heat map colour scale  
   output$uiSetColBoundsLow = renderUI({
-    ns <- session$ns
-    
+
     if(input$chBsetColBounds) {
       
       loc.dt = in.dataLong()
@@ -244,8 +257,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   
   output$uiSetColBoundsHigh = renderUI({
-    ns <- session$ns
-    
+
     if(input$chBsetColBounds) {
       
       loc.dt = in.dataLong()
@@ -642,6 +654,13 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
              in.data = data4clDistPlot,
              in.colors = getClColHier,
              in.fname = createFnameDistPlot)
+
+    # Pop-overs ----
+  addPopover(session, 
+             ns("alLearnMore"),
+             title = "Hierarchical clustering",
+             content = helpText.clHier[["alLearnMore"]],
+             trigger = "click")
   
   
 }

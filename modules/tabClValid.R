@@ -49,7 +49,8 @@ clustValidUI <- function(id, label = "Validation") {
       "Cluster validation using ",
       a("factoextra", 
         href="https://cran.r-project.org/web/packages/factoextra/",
-        title="External link")
+        title="External link",
+        target = "_blank")
     ),
     actionLink(ns("alLearnMore"), "Learn more"),
     br(),
