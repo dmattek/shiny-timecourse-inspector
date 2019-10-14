@@ -447,7 +447,7 @@ clustHierSpar <- function(input, output, session,
   output$downCellClSpar <- downloadHandler(
     filename = function() {
       paste0('clust_hierchSpar_data_',
-             input$selectPlotHierSparDiss,
+             ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
              '_',
              input$selectPlotHierSparLinkage, '.csv')
     },
@@ -574,7 +574,7 @@ clustHierSpar <- function(input, output, session,
   createFnameHeatMap = reactive({
     
     paste0('clust_hierchSparse_heatMap_',
-           input$selectPlotHierSparDiss,
+           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage,
            '.png')
@@ -583,7 +583,7 @@ clustHierSpar <- function(input, output, session,
   createFnameTrajPlot = reactive({
     
     paste0('clust_hierchSparse_tCourses_',
-           input$selectPlotHierSparDiss,
+           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, 
            '.pdf')
@@ -592,7 +592,7 @@ clustHierSpar <- function(input, output, session,
   createFnameRibbonPlot = reactive({
     
     paste0('clust_hierchSparse_tCoursesMeans_',
-           input$selectPlotHierSparDiss,
+           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, 
            '.pdf')
@@ -601,7 +601,7 @@ clustHierSpar <- function(input, output, session,
   createFnamePsdPlot = reactive({
     
     paste0('clust_hierchSparse_tCoursesPsd_',
-           input$selectPlotHierSparDiss,
+           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, 
            '.pdf')
@@ -610,7 +610,7 @@ clustHierSpar <- function(input, output, session,
   createFnameDistPlot = reactive({
     
     paste0('clust_hierchSparse_clDist_',
-           input$selectPlotHierSparDiss,
+           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, '.pdf')  })
   

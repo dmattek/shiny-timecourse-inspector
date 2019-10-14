@@ -37,7 +37,7 @@ tabDistPlot = function(input, output, session, in.data, in.fname) {
              in.data = data4boxPlot,
              in.meascol = 'y',
              in.bycols = c(COLRT, COLGR),
-             in.fname = 'data4boxplotTP.csv')
+             in.fname = 'individualsTP.csv')
   
   callModule(modDistPlot, 'distPlot', 
              in.data = data4boxPlot, 
