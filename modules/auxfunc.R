@@ -66,12 +66,12 @@ COLNTRAJ = "nCells"
 
 # file names
 FCSVOUTLIERS = 'outliers.csv'
-FCSVTCCLEAN  = 'tCoursesSelected_clean.csv'
+FCSVTCCLEAN  = 'tCoursesProcessed.csv'
 FPDFTCMEAN   = "tCoursesMeans.pdf"
 FPDFTCSINGLE = "tCourses.pdf"
 FPDFTCPSD    = 'tCoursesPsd.pdf'
-FPDFBOXAUC   = 'boxplotAUC.pdf'
-FPDFBOXTP    = 'boxplotTP.pdf'
+FPDFBOXAUC   = 'distributionAUC.pdf'
+FPDFBOXTP    = 'distributionTP.pdf'
 FPDFSCATTER  = 'scatter.pdf'
 
 # Colour definitions ----

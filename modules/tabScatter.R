@@ -27,7 +27,7 @@ helpText.tabScatter = c(
   chBregression = 'Add a line with linear regression and regions of 95% confidence interval.',
   inAvgWin = paste0(
     "Length of the averaging window to smooth data before plotting. ",
-    "Useful to avoid artefacts in due to spurious variations at specific time points."
+    "Useful to avoid artefacts due to spurious variations at specific time points."
   ),
   inPlotHeight = 'Height in pixels of the displayed plot',
   inPlotNcolFacet = 'Number of facets in a row. Each facet displayes a scatter plot for a single group.',

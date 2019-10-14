@@ -88,7 +88,7 @@ tabAUCplot = function(input, output, session, in.data, in.fname) {
              in.data = AUCcells,
              in.meascol = 'AUC',
              in.bycols = COLGR,
-             in.fname = 'data4boxplotAUC.csv')
+             in.fname = 'individualsAUC.csv')
   
   callModule(modAUCplot, 'aucPlot', 
              in.data = AUCcells, 
