@@ -8,14 +8,16 @@ helpText.clHier = c(alertNAsPresentClDTW = paste0("NAs (still) present. DTW cann
                                                 "If interpolation is active in the left panel, missing data can be due to removed outlier time points."),
                     alertNAsPresentCl = paste0("NAs (still) present, caution recommended. If interpolation is active in the left panel, ",
                                                "missing data can be due to removed outlier time points."),
-                    alLearnMore = paste0("<p>Clustering consists of two steps. First, a distance between all pairs ",
+                    alLearnMore = paste0("<p><a href=\"https://en.wikipedia.org/wiki/Hierarchical_clustering\" target=\"_blank\" title=\"External link\">Agglomerative hierarchical clustering</a> ",
+                                         "initially assumes that all time series are forming their own clusters. It then grows a clustering dendrogram thanks to 2 inputs:<p>",
+                                         "First, a <b>dissimilarity matrix</b> between all pairs ",
                                          "of time series is calculated with one of the metrics, such as ",
                                          "Euclidean (<a href=\"https://en.wikipedia.org/wiki/Euclidean_distance\" target=\"_blank\" title=\"External link\">L2 norm</a>) ",
                                          "or Manhattan (<a href=\"https://en.wikipedia.org/wiki/Taxicab_geometry\" target=\"_blank\" title=\"External link\">L1 norm</a>) distance. ",
                                          "<a href=\"https://en.wikipedia.org/wiki/Dynamic_time_warping\" target=\"_blank\" title=\"External link\">Dynamic Time Warping</a> (DTW) ",
-                                         "also quantifies similarity between two time series but ",
-                                         "contrary to other distance measures it accounts for the order of time points.</p>",
-                                         "<p>In the second step, distances are arranged hierarchicaly and visualised as a dendrogram ",
+                                         "is another distance metric that does not only compare series point by point but also tries to align them such that shapes between the 2 series are matched. ",
+                                         "This makes DTW a good quantification of similarity when signals are similar but shifted in time.</p>",
+                                         "<p>In the second step, clusters are successively built and merged together. The distance between the newly formed clusters is determined by the <b>linkage criterion</b> ",
                                          "using one of <a href=\"https://en.wikipedia.org/wiki/Hierarchical_clustering\" target=\"_blank\" title=\"External link\">linkage methods</a>.</p>"))
 
 
