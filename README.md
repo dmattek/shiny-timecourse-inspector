@@ -5,6 +5,7 @@
     + [Runnning instance](#runnning-instance)
     + [Running the app on the server](#running-the-app-on-the-server)
     + [Running the app locally](#running-the-app-locally)
+    + [Running the app directly from GitHub](#running-the-app-directly-from-github)
   * [Input file](#input-file)
       - [Long format](#long-format)
       - [Wide format](#wide-format)
@@ -58,7 +59,7 @@ install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 					"imputeTS", "MASS", "robust", "pracma", "Hmisc")) 
 ```
 
-### Running the app locally with a temporary copy
+### Running the app directly from GitHub
 Running the 2 following lines should get you started immediatly with a temporary copy of the app:
 ```
 library(shiny)
