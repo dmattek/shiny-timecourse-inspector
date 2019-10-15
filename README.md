@@ -1,12 +1,25 @@
 # Time-course analysis web-app
 
-## Runnning instance
+- [Time-course analysis web-app](#time-course-analysis-web-app)
+  * [Running the app](#running-the-app)
+    + [Runnning instance](#runnning-instance)
+    + [Running the app on the server](#running-the-app-on-the-server)
+    + [Running the app locally](#running-the-app-locally)
+  * [Input file](#input-file)
+      - [Long format](#long-format)
+      - [Wide format](#wide-format)
+  * [Unique track IDs](#unique-track-ids)
+  * [Modules and Functionality](#modules-and-functionality)
+
+
+## Running the app
+### Running instance
 Access the running instance of the app on [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector")
 
-## Running the app on the server
+### Running the app on the server
 The app can be deployed on RStudio/Shiny server. Follow instruction [here](https://shiny.rstudio.com/deploy/ "Shiny - Hosting").
 
-## Running the app locally
+### Running the app locally
 Alternatively, after downloading the code, the app can run within RStudio. Open `server.R` or `ui.R` file, then click "Run App" button with green triangle in the upper right corner of the window with code open.
 
 Following packages need to be installed in order to run the app locally:
@@ -45,14 +58,19 @@ install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 					"imputeTS", "MASS", "robust", "pracma", "Hmisc")) 
 ```
 
+### Running the app locally with a temporary copy
+Running the 2 following lines should get you started immediatly with a temporary copy of the app:
+```
+library(shiny)
+runGitHub("dmattek/shiny-timecourse-inspector")
+```
+
 ## Input file
-The app recognises CSV (comma-separated values) files: data columns separated by a comma, floating point numbers using a dot (full-stop).
 
-The data file has to be in a so called long format, where individual time-courses (tracks) are arranged one after another. Note a wide-format where individual tracks are arranged in neighbouring columns is NOT supported!
+The app recognizes CSV (comma-separated values) files where data columns are separated by a comma and floating point numbers use a dot (full-stop). Compressed CSV files in zip or bz2 format can be uploaded directly without decompression. Both long and wide data formats are accepted but we highly recommend using the long format because it allows for multiple groupings and multivariate measurements.
 
-The app recognizes CSV (comma-separated values) files where data columns are separated by a comma, and floating point numbers use a dot (full-stop). Data should be arranged in a long format, where time-series (tracks) are arranged one after another. The wide format where individual tracks are arranged in neighboring columns is not supported.
-
-The first row should include column headers. The input CSV file should contain at least these three columns:
+#### Long format
+In the long format, the first row should include column headers. The input CSV file should contain at least these three columns:
 
 * Identifier of a time series, i.e. a track label
 * Time points
@@ -69,7 +87,7 @@ The first row should include column headers. The input CSV file should contain a
 | 2  |  3   | 1.7   |
 | 2  |  4   | 2.2   |
 
-In case of multi-variate time series, additional columns with variables can be added in the input. Then, GUI allows for choosing a single or a combination of two variables to display.
+In case of multivariate time series, additional columns with variables can be added in the input. Then, the GUI allows for choosing a single or a combination of two variables to display.
 
 Time series can be grouped by introducing a grouping column:
 
@@ -90,6 +108,19 @@ Time series can be grouped by introducing a grouping column:
 
 Introduction of grouping allows for the analysis and displaying data per group.
 
+#### Wide format
+In wide format, entire univariate time series are stored as rows, with columns treated as time points. The first two columns should contain a grouping and the identifier of time series.
+
+| Group | ID | 0   | 1   | 2   | further time points |
+|-------|----|-----|-----|-----|---------------------|
+| gr1   | 1  | 3.0 | 3.3 | 3.1 | ...                 |
+| gr1   | 2  | 2.0 | 2.1 | 1.9 | ...                 |
+| gr2   | 1  | 4.9 | 5.1 | 5.0 | ...                 |
+| gr2   | 2  | 5.2 | 5.4 | 5.3 | ...                 |
+| gr2   | 3  | 5.5 | 5.3 | 5.6 | ...                 |
+
+We do not recommend this format because of its lack of flexibility. In wide format, only one grouping column and one measurement can be passed at a time, this means any new grouping or measurement analysis requires to create a dedicated file.
+
 ## Unique track IDs
 
 For the analysis, track labels need to be unique across the entire dataset. If the track label column is not unique in the uploaded dataset, there's an option in the UI to create a unique track ID. Check the *Create unique track label* box on and choose grouping columns that will be added to the existing non-unique track label. 
@@ -97,7 +128,7 @@ For the analysis, track labels need to be unique across the entire dataset. If t
 In the example above, the `ID` column is not unique across the dataset (ID=1 is repeated in group `gr1` and `gr2`), therefore the unique track label has to consist of columns `Group` and `ID`. The resulting track label will be `gr1_1`, `gr2_1`, etc.
 
 
-## Modules
+## Modules and Functionality
 
 The app opens with a default window that allows to plot population averages, individual time series, and power spectral density. 
 
@@ -110,5 +141,7 @@ The following features of time series analysis are available in the app:
 - **Highlight** individual time series by selecting a unique series identifier.
 - Calculate area under individual time series and visualise as a dot-, violin-, or a box-plot. The UI allows for selection of the time series range used for **AUC** calculation.
 - Display a dot-, violin-, box-, or a line-plot for selected time points.
-- Display a scatter-plot to identify **correlations** between two time points. 
-- Perform **hierarchical and sparse-hierarchical clustering** of individual time series. In these modules, the dendrogram can be cut at a chosen level to help visualising clusters. Addiitonally available are plots with cluster averages, individual times series per cluster, and contribution of time series from different groupings to clusters. 
+- Display a scatter-plot to identify **correlations** between two time points.
+- Calculate the **power spectral density (PSD)** using smoothed periodogram or autoregressive fit. Both estimations rely on the R's built-in implementation \texttt{spectrum}. PSD plots can be visualized in the frequency or period domain and independently for each time-series groups. Axis can be transformed with common functions (log, inverse...) to facilitate the identification of spectral patterns.
+- Perform **hierarchical and sparse-hierarchical clustering** of individual time series. In these modules, the dendrogram can be cut at a chosen level to help visualising clusters. Addiitonally available are plots with cluster averages, individual times series per cluster, and contribution of time series from different groupings to clusters.
+- Perform **cluster validation**. In this module both relative and internal validations are available. Relative validation with a sweep through a range of possible cluster numbers and a report of average silhouette width and within cluster sum of squares. Internal cluster validation, for a fixed number of clusters return 3 visualizations: a dendrogram colored according to the cut, the silhouette plot and a visualization of the clusters on the first 2 principal components. This analysis relies on the implementation in the R package \texttt{factoextra}.
