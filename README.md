@@ -1,12 +1,25 @@
 # Time-course analysis web-app
 
-## Runnning instance
+- [Time-course analysis web-app](#time-course-analysis-web-app)
+  * [Running the app](#running-the-app)
+    + [Runnning instance](#runnning-instance)
+    + [Running the app on the server](#running-the-app-on-the-server)
+    + [Running the app locally](#running-the-app-locally)
+  * [Input file](#input-file)
+      - [Long format](#long-format)
+      - [Wide format](#wide-format)
+  * [Unique track IDs](#unique-track-ids)
+  * [Modules](#modules)
+
+
+## Running the app
+### Running instance
 Access the running instance of the app on [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector")
 
-## Running the app on the server
+### Running the app on the server
 The app can be deployed on RStudio/Shiny server. Follow instruction [here](https://shiny.rstudio.com/deploy/ "Shiny - Hosting").
 
-## Running the app locally
+### Running the app locally
 Alternatively, after downloading the code, the app can run within RStudio. Open `server.R` or `ui.R` file, then click "Run App" button with green triangle in the upper right corner of the window with code open.
 
 Following packages need to be installed in order to run the app locally:
@@ -43,6 +56,13 @@ install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 					"dendextend", "RColorBrewer", "ggthemes",
 					"sparcl", "dtw", "factoextra",
 					"imputeTS", "MASS", "robust", "pracma", "Hmisc")) 
+```
+
+### Running the app locally with a temporary copy
+Running the 2 following lines should get you started immediatly with a temporary copy of the app:
+```
+library(shiny)
+runGitHub("dmattek/shiny-timecourse-inspector")
 ```
 
 ## Input file
