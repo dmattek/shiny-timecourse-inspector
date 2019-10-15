@@ -9,7 +9,7 @@
       - [Long format](#long-format)
       - [Wide format](#wide-format)
   * [Unique track IDs](#unique-track-ids)
-  * [Modules](#modules)
+  * [Modules and Functionality](#modules-and-functionality)
 
 
 ## Running the app
@@ -128,7 +128,7 @@ For the analysis, track labels need to be unique across the entire dataset. If t
 In the example above, the `ID` column is not unique across the dataset (ID=1 is repeated in group `gr1` and `gr2`), therefore the unique track label has to consist of columns `Group` and `ID`. The resulting track label will be `gr1_1`, `gr2_1`, etc.
 
 
-## Modules
+## Modules and Functionality
 
 The app opens with a default window that allows to plot population averages, individual time series, and power spectral density. 
 
