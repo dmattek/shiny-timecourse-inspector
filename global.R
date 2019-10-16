@@ -25,13 +25,15 @@ required_packages = c(
 )
 missing_packages =
   required_packages[!(required_packages %in% installed.packages()[, "Package"])]
-cat(paste(
-  "Missing packages:",
-  paste(missing_packages, collapse = ";"),
-  "\nAttempting to install them."
-))
-if (length(missing_packages))
+
+if (length(missing_packages)) {
+  cat(paste(
+    "Missing packages:",
+    paste(missing_packages, collapse = ";"),
+    "\nAttempting to install them."
+  ))
   install.packages(missing_packages)
+}
 
 # Load modules
 source('modules/auxfunc.R')
