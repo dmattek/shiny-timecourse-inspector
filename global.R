@@ -1,3 +1,11 @@
+# Check if all required packages are installed, if not attempt to install the missing ones
+required_packages = c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
+                      "data.table", "DT", "ggplot2", "gplots", "plotly",
+                      "scales", "grid", "dendextend", "RColorBrewer",
+                      "ggthemes", "sparcl", "dtw", "factoextra", "imputeTS",
+                      "MASS", "robust", "pracma", "Hmisc")
+missing_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if(length(missing_packages)) install.packages(missing_packages)
 source('modules/auxfunc.R')
 source('modules/selOutliers.R')
 source('modules/downPlot.R')
