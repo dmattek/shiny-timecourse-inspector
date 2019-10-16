@@ -53,14 +53,13 @@ shinyUI(fluidPage(
       uiOutput('uiFileLoadStim'),
       uiOutput('uiButLoadStim'),
       
+      tags$hr(),
+
+      uiOutput('varSelTrackLabel'),
       #tags$hr(),
       checkboxInput('chBtrackUni', 'Create unique track ID', F),
       bsTooltip('chBtrackUni', helpText.server[["chBtrackUni"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('varSelSite'),
-      
-      tags$hr(),
-
-      uiOutput('varSelTrackLabel'),
       
       checkboxInput('chBgroup', 'Group data', F),                
       bsTooltip('chBgroup', helpText.server[["chBgroup"]], placement = "top", trigger = "hover", options = NULL),
