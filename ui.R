@@ -5,7 +5,6 @@
 # This is the user-interface definition for a Shiny web application.
 #
 
-
 library(shiny)
 library(shinyjs) # http://deanattali.com/shinyjs/
 library(shinyBS) # for tooltips

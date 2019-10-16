@@ -1152,7 +1152,7 @@ LOCplotTrajRibbon = function(dt.arg,
         alpha = ribbon.alpha.arg
       )
   
-  p.tmp = p.tmp + geom_line(aes_string(y = y.arg, colour = group.arg))
+  p.tmp = p.tmp + geom_line(aes_string(y = y.arg, colour = group.arg), size = 1.25)
   
   
   # plot stimulation bars underneath time series
