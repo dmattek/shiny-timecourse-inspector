@@ -5,6 +5,13 @@
 # This is the user-interface definition for a Shiny web application.
 #
 
+required_packages = c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
+                  "data.table", "DT", "ggplot2", "gplots", "plotly",
+                  "scales", "grid", "dendextend", "RColorBrewer",
+                  "ggthemes", "sparcl", "dtw", "factoextra", "imputeTS",
+                  "MASS", "robust", "pracma", "Hmisc")
+missing_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if(length(missing_packages)) install.packages(missing_packages)
 
 library(shiny)
 library(shinyjs) # http://deanattali.com/shinyjs/
