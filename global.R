@@ -1,4 +1,4 @@
-# Check if all required packages are installed, if not attempt to install the missing ones
+# Check if all required packages are installed, if not, attempt to install the missing ones
 required_packages = c(
   "shiny",
   "shinyjs",
