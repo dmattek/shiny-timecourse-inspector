@@ -10,6 +10,12 @@
 # in server.R
 # callModule(downPlot, "uniqueID", 'fname.pdf', input_plot_to_save)
 
+helpText.downPlot = c(
+  downPlot = "Download a rendered plot in PDF (or PNG in case of a heatmap) formats.",
+  downRDS = "Download an R object used for plotting. Can be loaded with readRDS function for further plot adjustments using ggedit.",
+  inPlotWidth = "Adjust width of the saved plot.",
+  inPlotHeight = "Adjust height of the saved plot.")
+
 # UI ----
 downPlotUI <- function(id, label = "Download Plot") {
   ns <- NS(id)
@@ -27,9 +33,18 @@ downPlotUI <- function(id, label = "Download Plot") {
       ),
       
 
-      column(3,
+      column(2,
              uiOutput(ns('uiDownButton'))
              ),
+      
+      column(2,
+             downloadButton(ns('downRDS'), label = "RDS"),
+             bsTooltip(ns("downRDS"),
+                       helpText.downPlot[["downRDS"]],
+                       placement = "top",
+                       trigger = "hover",
+                       options = NULL)
+      ),
       column(
         3,
         tags$div(id = "inline", 
@@ -40,7 +55,12 @@ downPlotUI <- function(id, label = "Download Plot") {
                    min = 1,
                    width = 100
                    )
-        )
+        ),
+        bsTooltip(ns("inPlotWidth"),
+                  helpText.downPlot[["inPlotWidth"]],
+                  placement = "top",
+                  trigger = "hover",
+                  options = NULL)
       ),
       column(
         3,
@@ -52,7 +72,12 @@ downPlotUI <- function(id, label = "Download Plot") {
                    min = 1,
                    width = 100
                  )
-        )
+        ),
+        bsTooltip(ns("inPlotHeight"),
+                  helpText.downPlot[["inPlotHeight"]],
+                  placement = "top",
+                  trigger = "hover",
+                  options = NULL)
       )
     )
   )
@@ -71,8 +96,16 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
       downloadButton(ns('downPlot'), 'PNG')
     }
     
+    # For some reason, the button doesn't show up when the tooltip is active
+    # bsTooltip(ns("downPlot"),
+    #           helpText.downPlot[["downPlot"]],
+    #           placement = "top",
+    #           trigger = "hover",
+    #           options = NULL)
+    
   })
   
+  # Download rendered plot
   output$downPlot <- downloadHandler(
     filename = function() {
       cat(in.fname(), "\n")
@@ -103,6 +136,21 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
         in.plot()
         dev.off()
       }
+    }
+  )
+
+  # download object used for plotting
+  output$downRDS <- downloadHandler(
+    filename = function() {
+      cat(in.fname(), "\n")
+      gsub("pdf|png", "rds", in.fname())
+    },
+    
+    content = function(file) {
+        saveRDS(
+          in.plot(),
+          file = file,
+        )
     }
   )
   
