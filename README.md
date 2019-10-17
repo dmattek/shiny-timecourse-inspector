@@ -1,55 +1,39 @@
-# Time-course analysis web-app
+# TCI - Time-course analysis web-app
 
 - [Time-course analysis web-app](#time-course-analysis-web-app)
-  * [Running the app](#running-the-app)
-    + [Runnning instance](#runnning-instance)
-    + [Running the app on the server](#running-the-app-on-the-server)
+  * [What is TCI?](#what-is-tci)
+  * [Getting started](#getting-started)
     + [Running the app locally](#running-the-app-locally)
     + [Running the app directly from GitHub](#running-the-app-directly-from-github)
+    + [Runnning instance](#running-instance)
+    + [Running the app on a server](#running-the-app-on-a-server)
   * [Input file](#input-file)
       - [Long format](#long-format)
       - [Wide format](#wide-format)
   * [Unique track IDs](#unique-track-ids)
   * [Modules and Functionality](#modules-and-functionality)
 
+## What is TCI?
+Time Course Inspector (TCI) is a software for visualization, analysis and clustering of time-series. The driving philosophy of development is to provide a simple, yet flexible GUI to perform various time-series analyses without any programming knowledge. TCI is written as an R shiny web app which provides a reactive, fast and customizable framework to produce elegant visualizations. 
 
-## Running the app
-### Running instance
-Access the running instance of the app on [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector")
+The starting point of the app is a plain spreadsheet in comma-separated values format (CSV) that contains the dataset to analyze. TCI embeds a module for simple preprocessing of the data (normalization, missing values handling...), various visualizations, common statistics report, spectral decomposition, a flexible module for hierarchical clustering and cluster validation. All modules are documented with tooltips and "Learn More" sections to guide users through the UI and assist them with the analysis.
 
-### Running the app on the server
-The app can be deployed on RStudio/Shiny server. Follow instruction [here](https://shiny.rstudio.com/deploy/ "Shiny - Hosting").
+TCI puts the accent on spotting the unique dynamics that underly the time-series in the datasets. Its full potential is revealed when working with groups of time-series from which one wishes to understand their respective specificity and differences. To this effect, the clustering module works on pooled data, meaning that all groups of series will be considered at once when running the clustering procedure. The resulting clusters can then be inspected to visualize which types of series, patterns and frequencies were captured by each cluster. In addition, the distribution of clusters acroos the groups can be visualized to understand which dynamics or trends were over/under-represented in each group.
+
+The project is open-source and free of use. Feedbacks and contributions from the users are greatly encouraged!
+
+## Getting started
+
+The app can be run either locally or on a server. The installation process is detailed below.
+
+If you just wish to give the app a quick try without installing it, you can use the running instance on [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector"). Bear in mind that your experience on this instance might be sluggish and that the number of uses per month is limited. For a quick trial, we rather recommend to run the app directly from GitHub.
 
 ### Running the app locally
-Alternatively, after downloading the code, the app can run within RStudio. Open `server.R` or `ui.R` file, then click "Run App" button with green triangle in the upper right corner of the window with code open.
 
-Following packages need to be installed in order to run the app locally:
+#### Prerequisites
+TCI works on all major OS (Windows, macOS, standard Linux distributions) and only requires a recent R installation on which the standard package `shiny` is installed. Instructions to install R can be found on the official [R-project website](https://www.r-project.org/). Once R is installed, one can install the `shiny` package by typing: `install.packages("shiny")` in the R console.
 
-* shiny
-* shinyjs
-* shinyBS
-* shinycssloaders
-* data.table
-* DT
-* ggplot2
-* gplots
-* plotly
-* scales
-* grid
-* dendextend
-* RColorBrewer
-* ggthemes
-* sparcl
-* dtw
-* factoextra
-* imputeTS
-* MASS
-* robust
-* pracma
-* Hmisc
-
-Install packages using `install.packages('name_of_the_package_from_the_list_above')` command in RStudio command line.
-
+The app depends on many more packages which should be automatically installed when the user launches the app for the first time. The complete list of depedencies can also be manually installed from the R console by typing:
 ```
 install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 					"data.table", "DT",
@@ -59,12 +43,31 @@ install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 					"imputeTS", "MASS", "robust", "pracma", "Hmisc")) 
 ```
 
+For new R users, once you have installed R, we recommend to use R from Rstudio. It provides an excellent programming interface and makes it slightly easier to run TCI in a click! Instructions for installation can be found on the [Rstudio website](https://rstudio.com/).
+
+#### Install and Start the App
+First download get the latest version of the app directly from the [GitHub repository](https://github.com/dmattek/shiny-timecourse-inspector)(green button "Clone or download", download as zip). Unzip the folder and place it in your favorite location. 
+
+If you have installed RStudio, launch it and go to File -> Open Project. In the contextual menu navigate to the location where you placed the app and open the file `tcourse-inspector.Rproj`. This will load the app in the current Rstudio session, what makes it very easy to use. To start the app, open the `server.R` or the `ui.R` file in the Rstudio session, then click "Run App" button with green triangle in the upper right corner of the window with code open.
+
+If you did not install Rstudio, or do not wish to use it, you can also start TCI directly from the command line with:
+```
+R -e "shiny::runApp('path-to-application-folder')"
+```
+
 ### Running the app directly from GitHub
-Running the 2 following lines should get you started immediatly with a temporary copy of the app:
+If you have already an R installation with `shiny` installed you can also run the two following lines in your R console to get immediatly started with a temporary copy of the app:
 ```
 library(shiny)
 runGitHub("dmattek/shiny-timecourse-inspector")
 ```
+If you like it, we strongly recommend that you switch to a regular installation! This will make it work offline without the need to download the source code at every start.
+
+### Running instance
+Access the running instance of the app at [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector")
+
+### Running the app on a server
+The app can be deployed on RStudio/Shiny server. Please follow the instructions [here](https://shiny.rstudio.com/deploy/ "Shiny - Hosting").
 
 ## Input file
 
