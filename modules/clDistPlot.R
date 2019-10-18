@@ -85,14 +85,7 @@ modClDistPlot = function(input, output, session,
   
   #  display bar plot
   output$outPlotClDist <- renderPlot({
-    locBut = input$butPlotClDist
-    
-    if (locBut == 0) {
-      cat(file = stderr(), 'outPlotClDist: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
+
     plotClDist()
   })
   
