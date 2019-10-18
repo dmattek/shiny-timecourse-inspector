@@ -11,6 +11,7 @@
       - [Long format](#long-format)
       - [Wide format](#wide-format)
   * [Unique track IDs](#unique-track-ids)
+  * [Further plot customization with ggplot and ggedit](#further-plot-customization-with-ggplot-and-ggedit)
   * [Modules and Functionality](#modules-and-functionality)
 
 ## What is TCI?
@@ -131,6 +132,21 @@ For the analysis, track labels need to be unique across the entire dataset. If t
 
 In the example above, the `ID` column is not unique across the dataset (ID=1 is repeated in group `gr1` and `gr2`), therefore the unique track label has to consist of columns `Group` and `ID`. The resulting track label will be `gr1_1`, `gr2_1`, etc.
 
+## Further plot customization with ggplot and ggedit
+
+TCI offers quite some flexibility with the appearance of plots, most of which are built with the popular library `ggplot2`. However, as we wish to keep the UI light and focused, you might end up not being able to perfectly customize some little details. Should this happen, most plot objects can be downloaded for further processing by the means of the "Download RDS" buttons. The resulting files contains an R object which can be loaded in an R session with `plotObject <- readRDS('path/to/file')`.
+
+From there, 2 options are available to customize the plot. Either you feel comfortable with ggplot and you can modify the plot as you will normally do with a regular ggplot object. Otherwise, we propose to use `ggedit`, an R package that provides a GUI to modify the plots without any programming required. Instructions to install and run ggedit can be found on the [ggedit GitHub repository](https://github.com/metrumresearchgroup/ggedit). 
+
+A minimal example of plot modification with ggedit in an R session would look like:
+```
+library(ggedit)
+library(ggplot2)
+
+plotObject <- readRDS('path/to/file')
+plotObjectModified <- ggedit(plotObject)
+```
+
 
 ## Modules and Functionality
 
@@ -146,6 +162,6 @@ The following features of time series analysis are available in the app:
 - Calculate area under individual time series and visualise as a dot-, violin-, or a box-plot. The UI allows for selection of the time series range used for **AUC** calculation.
 - Display a dot-, violin-, box-, or a line-plot for selected time points.
 - Display a scatter-plot to identify **correlations** between two time points.
-- Calculate the **power spectral density (PSD)** using smoothed periodogram or autoregressive fit. Both estimations rely on the R's built-in implementation \texttt{spectrum}. PSD plots can be visualized in the frequency or period domain and independently for each time-series groups. Axis can be transformed with common functions (log, inverse...) to facilitate the identification of spectral patterns.
+- Calculate the **power spectral density (PSD)** using smoothed periodogram or autoregressive fit. Both estimations rely on the R's built-in implementation `spectrum`. PSD plots can be visualized in the frequency or period domain and independently for each time-series groups. Axis can be transformed with common functions (log, inverse...) to facilitate the identification of spectral patterns.
 - Perform **hierarchical and sparse-hierarchical clustering** of individual time series. In these modules, the dendrogram can be cut at a chosen level to help visualising clusters. Addiitonally available are plots with cluster averages, individual times series per cluster, and contribution of time series from different groupings to clusters.
-- Perform **cluster validation**. In this module both relative and internal validations are available. Relative validation with a sweep through a range of possible cluster numbers and a report of average silhouette width and within cluster sum of squares. Internal cluster validation, for a fixed number of clusters return 3 visualizations: a dendrogram colored according to the cut, the silhouette plot and a visualization of the clusters on the first 2 principal components. This analysis relies on the implementation in the R package \texttt{factoextra}.
+- Perform **cluster validation**. In this module both relative and internal validations are available. Relative validation with a sweep through a range of possible cluster numbers and a report of average silhouette width and within cluster sum of squares. Internal cluster validation, for a fixed number of clusters return 3 visualizations: a dendrogram colored according to the cut, the silhouette plot and a visualization of the clusters on the first 2 principal components. This analysis relies on the implementation in the R package `factoextra`.

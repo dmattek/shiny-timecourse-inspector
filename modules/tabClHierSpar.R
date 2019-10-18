@@ -178,11 +178,11 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
 
       ),
       
-      tabPanel('Averages',
+      tabPanel('Cluster averages',
                br(),
                modTrajRibbonPlotUI(ns('modPlotHierSparTrajRibbon'))),
       
-      tabPanel('Time series',
+      tabPanel('Time series in clusters',
                br(),
                modTrajPlotUI(ns('modPlotHierSparTraj'))),
       

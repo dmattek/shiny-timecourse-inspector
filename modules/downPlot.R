@@ -12,7 +12,7 @@
 
 helpText.downPlot = c(
   downPlot = "Download a rendered plot in PDF (or PNG in case of a heatmap) formats.",
-  downRDS = "Download an R object used for plotting. Can be loaded with readRDS function for further plot adjustments using ggedit.",
+  downRDS = "Download an R object used for plotting. Can be loaded with readRDS function for further plot adjustments using ggplot or ggedit.",
   inPlotWidth = "Adjust width of the saved plot.",
   inPlotHeight = "Adjust height of the saved plot.")
 
