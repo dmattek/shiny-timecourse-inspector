@@ -15,13 +15,13 @@
   * [Modules and Functionality](#modules-and-functionality)
 
 ## What is TCI?
-Time Course Inspector (TCI) is a software for visualization, analysis and clustering of time-series. The driving philosophy of development is to provide a simple, yet flexible GUI to perform various time-series analyses without any programming knowledge. TCI is written as an R shiny web app which provides a reactive, fast and customizable framework to produce elegant visualizations. 
+Time Course Inspector (TCI) is a software for visualization, analysis and clustering of time-series. The driving philosophy is to provide a simple, yet flexible GUI to perform various time-series analyses without any programming knowledge. TCI is written as an R shiny web app which provides a reactive, fast and customizable framework to produce elegant visualizations. 
 
-The starting point of the app is a plain spreadsheet in comma-separated values format (CSV) that contains the dataset to analyze. TCI embeds a module for simple preprocessing of the data (normalization, missing values handling...), various visualizations, common statistics report, spectral decomposition, a flexible module for hierarchical clustering and cluster validation. All modules are documented with tooltips and "Learn More" sections to guide users through the UI and assist them with the analysis.
+The starting point of the app is a plain spreadsheet in comma-separated values format (CSV) that contains the dataset to analyze. TCI embeds a module for simple preprocessing of the data (normalization, missing values handling...), various visualizations, common statistics report, spectral decomposition, a flexible module for hierarchical clustering and cluster validation. All modules are documented with tooltips and *Learn More* sections to guide users through the UI and assist them with the analysis.
 
 TCI puts the accent on spotting the unique dynamics that underly the time-series in the datasets. Its full potential is revealed when working with groups of time-series from which one wishes to understand their respective specificity and differences. To this effect, the clustering module works on pooled data, meaning that all groups of series will be considered at once when running the clustering procedure. The resulting clusters can then be inspected to visualize which types of series, patterns and frequencies were captured by each cluster. In addition, the distribution of clusters acroos the groups can be visualized to understand which dynamics or trends were over/under-represented in each group.
 
-The project is open-source and free of use. Feedbacks and contributions from the users are greatly encouraged!
+The project is open-source and free to use under GPL3 license. Feedbacks and contributions from the users are greatly encouraged!
 
 ## Getting started
 
@@ -47,14 +47,15 @@ install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
 For new R users, once you have installed R, we recommend to use R from Rstudio. It provides an excellent programming interface and makes it slightly easier to run TCI in a click! Instructions for installation can be found on the [Rstudio website](https://rstudio.com/).
 
 #### Install and Start the App
-First download get the latest version of the app directly from the [GitHub repository](https://github.com/dmattek/shiny-timecourse-inspector)(green button "Clone or download", download as zip). Unzip the folder and place it in your favorite location. 
+First, download the latest version of the app directly from the [GitHub repository](https://github.com/dmattek/shiny-timecourse-inspector)(green button *Clone or download*, download as zip). Unzip the folder and place it in your favorite location. 
 
-If you have installed RStudio, launch it and go to File -> Open Project. In the contextual menu navigate to the location where you placed the app and open the file `tcourse-inspector.Rproj`. This will load the app in the current Rstudio session, what makes it very easy to use. To start the app, open the `server.R` or the `ui.R` file in the Rstudio session, then click "Run App" button with green triangle in the upper right corner of the window with code open.
+If you have installed RStudio, launch it and go to *File -> Open Project*. In the contextual menu navigate to the location where you placed the app and open the file `tcourse-inspector.Rproj`. This will load the app in the current Rstudio session, what makes it very easy to use. To start the app, open the `server.R` or the `ui.R` file in the Rstudio session, then click the *Run App* button with a green triangle in the upper right corner of the window with code open.
 
-If you did not install Rstudio, or do not wish to use it, you can also start TCI directly from the command line with:
+If you did not install Rstudio, or do not wish to use it, you can also start TCI directly from your OS's command line with:
 ```
 R -e "shiny::runApp('path-to-application-folder')"
 ```
+In this case, open your web browser and point to the address given by the output of that command.
 
 ### Running the app directly from GitHub
 If you have already an R installation with `shiny` installed you can also run the two following lines in your R console to get immediatly started with a temporary copy of the app:
@@ -134,9 +135,9 @@ In the example above, the `ID` column is not unique across the dataset (ID=1 is 
 
 ## Further plot customization with ggplot and ggedit
 
-TCI offers quite some flexibility with the appearance of plots, most of which are built with the popular library `ggplot2`. However, as we wish to keep the UI light and focused, you might end up not being able to perfectly customize some little details. Should this happen, most plot objects can be downloaded for further processing by the means of the "Download RDS" buttons. The resulting files contains an R object which can be loaded in an R session with `plotObject <- readRDS('path/to/file')`.
+TCI offers quite some flexibility with the appearance of plots, most of which are built with the popular library `ggplot2`. However, as we wish to keep the UI light and focused, you might end up not being able to perfectly customize some little details. Should this happen, most plot objects can be downloaded for further processing by means of the *Download RDS* buttons. The resulting files contain an R object which can be loaded in an R session with `plotObject <- readRDS('path/to/file')`.
 
-From there, 2 options are available to customize the plot. Either you feel comfortable with ggplot and you can modify the plot as you will normally do with a regular ggplot object. Otherwise, we propose to use `ggedit`, an R package that provides a GUI to modify the plots without any programming required. Instructions to install and run ggedit can be found on the [ggedit GitHub repository](https://github.com/metrumresearchgroup/ggedit). 
+From there, two options are available to customize the plot. Either you feel comfortable with `ggplot` and you can modify the plot directly. Otherwise, we propose to use `ggedit`, an R package that provides a GUI to modify the plots without any programming required. Instructions to install and run `ggedit` can be found on the [ggedit GitHub repository](https://github.com/metrumresearchgroup/ggedit). 
 
 A minimal example of plot modification with ggedit in an R session would look like:
 ```
