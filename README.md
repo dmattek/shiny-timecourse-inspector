@@ -19,6 +19,8 @@ Time Course Inspector (TCI) is a software for visualization, analysis and cluste
 
 The **screencast** with an overview of the app's functionality and processing of the [test-case-1](https://github.com/dmattek/shiny-timecourse-inspector/tree/master/example-data/test-case-1 "Link to data") dataset can be found [here](https://youtu.be/pwRqUzf5HMs "Link to YouTube").
 
+If you just wish to give the app a quick try without installing it, you can access a **running instance** at [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "Link to a running app"). Bear in mind that your experience using this instance might be sluggish and that the number of uses per month is limited. For a quick trial, we rather recommend to run the app directly from GitHub as described in sections below.
+
 The starting point of the app is a plain spreadsheet in comma-separated values format (CSV) that contains the dataset to analyze. TCI embeds a module for simple preprocessing of the data (normalization, missing values handling...), various visualizations, common statistics report, spectral decomposition, a flexible module for hierarchical clustering and cluster validation. All modules are documented with tooltips and *Learn More* sections to guide users through the UI and assist them with the analysis.
 
 TCI puts the accent on spotting the unique dynamics that underly the time-series in the datasets. Its full potential is revealed when working with groups of time-series from which one wishes to understand their respective specificity and differences. To this effect, the clustering module works on pooled data, meaning that all groups of series will be considered at once when running the clustering procedure. The resulting clusters can then be inspected to visualize which types of series, patterns and frequencies were captured by each cluster. In addition, the distribution of clusters acroos the groups can be visualized to understand which dynamics or trends were over/under-represented in each group.
@@ -28,8 +30,6 @@ The project is open-source and free to use under GPL3 license. Feedbacks and con
 ## Getting started
 
 The app can be run either locally or on a server. The installation process is detailed below.
-
-If you just wish to give the app a quick try without installing it, you can use the running instance on [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector"). Bear in mind that your experience on this instance might be sluggish and that the number of uses per month is limited. For a quick trial, we rather recommend to run the app directly from GitHub.
 
 ### Running the app locally
 
@@ -68,7 +68,7 @@ runGitHub("dmattek/shiny-timecourse-inspector")
 If you like it, we strongly recommend that you switch to a regular installation! This will make it work offline without the need to download the source code at every start.
 
 ### Running instance
-Access the running instance of the app at [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "TimeCourse Inspector")
+Access the running instance of the app at [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "Link to a running app").
 
 ### Running the app on a server
 The app can be deployed on RStudio/Shiny server. Please follow the instructions [here](https://shiny.rstudio.com/deploy/ "Shiny - Hosting").
