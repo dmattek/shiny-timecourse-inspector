@@ -121,26 +121,19 @@ modPSDPlot = function(input, output, session,
   
   plotTraj <- function() {
     cat(file = stderr(), 'plotPSD: in\n')
+    
+    # make the f-n dependent on the button click
     locBut = input$butPlotTraj
     
-    if (locBut == 0) {
-      cat(file = stderr(), 'plotPSD: Go button not pressed\n')
-      
-      return(NULL)
-    }
-    
-    # check if main data exists
+    # Check if main data exists
+    # Thanks to solate all mods in the left panel are delayed 
+    # until clicking the Plot button
     loc.dt = isolate(in.data())
-    
-    cat("plotPSD: on to plot\n\n")
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'plotPSD: dt is NULL\n')
-      return(NULL)
-    }
+    validate(
+      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+    )
     
     cat(file = stderr(), 'plotPSD: dt not NULL\n')
-    
-    
     
     # Future: change such that a column with colouring status is chosen by the user
     # colour trajectories, if dataset contains mid.in column
