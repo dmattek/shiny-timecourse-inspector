@@ -1,6 +1,5 @@
 # TCI - Time-course analysis web-app
 
-- [Time-course analysis web-app](#time-course-analysis-web-app)
   * [What is TCI?](#what-is-tci)
   * [Getting started](#getting-started)
     + [Running the app locally](#running-the-app-locally)
@@ -13,6 +12,8 @@
   * [Unique track IDs](#unique-track-ids)
   * [Further plot customization with ggplot and ggedit](#further-plot-customization-with-ggplot-and-ggedit)
   * [Modules and Functionality](#modules-and-functionality)
+  * [Clustering](#clustering)
+    + [Cluster validation](#cluster-validation)
 
 ## What is TCI?
 Time Course Inspector (TCI) is a software for visualization, analysis and clustering of time-series. The driving philosophy is to provide a simple, yet flexible GUI to perform various time-series analyses without any programming knowledge. TCI is written as an R shiny web app which provides a reactive, fast and customizable framework to produce elegant visualizations. 
@@ -168,3 +169,25 @@ The following features of time series analysis are available in the app:
 - Calculate the **power spectral density (PSD)** using smoothed periodogram or autoregressive fit. Both estimations rely on the R's built-in implementation `spectrum`. PSD plots can be visualized in the frequency or period domain and independently for each time-series groups. Axis can be transformed with common functions (log, inverse...) to facilitate the identification of spectral patterns.
 - Perform **hierarchical and sparse-hierarchical clustering** of individual time series. In these modules, the dendrogram can be cut at a chosen level to help visualising clusters. Addiitonally available are plots with cluster averages, individual times series per cluster, and contribution of time series from different groupings to clusters.
 - Perform **cluster validation**. In this module both relative and internal validations are available. Relative validation with a sweep through a range of possible cluster numbers and a report of average silhouette width and within cluster sum of squares. Internal cluster validation, for a fixed number of clusters return 3 visualizations: a dendrogram colored according to the cut, the silhouette plot and a visualization of the clusters on the first 2 principal components. This analysis relies on the implementation in the R package `factoextra`.
+
+## Clustering
+
+TCI performs [hierarchical clustering](https://en.wikipedia.org/wiki/Hierarchical_clustering "Link to wiki") on data pooled from all groups (experimental conditions). The results of clustering are displayed as heatmaps with time series arranged in rows and time points shown in columns. The arrangement of clusters in the heatmap is illustrated by the dendrogram. The UI allows to *cut* the dendrogram at a desired level and to highlight major tree branches. This is useful to plot cluster averages and time series within such clusters in other tabs of that module. If grouping is present in the dataset, it is possible to plot the fraction of time series from different clusters per group as a stacked bar plot.
+
+TCI uses a number of distance metrics and linkage methods available in R. For high dimensional data such as time series, it is typically better to use [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry "Link to wiki"). It is less likely to be influenced by outliers compared to Euclidean or other higher dimensional norms (read more [here](https://bib.dbvis.de/uploadedFiles/155.pdf "Link to a publication") and [here](https://datascience.stackexchange.com/questions/20075/when-would-one-use-manhattan-distance-as-opposite-to-euclidean-distance "Link to stackexchange")).
+
+[Dynamic time warping](https://en.wikipedia.org/wiki/Dynamic_time_warping "Link to wiki") is particularly useful metric to compute similarities between time series that have features relevant for clustering but shifted in time. Conventional metrics such as Euclidean distance calculate the distance independently for every time point. Thus two time series with an identical transient peak that takes place at different points in time may result in a very large distance. DTW tries to match such shapes and align them together. 
+
+[Sparse hierarchical](https://cran.r-project.org/web/packages/sparcl/index.html "Link to CRAN") clustering is available in a separate tab and is suitable for datasets when the number of time points is much larger than the number of time-series, i.e. a \emph{sparse} dataset. In such cases, true clusters differ only with respect to a small fraction of time points. Such clusters may not be distinguished properly if all time points are taken into consideration, especially those that have similar measurement values across the time series. To avoid that, sparse clustering assigns weights to time points and discards those that do not contribute to clustering and thus have low weights. In TCI, we have labelled time points according to their weights, which is visualised in column names of the heatmap plot.
+
+The complete linkage method adds objects to already existing clusters by looking at the farthest object in that cluster. This adds robustness to clusters and avoids formation of clusters that consist of “accidental” elements. 
+
+### Cluster validation
+
+[Hierarchical clustering](https://en.wikipedia.org/wiki/Hierarchical_clustering "Link to wiki") produces a dendrogram with a hierarchy of distances between individual time series. A common procedure is to cut the dendrogram at a manually chosen level to highlight main branches that correspond to main clusters in the dataset. Though the process of finding the right cut is empirical and should be done in an interactive, iterative fashion, some metrics can provide computational support for a given clustering. TCI integrates two types of cluster validation implementation in the R package [factoextra](https://cran.r-project.org/web/packages/factoextra/index.html): relative and internal. The former sweeps through a range of possible cluster numbers and reports global metrics about the goodness of clustering. The current implementation returns two such metrics: the average silhouette width and the within cluster sum of squares (WSS). 
+
+The [silhouette analysis](https://en.wikipedia.org/wiki/Silhouette_(clustering) "Link to wiki") computes how close each trajectory is to other time series in the cluster it is assigned to. This is then compared to closeness with trajectories in other clusters. Larger average silhouette widths usually indicate better clustering. To make sure averaging does not hide a locally bad clustering, this should be inspected along with the silhouette plot for a particular number of clusters using internal validation available in another tab.
+
+[WSS](https://en.wikipedia.org/wiki/K-means_clustering#Description "Link to wiki"), or variance, evaluates the compactness of clusters. Compact clusters achieve low WSS values. When plotted as function of the number of clusters, WSS would typically display decrease and level off. This inflection point, i.e. *the elbow*, beyond which further increase in the number of clusters does not confer a significant decrease in WSS is considered an optimum.
+
+With internal cluster validation, the user provides a number of clusters and can inspect the quality of this partitioning. TCI offers three visualisations: a dendrogram coloured according to the cut level, the silhouette plot, and a visualisation of the clusters using first two principal components.
