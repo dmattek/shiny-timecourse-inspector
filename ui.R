@@ -159,6 +159,12 @@ shinyUI(fluidPage(
           clustHierUI('tabClHier')
         ),
         
+        # hierarchical clustering with distance matrix uploaded
+        tabPanel(
+          'Hier Dist',
+          clustHierWdistUI('tabClHierWdist')
+        ),
+        
         # sparse hierarchical clustering package sparcl temporarily unavailable from CRAN
         tabPanel(
            'Hierarchical Sparse',
