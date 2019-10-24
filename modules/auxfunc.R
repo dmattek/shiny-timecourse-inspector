@@ -757,13 +757,11 @@ getDataCl = function(in.dend, in.k) {
   cat(file = stderr(), 'getDataCl \n')
   
   loc.clAssign = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE, )
-  #print(loc.m)
-  
+
   # The result of cutree containes named vector with names being cell id's
   # THIS WON'T WORK with sparse hierarchical clustering because there, the dendrogram doesn't have original id's
   loc.dt.clAssign = as.data.table(loc.clAssign, keep.rownames = T)
   setnames(loc.dt.clAssign, c(COLID, COLCL))
-  
   
   #cat('===============\ndataCl:\n')
   #print(loc.dt.cl)

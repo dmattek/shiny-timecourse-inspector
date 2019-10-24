@@ -1011,6 +1011,9 @@ shinyServer(function(input, output, session) {
   ##### Hierarchical clustering
   callModule(clustHier, 'tabClHier', dataWide, dataLongNoOut, dataStim)
   
+  ##### Hierarchical clustering with distance matrix
+  callModule(clustHierWdist, 'tabClHierWdist', dataWide, dataLongNoOut, dataStim)
+  
   ##### Sparse hierarchical clustering using sparcl
   callModule(clustHierSpar, 'tabClHierSpar', dataWide, dataLongNoOut, dataStim)
 })
