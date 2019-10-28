@@ -8,6 +8,7 @@ helpText.clHier = c(alertNAsPresentClDTW = paste0("NAs (still) present. DTW cann
                                                 "If interpolation is active in the left panel, missing data can be due to removed outlier time points."),
                     alertNAsPresentCl = paste0("NAs (still) present, caution recommended. If interpolation is active in the left panel, ",
                                                "missing data can be due to removed outlier time points."),
+                    alertNAsInDist = "NAs in distance matrix. Possible non-overlapping time series in the dataset.",
                     alLearnMore = paste0("<p><a href=\"https://en.wikipedia.org/wiki/Hierarchical_clustering\" target=\"_blank\" title=\"External link\">Agglomerative hierarchical clustering</a> ",
                                          "initially assumes that all time series are forming their own clusters. It then grows a clustering dendrogram using two inputs:<p>",
                                          "A <b>dissimilarity matrix</b> between all pairs ",
@@ -314,11 +315,24 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
       closeAlert(session, 'alertNAsPresentCl')
     }
     
-    
     #pr_DB$set_entry(FUN = fastDTW, names = c("fastDTW"))
     cl.dist = proxy::dist(loc.dm, method = input$selectPlotHierDiss)
     
-    return(cl.dist)
+    # check if distance matrix has NAs
+    # if NAs present, hclust will throw an error
+    # NAs stem from non-overlapping rows (time-series), for which distance cannot be calculated
+    if(sum(is.na(cl.dist)) > 0) {
+      createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsInDist", title = "Error",
+                  content = helpText.clHier[["alertNAsInDist"]], 
+                  append = TRUE,
+                  style = "danger")
+      return(NULL)
+    } else {
+      closeAlert(session, 'alertNAsInDist')
+      return(cl.dist)
+    }
+    
+
   })
   
   # perform hierarchical clustering and return dendrogram coloured according to cutree
@@ -332,6 +346,8 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     if (is.null(loc.dm.dist)) {
       return(NULL)
     }
+    
+    #print(sum(is.na(loc.dm.dist)))
     
     loc.cl.hc = hclust(loc.dm.dist, method = input$selectPlotHierLinkage)
     
