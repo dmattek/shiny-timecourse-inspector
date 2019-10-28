@@ -94,12 +94,14 @@ modTrackStats = function(input, output, session,
     loc.dt.aggr = loc.dt[, 
                          .(nTpts = .N), 
                          by = c(in.bycols, COLID)][, .(tracksN = .N,
+                                                       tracksMin = min(nTpts),
+                                                       tracksMax = max(nTpts),
                                                        tracksLenMean = mean(nTpts),
                                                        tracksLenSD = sd(nTpts),
                                                        tracksLenMedian = median(as.double(nTpts)),
                                                        tracksLenIQR = IQR(as.double(nTpts))), by = c(in.bycols)]
 
-    setnames(loc.dt.aggr, c(in.bycols, 'nTracks', 'Mean Length', 'SD', 'Median Length', 'IQR'))
+    setnames(loc.dt.aggr, c(in.bycols, 'nTracks', 'Min Length', 'Max Length', 'Mean Length', 'SD', 'Median Length', 'IQR'))
     
     return(loc.dt.aggr)
   })
@@ -116,7 +118,7 @@ modTrackStats = function(input, output, session,
     if (nrow(loc.dt))
       datatable(loc.dt, 
                 caption = paste0("Statistics of time series: number of time series, ",
-                                 "mean/median track length, ",
+                                 "min/max/mean/median track length, ",
                                  "SD - standard deviation, IQR - interquartile range."),
                 rownames = TRUE,
                 extensions = 'Buttons', 
@@ -131,7 +133,7 @@ modTrackStats = function(input, output, session,
                                                           filename = 'hitStats'),
                                                      list(extend='pdf',
                                                           filename= 'hitStats')),
-                                      text = 'Download')))) %>% formatSignif(3:4, digits = SIGNIFDIGITSINTAB)
+                                      text = 'Download')))) %>% formatSignif(5:6, digits = SIGNIFDIGITSINTAB)
     else
       return(NULL)
   })
