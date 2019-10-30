@@ -850,7 +850,7 @@ shinyServer(function(input, output, session) {
     # Missing rows in the long format give rise to NAs during dcast
     # Here, we are not checking for explicit NAs in COLY column
     if ((sum(is.na(loc.dt[[COLY]])) == 0) & (sum(is.na(loc.dt.wide)) > 0))
-      cat(stderr(), helpText.server[["alertNAsPresentLong2WideConv"]])
+      cat(helpText.server[["alertNAsPresentLong2WideConv"]], "\n")
 
     return(loc.m.out)
   }) 
