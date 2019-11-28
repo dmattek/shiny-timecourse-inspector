@@ -9,6 +9,7 @@ library(shiny)
 library(shinyjs) #http://deanattali.com/shinyjs/
 library(shinyBS) # for tooltips
 library(shinycssloaders) # for loader animations
+library(R.utils) # for reading gzipped files directly
 library(data.table)
 library(ggplot2)
 library(gplots) # for heatmap.2

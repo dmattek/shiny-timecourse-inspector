@@ -503,7 +503,7 @@ clustHierSpar <- function(input, output, session,
     locBut = input$butPlot
     
     # Check if main data exists
-    # Thanks to solate all mods in the left panel are delayed 
+    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dm = isolate(in.dataWide())
     loc.hc = isolate(userFitHierSpar())

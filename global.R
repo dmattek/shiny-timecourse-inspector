@@ -4,6 +4,7 @@ required_packages = c(
   "shinyjs",
   "shinyBS",
   "shinycssloaders",
+  "R.utils",
   "data.table",
   "DT",
   "ggplot2",

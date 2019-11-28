@@ -37,10 +37,10 @@ The app can be run either locally or on a server. The installation process is de
 #### Prerequisites
 TCI works on all major OS (Windows, macOS, standard Linux distributions) and only requires a recent R installation on which the standard package `shiny` is installed. Instructions to install R can be found on the official [R-project website](https://www.r-project.org/). Once R is installed, one can install the `shiny` package by typing: `install.packages("shiny")` in the R console.
 
-The app depends on many more packages which should be automatically installed when the user launches the app for the first time. The complete list of depedencies can also be manually installed from the R console by typing:
+The app depends on many more packages which should be automatically installed when the user launches the app for the first time. The complete list of dependencies can also be manually installed from the R console by typing:
 ```
 install.packages(c("shiny", "shinyjs", "shinyBS", "shinycssloaders",
-					"data.table", "DT",
+					"R.utils", "data.table", "DT",
 					"ggplot2", "gplots", "plotly", "scales", "grid",
 					"dendextend", "RColorBrewer", "ggthemes",
 					"sparcl", "dtw", "factoextra",

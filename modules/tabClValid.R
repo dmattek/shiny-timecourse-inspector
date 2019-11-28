@@ -1,6 +1,6 @@
 #
 # Time Course Inspector: Shiny app for plotting time series data
-# Author: Maciej Dobrzynski
+# Author: Maciej Dobrzynski & Marc-Antoine Jacques
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
