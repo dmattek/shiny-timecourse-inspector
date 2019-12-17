@@ -281,9 +281,9 @@ tabScatterPlot <-
       # Check if main data exists
       # Thanks to solate all mods in the left panel are delayed 
       # until clicking the Plot button
-      loc.dt = isolate(data4scatterPlot())
-      validate(
-        need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+      loc.dt = shiny::isolate(data4scatterPlot())
+      shiny::validate(
+        shiny::need(!is.null(loc.dt), "Nothing to plot. Load data first!")
       )    
       
       cat(file = stderr(), 'plotScatter:dt not NULL\n')

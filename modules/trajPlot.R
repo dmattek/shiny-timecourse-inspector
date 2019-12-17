@@ -247,14 +247,14 @@ modTrajPlot = function(input, output, session,
     # Thanks to solate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dt = isolate(in.data())
-    validate(
-      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+    shiny::validate(
+      shiny::need(!is.null(loc.dt), "Nothing to plot. Load data first!")
     )
     
     cat(file = stderr(), 'plotTraj: dt not NULL\n')
     
     # check if stim data exists
-    loc.dt.stim = isolate(in.data.stim())
+    loc.dt.stim = shiny::isolate(in.data.stim())
     
     if (is.null(loc.dt.stim)) {
       cat(file = stderr(), 'plotTraj: dt.stim is NULL\n')

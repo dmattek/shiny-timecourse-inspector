@@ -247,10 +247,11 @@ modTrajRibbonPlot = function(input, output, session,
     # Check if main data exists
     # Thanks to solate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.dt = isolate(in.data())
-    validate(
-      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
-    )    
+    loc.dt = shiny::isolate(in.data())
+    
+    shiny::validate(
+      shiny::need(!is.null(loc.dt), message = "Nothing to plot. Load data first!")
+    )
     
     cat(file = stderr(), 'plotTrajRibbon: dt not NULL\n')
     

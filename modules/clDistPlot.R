@@ -43,8 +43,8 @@ modClDistPlot = function(input, output, session,
     cat(file = stderr(), 'plotClDist: in\n')
     
     loc.dt = in.data()
-    validate(
-      need(!is.null(loc.dt), "Nothing to plot. Load data first!")
+    shiny::validate(
+      shiny::need(!is.null(loc.dt), "Nothing to plot. Load data first!")
     )
     
     # Two statements: "position_fill(reverse = TRUE)" and "guide_legend(reverse = T)"

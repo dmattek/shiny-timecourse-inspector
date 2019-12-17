@@ -111,8 +111,8 @@ modTrackStats = function(input, output, session,
     cat(file = stderr(), 'modTrackStats:outTabStats\n')
     loc.dt = calcStatsTracks()
     
-    validate(
-      need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
+    shiny::validate(
+      shiny::need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
     )
     
     if (nrow(loc.dt))
@@ -144,8 +144,8 @@ modTrackStats = function(input, output, session,
     cat(file = stderr(), 'modTrackStats:outTabMeas\n')
     loc.dt = calcStatsMeas()
     
-    validate(
-      need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
+    shiny::validate(
+      shiny::need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
     )
     
     if (nrow(loc.dt))
@@ -178,8 +178,8 @@ modTrackStats = function(input, output, session,
     cat(file = stderr(), 'modTrackStats:outTabStatsDup\n')
     loc.dt = in.data()
     
-    validate(
-      need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
+    shiny::validate(
+      shiny::need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
     )
     
     # Look whether there were more objects with the same track ID in the frame

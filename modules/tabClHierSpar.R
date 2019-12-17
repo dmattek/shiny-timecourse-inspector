@@ -503,16 +503,16 @@ clustHierSpar <- function(input, output, session,
     locBut = input$butPlot
     
     # Check if main data exists
-    # Thanks to solate all mods in the left panel are delayed 
+    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.dm = isolate(in.dataWide())
-    loc.hc = isolate(userFitHierSpar())
-    loc.dend = isolate(userFitDendHierSpar())
+    loc.dm = shiny::isolate(in.dataWide())
+    loc.hc = shiny::isolate(userFitHierSpar())
+    loc.dend = shiny::isolate(userFitDendHierSpar())
     
-    validate(
-      need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
-      need(!is.null(loc.hc), "Did not cluster"),
-      need(!is.null(loc.dend), "Did not create dendrogram")
+    shiny::validate(
+      shiny::need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
+      shiny::need(!is.null(loc.hc), "Did not cluster"),
+      shiny::need(!is.null(loc.dend), "Did not create dendrogram")
     )
     
     # Dummy dependency to redraw the heatmap without clicking Plot

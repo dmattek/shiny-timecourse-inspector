@@ -1,6 +1,6 @@
 #
 # Time Course Inspector: Shiny app for plotting time series data
-# Author: Maciej Dobrzynski
+# Author: Maciej Dobrzynski & Marc-Antoine Jacques
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
@@ -242,11 +242,11 @@ clustValid <- function(input, output, session, in.dataWide) {
     # Check if required data exists
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.dist = isolate(calcDist())
+    loc.dist = shiny::isolate(calcDist())
     
-    validate(
-      need(!is.null(loc.dist), "Nothing to plot. Load data first!"),
-      need(returnMaxNclust() <  nrow(loc.dist), "Maximum number of clusters to conisder should be smaller than the number of time series.")
+    shiny::validate(
+      shiny::need(!is.null(loc.dist), "Nothing to plot. Load data first!"),
+      shiny::need(returnMaxNclust() <  nrow(loc.dist), "Maximum number of clusters to conisder should be smaller than the number of time series.")
     )    
 
     loc.p = LOCnbclust(loc.dist,
@@ -277,9 +277,9 @@ clustValid <- function(input, output, session, in.dataWide) {
     # until clicking the Plot button
     loc.dist = isolate(calcDist())
     
-    validate(
-      need(!is.null(loc.dist), "Nothing to plot. Load data first!"),
-      need(returnMaxNclust() <  nrow(loc.dist), "Maximum number of clusters to conisder should be smaller than the number of time series.")
+    shiny::validate(
+      shiny::need(!is.null(loc.dist), "Nothing to plot. Load data first!"),
+      shiny::need(returnMaxNclust() <  nrow(loc.dist), "Maximum number of clusters to conisder should be smaller than the number of time series.")
     )    
     
     loc.p = LOCnbclust(loc.dist,
@@ -310,10 +310,10 @@ clustValid <- function(input, output, session, in.dataWide) {
     loc.part = calcDendCut()
     loc.dm = in.dataWide()
     
-    validate(
-      need(!is.null(loc.part), "Nothing to plot. Load data first!"),
-      need(!is.null(loc.dm),   "Nothing to plot. Load data first!"),
-      need(sum(is.na(loc.dm)), "Cannot calculate PCA in the presence of missing data and/or NAs.")
+    shiny::validate(
+      shiny::need(!is.null(loc.part), "Nothing to plot. Load data first!"),
+      shiny::need(!is.null(loc.dm),   "Nothing to plot. Load data first!"),
+      shiny::need(sum(is.na(loc.dm)), "Cannot calculate PCA in the presence of missing data and/or NAs.")
     )    
     
     if (sum(is.na(loc.dm)) > 0)
@@ -362,9 +362,9 @@ clustValid <- function(input, output, session, in.dataWide) {
     # Rerun the PCA plot to obtain clour mapping of clusters in PCA and silhouette plot and match it with dendrogram colors.
     loc.map = plotClPCA()
     
-    validate(
-      need(!is.null(loc.part), "Nothing to plot. Load data first!"),
-      need(!is.null(loc.map),  "Cannot assign colours to clusters. Possible NAs in the dataset!")
+    shiny::validate(
+      shiny::need(!is.null(loc.part), "Nothing to plot. Load data first!"),
+      shiny::need(!is.null(loc.map),  "Cannot assign colours to clusters. Possible NAs in the dataset!")
     )    
     
     # Determine cluster order of occurence from left to right in the dendrogram
@@ -400,8 +400,8 @@ clustValid <- function(input, output, session, in.dataWide) {
     
     # until clicking the Plot button
     loc.part = calcDendCut()
-    validate(
-      need(!is.null(loc.part), "Nothing to plot. Load data first!")
+    shiny::validate(
+      shiny::need(!is.null(loc.part), "Nothing to plot. Load data first!")
     )    
     
     loc.pal = ifelse(returnNclust() <= 10, "Color Blind", "Tableau 20")
