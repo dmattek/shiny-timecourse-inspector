@@ -1,6 +1,7 @@
 # TCI - Time-course analysis web-app
 
   * [What is TCI?](#what-is-tci)
+  * [How to cite us?](#how-to-cite-us)
   * [Getting started](#getting-started)
     + [Running the app locally](#running-the-app-locally)
     + [Running the app directly from GitHub](#running-the-app-directly-from-github)
@@ -27,6 +28,13 @@ The starting point of the app is a plain spreadsheet in comma-separated values f
 TCI puts the accent on spotting the unique dynamics that underly the time-series in the datasets. Its full potential is revealed when working with groups of time-series from which one wishes to understand their respective specificity and differences. To this effect, the clustering module works on pooled data, meaning that all groups of series will be considered at once when running the clustering procedure. The resulting clusters can then be inspected to visualize which types of series, patterns and frequencies were captured by each cluster. In addition, the distribution of clusters acroos the groups can be visualized to understand which dynamics or trends were over/under-represented in each group.
 
 The project is open-source and free to use under GPL3 license. Feedbacks and contributions from the users are greatly encouraged!
+
+## How to cite us?
+
+If you use TCI for your work, please cite the following paper:
+```
+Dobrzyński, M., Jacques, M. A., & Pertz, O. (2019). Mining single-cell time-series datasets with Time Course Inspector. Bioinformatics.
+```
 
 ## Getting started
 
