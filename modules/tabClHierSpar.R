@@ -14,7 +14,9 @@ helpText.clHierSpar = c(alImportance = paste0("<p>Weight factors (WF) calculated
                                               "<li><p, style=\"color:Tomato;\">*** - high, WF∈(0.5, 1.0]</p></li>",
                                               "</p><p>Witten and Tibshirani (2010): ",
                                               "<i>A framework for feature selection in clustering</i>; ",
-                                              "Journal of the American Statistical Association 105(490): 713-726.</p>"))
+                                              "Journal of the American Statistical Association 105(490): 713-726.</p>"),
+                        downCellClSpar = "Download a CSV with cluster assignments to time series ID",
+                        downDendSpar = "Download an RDS file with dendrogram object. Read later with readRDS() function.")
 
 # UI ----
 clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
@@ -68,7 +70,21 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
         ),
         checkboxInput(ns('chBPlotHierSparClSel'), 'Manually select clusters to display'),
         uiOutput(ns('uiPlotHierSparClSel')),
-        downloadButton(ns('downCellClSpar'), 'Download CSV with cluster assignments')
+        
+        downloadButton(ns('downCellClSpar'), 'Download cluster assignments'),
+        bsTooltip(ns("downCellClSpar"),
+                  helpText.clHierSpar[["downCellClSpar"]],
+                  placement = "top",
+                  trigger = "hover",
+                  options = NULL),
+        
+        downloadButton(ns('downDendSpar'), 'Download dendrogram object'),
+        bsTooltip(ns("downDendSpar"),
+                  helpText.clHierSpar[["downDendSpar"]],
+                  placement = "top",
+                  trigger = "hover",
+                  options = NULL)
+        
       ),
       
       column(
@@ -443,10 +459,10 @@ clustHierSpar <- function(input, output, session,
   })
   
   
-  # download a list of cellIDs with cluster assignments
+  # download a CSV with a list of cellIDs with cluster assignments
   output$downCellClSpar <- downloadHandler(
     filename = function() {
-      paste0('clust_hierchSpar_data_',
+      paste0('clust_hierSpar_data_',
              ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
              '_',
              input$selectPlotHierSparLinkage, '.csv')
@@ -457,6 +473,20 @@ clustHierSpar <- function(input, output, session,
                                   input$inPlotHierSparNclust, 
                                   getDataTrackObjLabUni_afterTrim()), 
                 file = file, row.names = FALSE)
+    }
+  )
+  
+  # download an RDS file with dendrogram objet
+  output$downDendSpar <- downloadHandler(
+    filename = function() {
+      paste0('clust_hierSpar_dend_',
+             input$selectPlotHierSparDiss,
+             '_',
+             input$selectPlotHierSparLinkage, '.rds')
+    },
+    
+    content = function(file) {
+      saveRDS(object = userFitDendHierSpar(), file = file)
     }
   )
   
@@ -573,7 +603,7 @@ clustHierSpar <- function(input, output, session,
   
   createFnameHeatMap = reactive({
     
-    paste0('clust_hierchSparse_heatMap_',
+    paste0('clust_hierSparse_heatMap_',
            ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage,
@@ -582,7 +612,7 @@ clustHierSpar <- function(input, output, session,
   
   createFnameTrajPlot = reactive({
     
-    paste0('clust_hierchSparse_tCourses_',
+    paste0('clust_hierSparse_tCourses_',
            ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, 
@@ -591,7 +621,7 @@ clustHierSpar <- function(input, output, session,
   
   createFnameRibbonPlot = reactive({
     
-    paste0('clust_hierchSparse_tCoursesMeans_',
+    paste0('clust_hierSparse_tCoursesMeans_',
            ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, 
@@ -600,7 +630,7 @@ clustHierSpar <- function(input, output, session,
   
   createFnamePsdPlot = reactive({
     
-    paste0('clust_hierchSparse_tCoursesPsd_',
+    paste0('clust_hierSparse_tCoursesPsd_',
            ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, 
@@ -609,7 +639,7 @@ clustHierSpar <- function(input, output, session,
   
   createFnameDistPlot = reactive({
     
-    paste0('clust_hierchSparse_clDist_',
+    paste0('clust_hierSparse_clDist_',
            ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selectPlotHierSparLinkage, '.pdf')  })

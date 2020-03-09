@@ -129,7 +129,7 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
         } else {
           png(file,
               width  = input$inPlotWidth,
-              height = input$inPlotHeight, units = 'in', res = 300)
+              height = input$inPlotHeight, units = 'in', res = 1200)
         }
         
         

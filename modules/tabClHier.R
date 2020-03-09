@@ -19,7 +19,9 @@ helpText.clHier = c(alertNAsPresentClDTW = paste0("NAs (still) present. DTW cann
                                          "Instead of comparing time series point by point, DTW tries to align and match their shapes. ",
                                          "This makes DTW a good quantification of similarity when signals are similar but shifted in time.</p>",
                                          "<p>In the second step, clusters are successively built and merged together. The distance between the newly formed clusters is determined by the <b>linkage criterion</b> ",
-                                         "using one of <a href=\"https://en.wikipedia.org/wiki/Hierarchical_clustering\" target=\"_blank\" title=\"External link\">linkage methods</a>.</p>"))
+                                         "using one of <a href=\"https://en.wikipedia.org/wiki/Hierarchical_clustering\" target=\"_blank\" title=\"External link\">linkage methods</a>.</p>"),
+                    downCellCl = "Download a CSV with cluster assignments to time series ID",
+                    downDend = "Download an RDS file with dendrogram object. Read later with readRDS() function.")
 
 
 # UI ----
@@ -89,7 +91,20 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
              
              checkboxInput(ns('chBPlotHierClSel'), 'Manually select clusters to display'),
              uiOutput(ns('uiPlotHierClSel')),
-             downloadButton(ns('downCellCl'), 'Download CSV with cluster assignments')
+             
+             downloadButton(ns('downCellCl'), 'Download cluster assignments'),
+             bsTooltip(ns("downCellCl"),
+                       helpText.clHier[["downCellCl"]],
+                       placement = "top",
+                       trigger = "hover",
+                       options = NULL),
+             
+             downloadButton(ns('downDend'), 'Download dendrogram object'),
+             bsTooltip(ns("downDend"),
+                       helpText.clHier[["downDend"]],
+                       placement = "top",
+                       trigger = "hover",
+                       options = NULL)
       )
     ),
     
@@ -474,10 +489,10 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     return(loc.dt)
   })
   
-  # download a list of cellIDs with cluster assignments
+  # download a CSV with a list of cellIDs with cluster assignments
   output$downCellCl <- downloadHandler(
     filename = function() {
-      paste0('clust_hierch_data_',
+      paste0('clust_hier_data_',
              input$selectPlotHierDiss,
              '_',
              input$selectPlotHierLinkage, '.csv')
@@ -485,6 +500,20 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     
     content = function(file) {
       write.csv(x = getDataCl(userFitDendHier(), returnNclust()), file = file, row.names = FALSE)
+    }
+  )
+  
+  # download an RDS file with dendrogram objet
+  output$downDend <- downloadHandler(
+    filename = function() {
+      paste0('clust_hier_dend_',
+             input$selectPlotHierDiss,
+             '_',
+             input$selectPlotHierLinkage, '.rds')
+    },
+    
+    content = function(file) {
+      saveRDS(object = userFitDendHier(), file = file)
     }
   )
   
@@ -599,7 +628,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   createFnameHeatMap = reactive({
     
-    paste0('clust_hierch_heatMap_',
+    paste0('clust_hier_heatMap_',
            input$selectPlotHierDiss,
            '_',
            input$selectPlotHierLinkage,
@@ -608,7 +637,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   createFnameTrajPlot = reactive({
     
-    paste0('clust_hierch_tCourses_',
+    paste0('clust_hier_tCourses_',
            input$selectPlotHierDiss,
            '_',
            input$selectPlotHierLinkage, 
@@ -617,7 +646,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   createFnameRibbonPlot = reactive({
     
-    paste0('clust_hierch_tCoursesMeans_',
+    paste0('clust_hier_tCoursesMeans_',
            input$selectPlotHierDiss,
            '_',
            input$selectPlotHierLinkage, 
@@ -626,7 +655,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   createFnamePsdPlot = reactive({
     
-    paste0('clust_hierch_tCoursesPsd_',
+    paste0('clust_hier_tCoursesPsd_',
            input$selectPlotHierDiss,
            '_',
            input$selectPlotHierLinkage, 
@@ -635,7 +664,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   
   createFnameDistPlot = reactive({
     
-    paste0('clust_hierch_clDist_',
+    paste0('clust_hier_clDist_',
            input$selectPlotHierDiss,
            '_',
            input$selectPlotHierLinkage, '.pdf')  
