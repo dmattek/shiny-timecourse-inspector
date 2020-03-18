@@ -71,14 +71,14 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
         checkboxInput(ns('chBPlotHierSparClSel'), 'Manually select clusters to display'),
         uiOutput(ns('uiPlotHierSparClSel')),
         
-        downloadButton(ns('downCellClSpar'), 'Download cluster assignments'),
+        downloadButton(ns('downCellClSpar'), 'Cluster assignments'),
         bsTooltip(ns("downCellClSpar"),
                   helpText.clHierSpar[["downCellClSpar"]],
                   placement = "top",
                   trigger = "hover",
                   options = NULL),
         
-        downloadButton(ns('downDendSpar'), 'Download dendrogram object'),
+        downloadButton(ns('downDendSpar'), 'Dendrogram object'),
         bsTooltip(ns("downDendSpar"),
                   helpText.clHierSpar[["downDendSpar"]],
                   placement = "top",

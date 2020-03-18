@@ -92,14 +92,14 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
              checkboxInput(ns('chBPlotHierClSel'), 'Manually select clusters to display'),
              uiOutput(ns('uiPlotHierClSel')),
              
-             downloadButton(ns('downCellCl'), 'Download cluster assignments'),
+             downloadButton(ns('downCellCl'), 'Cluster assignments'),
              bsTooltip(ns("downCellCl"),
                        helpText.clHier[["downCellCl"]],
                        placement = "top",
                        trigger = "hover",
                        options = NULL),
              
-             downloadButton(ns('downDend'), 'Download dendrogram object'),
+             downloadButton(ns('downDend'), 'Dendrogram object'),
              bsTooltip(ns("downDend"),
                        helpText.clHier[["downDend"]],
                        placement = "top",
