@@ -491,11 +491,12 @@ clustHierWdist <- function(input, output, session, in.dataWide, in.dataLong, in.
     # Check if main data exists
     # Thanks to solate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.dm = isolate(in.dataWide())
-    loc.dend = isolate(userFitDendHier())
-    validate(
-      need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
-      need(!is.null(loc.dend), "Could not create dendrogram")
+    loc.dm = shiny::isolate(in.dataWide())
+    loc.dend = shiny::isolate(userFitDendHier())
+    
+    shiny::validate(
+      shiny::need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
+      shiny::need(!is.null(loc.dend), "Could not create dendrogram")
     )
     
     # Dummy dependency to redraw the heatmap without clicking Plot
