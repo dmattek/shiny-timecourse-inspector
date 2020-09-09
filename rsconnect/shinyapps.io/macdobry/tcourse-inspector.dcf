@@ -1,0 +1,13 @@
+name: tcourse-inspector
+title:
+username:
+account: macdobry
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 995319
+bundleId: 2963646
+url: https://macdobry.shinyapps.io/tcourse-inspector/
+when: 1585908281.21396
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: appFileManifest.txt|modules-unused/tabClBay.R|demo|example-data|misc-scripts

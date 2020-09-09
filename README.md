@@ -23,6 +23,8 @@ The **screencast** with an overview of the app's functionality and processing of
 
 If you just wish to give the app a quick try without installing it, you can access a **running instance** at [shinyapps.io](https://macdobry.shinyapps.io/tcourse-inspector/ "Link to a running app"). Bear in mind that your experience using this instance might be sluggish and that the number of uses per month is limited. For a quick trial, we rather recommend to run the app directly from GitHub as described in sections below.
 
+![TCI](demo/TCI-screenshot-hierclust.png)
+
 The starting point of the app is a plain spreadsheet in comma-separated values format (CSV) that contains the dataset to analyze. TCI embeds a module for simple preprocessing of the data (normalization, missing values handling...), various visualizations, common statistics report, spectral decomposition, a flexible module for hierarchical clustering and cluster validation. All modules are documented with tooltips and *Learn More* sections to guide users through the UI and assist them with the analysis.
 
 TCI puts the accent on spotting the unique dynamics that underly the time-series in the datasets. Its full potential is revealed when working with groups of time-series from which one wishes to understand their respective specificity and differences. To this effect, the clustering module works on pooled data, meaning that all groups of series will be considered at once when running the clustering procedure. The resulting clusters can then be inspected to visualize which types of series, patterns and frequencies were captured by each cluster. In addition, the distribution of clusters acroos the groups can be visualized to understand which dynamics or trends were over/under-represented in each group.
