@@ -1,0 +1,15 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+rsconnect/
+modules-unused/
+misc-scripts/
+example-data/set1-Coralie/
+example-data/set2-Yannick/
+example-data/set3-testIncompleteTraj/
+shiny-contest/
+*.mov
+*.mp4
+*.pptx
