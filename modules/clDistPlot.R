@@ -37,7 +37,7 @@ modClDistPlot = function(input, output, session,
                          in.fname = 'clDist.pdf') {
   
   ns <- session$ns
- 
+  
   # Barplot with distribution of clusters across conditions
   plotClDist = function() {
     cat(file = stderr(), 'plotClDist: in\n')
@@ -55,11 +55,22 @@ modClDistPlot = function(input, output, session,
                position = position_fill(reverse = TRUE)) +
       guides(fill = guide_legend(reverse = T))
     
-    if(is.null(in.colors))
-      p.out = p.out + scale_fill_discrete(name = "Cluster no.")
-    else
-      p.out = p.out + scale_fill_manual(name = "Cluster no.", 
-                                        values = in.colors()[["gr.col"]])
+    if(is.null(in.colors)) {
+      p.out = p.out + 
+        scale_fill_discrete(name = "Cluster")
+    }
+    else {
+      # Create a named vector with colours to make sure
+      # that colours correspond to correct clusters.
+      # The names come from cluster numbers.
+      loc.col.dt = in.colors()
+      loc.col.vec = loc.col.dt[["gr.col"]]
+      names(loc.col.vec) = loc.col.dt[["gr.no"]]
+      
+      p.out = p.out + 
+        scale_fill_manual(name = "Cluster", 
+                          values = loc.col.vec)
+    }
     
     loc.rads = as.numeric(input$rBAxisLabelsRotate) * pi / 180
     loc.hjust = 0.5*(1-sin(loc.rads))
@@ -77,15 +88,15 @@ modClDistPlot = function(input, output, session,
       theme(
         axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), 
                                                 size = PLOTFONTAXISTEXT)
-    )
-
+      )
+    
     return(p.out)
     
   }
   
   #  display bar plot
   output$outPlotClDist <- renderPlot({
-
+    
     plotClDist()
   })
   

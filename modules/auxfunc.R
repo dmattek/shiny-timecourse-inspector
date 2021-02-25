@@ -584,7 +584,7 @@ LOCinterpolate = function(inDT, inColGr, inColID, inColT, inColY, inTfreq = 1, i
       cat(file = stdout(), sprintf("Interpolating NAs in column: %s\n", col))
     
     # Interpolated columns should be of type numeric (float)
-    # This is to ensure that interpolated columns are of porper type.
+    # This is to ensure that interpolated columns have proper type.
     data.table::set(loc.out, j = col, value = as.numeric(loc.out[[col]]))
     
     loc.out[, (col) := na_interpolation(get(col)), by = c(inColID)]        
@@ -1001,32 +1001,31 @@ LOCplotTraj = function(dt.arg,
       )
   }
   
-  # this is temporary solution for adding colour according to cluster number
-  # use only when plotting traj from clustering!
-  # a horizontal line is added at the top of data
+  # Add a horizontal bar with colours according to cluster numbers.
+  # Use only when plotting traj from clustering!
+  # A horizontal line is added above the data
   if (!is.null(facet.color.arg)) {
-    loc.y.max = max(dt.arg[, c(y.arg), with = FALSE])
-    loc.dt.cl = data.table(xx = 1:length(facet.color.arg), yy = loc.y.max)
-    setnames(loc.dt.cl, 'xx', facet.arg)
+    loc.y.max = max(dt.arg[, 
+                           c(y.arg), 
+                           with = FALSE])
     
-    # adjust facet.color.arg to plot
+    # cat("auxfunc::LOCplotTraj::facet.color.arg\n")
+    # print(facet.color.arg)
+    # cat("\n\n")
     
     p.tmp = p.tmp +
       geom_hline(
-        data = loc.dt.cl,
-        colour = facet.color.arg,
+        colour = facet.color.arg[sort(names(facet.color.arg))],
         yintercept = loc.y.max,
         size = 4
-      ) +
-      scale_colour_manual(values = facet.color.arg,
-                          name = '')
+      )
   }
   
   if ('mean' %in% loc.stat)
     p.tmp = p.tmp +
     stat_summary(
       aes_string(y = y.arg, group = 1),
-      fun.y = mean,
+      fun = mean,
       na.rm = T,
       colour = 'red',
       linetype = 'solid',
@@ -1146,24 +1145,37 @@ LOCplotTrajRibbon = function(dt.arg,
                              ylab.arg = NULL,
                              plotlab.arg = NULL) {
   
-  p.tmp = ggplot(dt.arg, aes_string(x = x.arg, group = group.arg))
+  # cat("auxfunc::LOCplotTrajRibbon::unique(dt.arg[[group.arg]])\n")
+  # print(unique(dt.arg[[group.arg]]))
+  # cat("\n\n")
+  # 
+  # cat("auxfunc::LOCplotTrajRibbon::col.arg\n")
+  # print(col.arg)
+  # cat("\n\n")
+    
+  p.tmp = ggplot(dt.arg, aes_string(x = x.arg, 
+                                    group = group.arg))
   
   if (!is.null(ribbon.lohi.arg))
     p.tmp = p.tmp +
       geom_ribbon(
-        aes_string(ymin = ribbon.lohi.arg[1], ymax = ribbon.lohi.arg[2]),
+        aes_string(ymin = ribbon.lohi.arg[1], 
+                   ymax = ribbon.lohi.arg[2]),
         fill = ribbon.fill.arg,
         alpha = ribbon.alpha.arg
       )
   
-  p.tmp = p.tmp + geom_line(aes_string(y = y.arg, colour = group.arg), size = 1.25)
+  p.tmp = p.tmp + 
+    geom_line(aes_string(y = y.arg, 
+                         colour = group.arg), size = 1.25)
   
   
   # plot stimulation bars underneath time series
   # dt.stim.arg is read separately and should contain 4 columns with
   # xy positions of beginning and end of the bar
   if (!is.null(dt.stim.arg)) {
-    p.tmp = p.tmp + geom_segment(
+    p.tmp = p.tmp + 
+      geom_segment(
       data = dt.stim.arg,
       aes_string(
         x = x.stim.arg[1],

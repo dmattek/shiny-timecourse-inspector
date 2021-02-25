@@ -53,7 +53,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
           value = PLOTWIDTH,
           min = 10,
           width = '100px',
-          step = 10
+          step = 5
         ),
         numericInput(
           ns('inPlotTrajHeight'),
@@ -298,7 +298,7 @@ modTrajRibbonPlot = function(input, output, session,
     # The number of colours in the palette has to be equal to the number of groups.
     # This might differ if the user selects manually groups (e.g. clusters) to display.
     
-    # Get existing groups in dt for subsetting externally provided group-color table
+    # Get existing groups in dt for sub-setting the externally provided group-colour table
     loc.groups = unique(loc.dt[, ..in.group])
     
     if (is.null(in.group.color)) {
@@ -306,8 +306,13 @@ modTrajRibbonPlot = function(input, output, session,
       loc.group.color = LOCreturnTableauPalette("Color Blind", nrow(loc.groups))
     } else {
       # Use externally provided translation between groups/clusters and colors
-      # Subset group-color assignments with existing groups
+      # Subset group-colour assignments with existing groups
       loc.group.color = in.group.color()[loc.groups][["gr.col"]]
+     
+      # IMPORTANT!!!
+      # The vector with colours has to be named according to cluster numbers,
+      # otherwise the manual colour assignment in scale_colour_manual won't match!
+      names(loc.group.color) = loc.groups[[COLCL]]
     }
     
     # aggregate data; calculate Mean, CI or SE

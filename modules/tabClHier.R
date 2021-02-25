@@ -173,7 +173,7 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
                                      'Display plot height [px]', 
                                      value = 600, 
                                      min = 100,
-                                     step = 100,
+                                     step = 50,
                                      width = "180px")
                         
                  ),
@@ -401,17 +401,24 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     
     # obtain relations between cluster and colors from the dendrogram
     loc.dt = LOCgetClCol(loc.dend, returnNclust())
-    
+
     # Display clusters specified in the inPlotHierClSel field
     # Data is ordered according to the order of clusters specified in this field
     if(input$chBPlotHierClSel) {
-      # kepp only clusters specified in input$inPlotHierClSel
+      # keep only clusters specified in input$inPlotHierClSel
       loc.dt = loc.dt[gr.no %in% input$inPlotHierClSel]
       loc.dt[, gr.no := factor(gr.no, levels = input$inPlotHierClSel)]
     }
 
-    # set the key to allow subsetting
+    # sort by cluster number
+    setorder(loc.dt, gr.no)
+    
+    # set the key to allow sub-setting
     setkey(loc.dt, gr.no)
+# 
+#     cat("tabClHier::getClColHier::locdt\n")
+#     print(loc.dt)
+#     cat("\n\n")
     
     return(loc.dt)
   })
@@ -674,7 +681,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
   #  Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHier", createFnameHeatMap, plotHier)
   
-  # plot individual trajectories withina cluster  
+  # plot individual trajectories within clusters  
   callModule(modTrajPlot, 'modPlotHierTraj', 
              in.data = data4trajPlotCl, 
              in.data.stim = data4stimPlotCl,

@@ -65,7 +65,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
           value = PLOTWIDTH,
           min = 10,
           width = '100px',
-          step = 10
+          step = 5
         ),
         numericInput(
           ns('inPlotTrajHeight'),
@@ -73,6 +73,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
           value = PLOTTRAJHEIGHT,
           min = 100,
           width = '100px',
+          step = 50
         )
       )
     ),
@@ -296,6 +297,11 @@ modTrajPlot = function(input, output, session,
       
       # subset group-color assignments with existing groups
       loc.facet.color = in.facet.color()[loc.facets][["gr.col"]]
+      
+      # IMPORTANT!!!
+      # The vector with colours has to be named according to cluster numbers,
+      # otherwise the manual colour assignment in scale_colour_manual won't match!
+      names(loc.facet.color) = loc.facets[[COLCL]]
     }
     
     
