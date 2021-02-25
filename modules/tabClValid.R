@@ -319,7 +319,7 @@ clustValid <- function(input, output, session, in.dataWide) {
     if (sum(is.na(loc.dm)) > 0)
       return(NULL)
     
-    # Tha tableau "Color Blind" palette has only 10 colours; 
+    # The tableau "Color Blind" palette has only 10 colours; 
     # change to "Tableau 20" if more clusters requested
     loc.pal = ifelse(returnNclust() <= 10, "Color Blind", "Tableau 20")
     loc.col = ggthemes::tableau_color_pal(loc.pal)(n = returnNclust())

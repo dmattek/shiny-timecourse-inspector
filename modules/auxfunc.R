@@ -593,7 +593,7 @@ LOCinterpolate = function(inDT, inColGr, inColID, inColT, inColY, inTfreq = 1, i
   return(loc.out)
 }
 
-#' Remove outlier time points and/or tracks depdending on maximum permissible gap length due to outliers
+#' Remove outlier time points and/or tracks depending on maximum permissible gap length due to outliers
 #'
 #' @param inDT Data.table in long format with main dataset
 #' @param inDTout Data.table in long format with rows of inDT that include outlier time points
