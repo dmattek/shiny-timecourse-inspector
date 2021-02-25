@@ -68,7 +68,7 @@ shinyUI(fluidPage(
       uiOutput('varSelMeas1'),
       radioButtons(
         'inSelMath', width = '50%',
-        'Math on 1st and 2nd meas.:',
+        'Math on 1st and 2nd meas.',
         c(
           'None' = '',
           'Divide' = " / ",
@@ -136,21 +136,22 @@ shinyUI(fluidPage(
           )
         ),
         
+        # scatter plot
+        tabPanel(
+          'Scatter',
+          tabScatterPlotUI('tabScatter')
+        ),
+        
+        # area under the curve
         tabPanel(
           "AUC",
           tabAUCplotUI('tabAUC')
         ),
         
+        # distributions at time points
         tabPanel(
           "Distributions",
           tabDistPlotUI('tabDistPlot')
-        ),
-        
-        
-        # scatter plot
-        tabPanel(
-          'Scatter',
-          tabScatterPlotUI('tabScatter')
         ),
         
         # hierarchical clustering
