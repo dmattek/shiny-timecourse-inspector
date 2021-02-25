@@ -207,7 +207,7 @@ shinyServer(function(input, output, session) {
       cat(file = stdout(), 'server:varSelTime\n')
     
     locCols = getDataNucCols()
-    locColSel = locCols[grep('(T|t)ime|Metadata_T', locCols)[1]] # index 1 at the end in case more matches; select 1st; matches RealTime, realtime, real time, etc.
+    locColSel = locCols[grep('(F|f)rame|(T|t)ime|Metadata_T', locCols)[1]] # index 1 at the end in case more matches; select 1st; matches RealTime, realtime, real time, etc.
     
     selectInput(
       'inSelTime',
@@ -231,7 +231,7 @@ shinyServer(function(input, output, session) {
       locCols = getDataNucCols()
       
       if (!is.null(locCols)) {
-        locColSel = locCols[grep('(G|g)roup|(S|s)tim|(S|s)timulation|(S|s)ite', locCols)[1]]
+        locColSel = locCols[grep('(G|g)roup|(S|s)tim|(S|s)timulation|(S|s)ite|(T|t)reat', locCols)[1]]
 
         #cat('UI varSelGroup::locColSel ', locColSel, '\n')
         selectInput(
