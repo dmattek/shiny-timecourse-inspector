@@ -164,7 +164,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
                                      'Display plot height [px]', 
                                      value = 600, 
                                      min = 100,
-                                     step = 100, 
+                                     step = 50, 
                                      width = "180px")
                         
                  ),

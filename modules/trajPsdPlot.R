@@ -43,7 +43,7 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
           value = 100,
           min = 10,
           width = '100px',
-          step = 10
+          step = 5
         ),
         numericInput(
           ns('inPlotTrajHeight'),
