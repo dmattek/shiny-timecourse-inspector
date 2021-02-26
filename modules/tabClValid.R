@@ -234,7 +234,7 @@ clustValid <- function(input, output, session, in.dataWide) {
   
   # plot average silhouette
   plotSilhAvg <- function() {
-    cat(file = stderr(), 'plotSilhAvg: in\n')
+    cat(file = stderr(), 'clustValid:plotSilhAvg: in\n')
     
     # make the f-n dependent on the button click
     locBut = input$butPlotRel
@@ -267,7 +267,7 @@ clustValid <- function(input, output, session, in.dataWide) {
 
   # plot Ws
   plotWss <- function() {
-    cat(file = stderr(), 'plotWss: in\n')
+    cat(file = stderr(), 'clustValid:plotWss: in\n')
     
     # make the f-n dependent on the button click
     locBut = input$butPlotRel
@@ -301,7 +301,7 @@ clustValid <- function(input, output, session, in.dataWide) {
   
   # PCA visualization of partitioning methods 
   plotClPCA <- function() {
-    cat(file = stderr(), 'plotTree: in\n')
+    cat(file = stderr(), 'clustValid:plotClPCA: in\n')
     
     # make the f-n dependent on the button click
     locBut = input$butPlotInt
@@ -351,7 +351,7 @@ clustValid <- function(input, output, session, in.dataWide) {
   
   # plot dendrogram tree
   plotTree <- function() {
-    cat(file = stderr(), 'plotTree: in\n')
+    cat(file = stderr(), 'clustValid:plotTree: in\n')
     
     # make the f-n dependent on the button click
     locBut = input$butPlotInt
@@ -393,7 +393,7 @@ clustValid <- function(input, output, session, in.dataWide) {
   
   # plot silhouettes for a particular dendrogram cut
   plotSilhForCut <- function() {
-    cat(file = stderr(), 'plotSilhForCut: in\n')
+    cat(file = stderr(), 'clustValid:plotSilhForCut: in\n')
     
     # make the f-n dependent on the button click
     locBut = input$butPlotInt
