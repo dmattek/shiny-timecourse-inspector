@@ -653,27 +653,28 @@ LOCremoveOutTracks = function(inDT, inDTout, inColID, inGapLen = 0, inDeb = F) {
 # Inherit and adapt hcut function to take input from UI, used for fviz_clust
 
 LOChcut <-
-function(x,
-         k = 2,
-         isdiss = inherits(x, "dist"),
-         hc_func = "hclust",
-         hc_method = "average",
-         hc_metric = "euclidean") {
-
+  function(x,
+           k = 2,
+           isdiss = inherits(x, "dist"),
+           hc_func = "hclust",
+           hc_method = "average",
+           hc_metric = "euclidean") {
+    
     if (!inherits(x, "dist")) {
-    stop("x must be a distance matrix")
-  }
-  return(
-    factoextra::hcut(
-      x = x,
-      k = k,
-      isdiss = TRUE,
-      hc_func = hc_func,
-      hc_method = hc_method,
-      hc_metric = hc_metric
+      stop("x must be a distance matrix")
+    }
+    
+    return(
+      factoextra::hcut(
+        x = x,
+        k = k,
+        isdiss = TRUE,
+        hc_func = hc_func,
+        hc_method = hc_method,
+        hc_metric = hc_metric
+      )
     )
-  )
-}
+  }
 
 # Modified from factoextra::fviz_nbclust
 # Allow (actually enforce) x to be a distance matrix; no GAP statistics for compatibility
@@ -743,14 +744,14 @@ LOCnbclust <-
         xlab = "Number of clusters",
         main = loc.mainlab
       )
-
+      
       return(p)
     }
   }
 
 # Clustering ----
 
-# Return a dt with cell IDs and corresponding cluster assignments depending on dendrogram cut (in.k)
+# Return a dt with tracks IDs and corresponding cluster assignments depending on the sdendrogram cut (in.k)
 # This one works wth dist & hclust pair
 # For sparse hierarchical clustering use getDataClSpar
 # Arguments:
@@ -802,7 +803,11 @@ getDataClSpar = function(in.dend, in.k, in.id) {
 
 # Returns a table with 2 columns:
 # - gr.no - group numbers, e.g. cluster,
-# - gr.col - color assignments.
+# - gr.col - colour assignments.
+#
+# Used to pass the cluster-colour relationship to plotting functions
+# to keep the same colour assignments across plots.
+# Thanks to data.table, the order can be specified when selecting clusters to display in UI.
 # 
 # The number of rows is determined by dendrogram cut, parameter in.k.
 # Colours are obtained from the dendrogram, parameter in.dend, using dendextend::get_leaves_branches_col
@@ -816,6 +821,26 @@ LOCgetClCol <- function(in.dend, in.k) {
       gr.col = loc.col_labels
     )
   ))
+}
+
+## NOT USED ATM
+# Returns a named vector with:
+# colour assignments as values and cluster numbers as names.
+# Same as LOCgetClCol but returns a vector instead of a data.table
+# 
+# Vector length is determined by dendrogram cut, parameter in.k.
+# Colours are obtained from the dendrogram, parameter in.dend, using dendextend::get_leaves_branches_col
+LOCgetClColVec <- function(in.dend, in.k) {
+  loc.col_labels <- dendextend::get_leaves_branches_col(in.dend)
+  loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
+  
+  names(loc.col_labels) = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE)
+  
+  # To return unique vector elements and to keep the names
+  # via: https://stackoverflow.com/a/42714288/1898713
+  return(
+    loc.col_labels[unique(names(loc.col_labels))]
+  )
 }
 
 
@@ -1152,7 +1177,7 @@ LOCplotTrajRibbon = function(dt.arg,
   # cat("auxfunc::LOCplotTrajRibbon::col.arg\n")
   # print(col.arg)
   # cat("\n\n")
-    
+  
   p.tmp = ggplot(dt.arg, aes_string(x = x.arg, 
                                     group = group.arg))
   
@@ -1176,17 +1201,17 @@ LOCplotTrajRibbon = function(dt.arg,
   if (!is.null(dt.stim.arg)) {
     p.tmp = p.tmp + 
       geom_segment(
-      data = dt.stim.arg,
-      aes_string(
-        x = x.stim.arg[1],
-        xend = x.stim.arg[2],
-        y = y.stim.arg[1],
-        yend = y.stim.arg[2]
-      ),
-      colour = rhg_cols[[3]],
-      size = stim.bar.width.arg,
-      group = 1
-    )
+        data = dt.stim.arg,
+        aes_string(
+          x = x.stim.arg[1],
+          xend = x.stim.arg[2],
+          y = y.stim.arg[1],
+          yend = y.stim.arg[2]
+        ),
+        colour = rhg_cols[[3]],
+        size = stim.bar.width.arg,
+        group = 1
+      )
   }
   
   p.tmp = p.tmp + coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
