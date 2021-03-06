@@ -7,7 +7,7 @@
 helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected distance measure will work, ",
                                               "however PCA will not be avaliable."),
                      alertClValidNAsPresentDTW = paste0("NAs present. DTW distance measure will NOT work."),
-                    alLearnMore = paste0("<p><a href=http://www.sthda.com/english/wiki/print.php?id=241 title=\"External link\">Clustering</a> ",
+                    alLearnMore = paste0("<p><a href=http://www.sthda.com/english/wiki/print.php?id=241 target=\"_blank\" title=\"External link\">Clustering</a> ",
                                          "is an <b>unsupervised</b> machine learning method for partitioning ",
                                          "dataset into a set of groups called clusters. The procedure will return clusters ",
                                          "even if the data <b>does not</b> contain any! ",
@@ -33,7 +33,7 @@ helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected 
                                             "indicate good partitioning. The percentage of total variance carried by each PC is indicated.</p>",
                                             "<p><b>Dendrogram:</b> The height of branches indicates how well clusters are separated.</p>",
                                             "<p><b>Silhouette plot:</b> The plot indicates for each series whether it is on average closer to series within its cluster ",
-                                            "or to series in other clusters. Each bar represents the <a href=https://en.wikipedia.org/wiki/Silhouette_(clustering) title=\"External link\">silhouette score</a> ",
+                                            "or to series in other clusters. Each bar represents the <a href=https://en.wikipedia.org/wiki/Silhouette_(clustering) target=\"_blank\" title=\"External link\">silhouette score</a> ",
                                             "(Si) for one series. The height of the bars varies ",
                                             "between 1 (the series is much closer to series in its cluster) and -1 (the series is much closer to series in an other cluster). ",
                                             "Hence, large positive values of Si are usually associated with better clustering, while negative values are associated with worse clustering.")
