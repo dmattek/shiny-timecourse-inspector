@@ -108,7 +108,9 @@ downPlot <- function(input, output, session, in.fname, in.plot, in.gg = FALSE) {
   # Download rendered plot
   output$downPlot <- downloadHandler(
     filename = function() {
-      cat(in.fname(), "\n")
+      if (DEB) {
+        cat(sprintf("Saving plot to %s\n", in.fname()))
+      }
       in.fname()
     },
     
