@@ -8,47 +8,73 @@
 # - a table with track IDs matched to clusters
 # - a table with clusters matched to colours
 
+
+## Help text ----
+helpText.pca = c(alLearnMore = paste0("<p>Display first two <a href=https://en.wikipedia.org/wiki/Principal_component_analysis target=\"_blank\" title=\"External link\">principal components</a> ",
+                                          "coloured by clusters.<p>"))
+                     
+
 # UI ----
 modPCAplotUI =  function(id, label = "Plot PCA.") {
   ns <- NS(id)
   
   tagList(
-    fluidRow(
-      column(
-        3,
-        checkboxInput(ns('chBplotPCAint'), 'Interactive Plot'),
-        actionButton(ns('butPlot'), 'Plot!')
-      ),
-      column(
-        2,
-        numericInput(
-          ns('inPlotPCAwidth'),
-          'Width [%]',
-          value = 100,
-          min = 10,
-          width = '100px',
-          step = 5
+    actionLink(ns("alLearnMore"), "Learn more"),
+    checkboxInput(ns('chBplotStyle'),
+                  'Adjust plot appearance',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBplotStyle",
+      ns = ns,
+      fluidRow(
+        column(
+          2,
+          numericInput(
+            ns('inPlotPCAwidth'),
+            'Width [%]',
+            value = 100,
+            min = 10,
+            width = '100px',
+            step = 5
+          )
+        ),
+        column(
+          2,
+          numericInput(
+            ns('inPlotPCAheight'),
+            'Height [px]',
+            value = PLOTPSDHEIGHT,
+            min = 100,
+            width = '100px',
+            step = 50
+          )
         )
-      ),
-      column(
-        2,
-        numericInput(
-          ns('inPlotPCAheight'),
-          'Height [px]',
-          value = PLOTPSDHEIGHT,
-          min = 100,
-          width = '100px',
-          step = 50
-        )
-      )
+      )),
+    
+    checkboxInput(ns('chBplotPCAint'), 'Interactive Plot'),
+
+    checkboxInput(ns('chBdownload'),
+                  'Download plot or data',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBdownload",
+      ns = ns,
+      
+      downCsvUI(ns('downDataPCA'), ""),
+      downPlotUI(ns('downPlotPCA'), "")
     ),
-    uiOutput(ns('uiPlotPCA')),
-    downPlotUI(ns('downPlotPCA'), "Download Plot")
+    
+    #actionButton(ns('butPlot'), 'Plot!'),
+    uiOutput(ns('uiPlotPCA'))
   )
 }
 
 # Server ----
-
+# Requires:
+# in.dataWide - data as a matrix in wide format for prcomp
+# in.idWithCl - a table with track IDs matched to clusters
+# in.clWithCol- a table with clusters matched to colours
+# in.fname - filename generating function, clustHier::createFnamePCAplot
 modPCAplot = function(input, output, session, 
                       in.dataWide,
                       in.idWithCl,
@@ -63,7 +89,7 @@ modPCAplot = function(input, output, session,
   
   ## Processing ----
   
-  # Caclulate PCA
+  # Calculate PCA
   # Return a list with a data.table with 3 columns (PC1, PC2, id)
   # and the percentage of explained variance
   calcPCA <- reactive({
@@ -169,7 +195,11 @@ modPCAplot = function(input, output, session,
     return(plotly_build(loc.p))
   })
   
-  
+  # PCA data - download CSV
+  callModule(downCsv, "downDataPCA", 
+             in.fname = "pca.csv",
+             calcPCA()$pcaDT)
+    
   # PCA plot - download pdf
   callModule(downPlot, "downPlotPCA", 
              in.fname = in.fname,
@@ -180,7 +210,7 @@ modPCAplot = function(input, output, session,
     cat(file = stderr(), 'trajPCAplot:plotClPCA: in\n')
     
     # make the f-n dependent on the button click
-    locBut = input$butPlot
+    # locBut = input$butPlot
     
     # until clicking the Plot button
     locPCAres = calcPCA()
@@ -246,4 +276,12 @@ modPCAplot = function(input, output, session,
     
     return(locP)
   }
+  
+  # Pop-overs ----
+  addPopover(session, 
+             ns("alLearnMore"),
+             title = "Principal Component Analysis",
+             content = helpText.pca[["alLearnMore"]],
+             trigger = "click")
+  
 }
