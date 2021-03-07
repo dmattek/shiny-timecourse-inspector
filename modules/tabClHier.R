@@ -84,13 +84,16 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
                round = TRUE
              ),
              
-             # These two lines are to manually assign colours to clusters; it doesn't really work well, so skip
-             # NOT USED AT THE MOMENT!
-             #checkboxInput(ns('chBPlotHierClAss'), 'Manually assign cluster colours'),
-             #uiOutput(ns('uiPlotHierClAss')),
-             
-             checkboxInput(ns('chBPlotHierClSel'), 'Manually select clusters to display'),
+             checkboxInput(ns('chBPlotHierClSel'), 'Select clusters to display'),
              uiOutput(ns('uiPlotHierClSel')),
+      ),
+      column(3,
+             selectInput(
+               ns("selectPlotHierPaletteDend"),
+               label = "Cluster colour palette",
+               choices = l.col.pal.dend.2,
+               selected = 'Color Blind'
+             ),
              
              downloadButton(ns('downCellCl'), 'Cluster assignments'),
              bsTooltip(ns("downCellCl"),
@@ -98,6 +101,7 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
                        placement = "top",
                        trigger = "hover",
                        options = NULL),
+             br(),
              
              downloadButton(ns('downDend'), 'Dendrogram object'),
              bsTooltip(ns("downDend"),
@@ -105,102 +109,16 @@ clustHierUI <- function(id, label = "Hierarchical Clustering") {
                        placement = "top",
                        trigger = "hover",
                        options = NULL)
-      ),
-      column(3,
-             selectInput(
-               ns("selectPlotHierPaletteDend"),
-               label = "Dendrogram\'s colour palette",
-               choices = l.col.pal.dend.2,
-               selected = 'Color Blind'
-             )
       )
     ),
     
     br(),
     
     tabsetPanel(
+      
       tabPanel('Heatmap',
                br(),
-               fluidRow(
-                 column(3,
-                        selectInput(
-                          ns("selectPlotHierPalette"),
-                          label = "Heatmap\'s colour palette",
-                          choices = l.col.pal,
-                          selected = 'Spectral'
-                        ),
-                        checkboxInput(ns('inPlotHierRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
-                        checkboxInput(ns('selectPlotHierKey'), 'Plot colour key', TRUE),
-                        checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
-                        
-                        fluidRow(
-                          column(5,
-                                 uiOutput(ns('uiSetColBoundsLow'))
-                          ),
-                          column(5,
-                                 uiOutput(ns('uiSetColBoundsHigh'))
-                          )
-                        )
-                 ),
-                 column(3,
-                        sliderInput(
-                          ns('inPlotHierNAcolor'),
-                          'Shade of grey for NA values',
-                          min = 0,
-                          max = 1,
-                          value = 0.8,
-                          step = .1,
-                          ticks = TRUE
-                        ),
-                        checkboxInput(ns('selectPlotHierDend'), 'Plot dendrogram and re-order samples', TRUE)
-                 ),
-                 column(3,
-                        numericInput(
-                          ns('inPlotHierMarginX'),
-                          'Bottom margin',
-                          5,
-                          min = 1,
-                          width = "120px"
-                        ),
-                        numericInput(
-                          ns('inPlotHierFontY'),
-                          'Font size column labels',
-                          1,
-                          min = 0,
-                          width = "180px",
-                          step = 0.1
-                        ),
-                        numericInput(ns('inPlotHierHeatMapHeight'), 
-                                     'Display plot height [px]', 
-                                     value = 600, 
-                                     min = 100,
-                                     step = 50,
-                                     width = "180px")
-                        
-                 ),
-                 column(3,
-                        numericInput(
-                          ns('inPlotHierMarginY'),
-                          'Right margin',
-                          20,
-                          min = 1,
-                          width = "120px"
-                        ),
-                        numericInput(
-                          ns('inPlotHierFontX'),
-                          'Font size row labels',
-                          1,
-                          min = 0,
-                          width = "180px",
-                          step = 0.1
-                        )
-                 )
-               ),
-               
-               actionButton(ns('butPlotHierHeatMap'), 'Plot!'),
-               downPlotUI(ns('downPlotHier'), "Download Plot"),
-               withSpinner(plotOutput(ns('outPlotHier')))
-      ),
+               modPlotHeatmapUI(ns('modPlotHeatmap'))),
       
       tabPanel('Cluster averages',
                br(),
@@ -237,16 +155,6 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     return(input$slPlotHierNclust)
   }) %>% debounce(MILLIS)
   
-  # not functional; see th note in UI
-  output$uiPlotHierClAss = renderUI({
-    
-    if(input$chBPlotHierClAss) {
-      selectInput(ns('inPlotHierClAss'), 'Assign cluster order', 
-                  choices = seq(1, returnNclust(), 1),
-                  multiple = TRUE, 
-                  selected = seq(1, returnNclust(), 1))
-    }
-  })
   
   output$uiPlotHierClSel = renderUI({
     
@@ -258,44 +166,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     }
   })
   
-  
-  
-  # UI for setting lower and upper bounds for heat map colour scale  
-  output$uiSetColBoundsLow = renderUI({
-    
-    if(input$chBsetColBounds) {
-      
-      loc.dt = in.dataLong()
-      if (is.null(loc.dt))
-        return(NULL)
-      
-      numericInput(
-        ns('inSetColBoundsLow'),
-        label = 'Lower',
-        step = 0.1, 
-        value = signif(min(loc.dt[['y']], na.rm = T), digits = 3)
-      )
-    }
-  })
-  
-  
-  output$uiSetColBoundsHigh = renderUI({
-    
-    if(input$chBsetColBounds) {
-      
-      loc.dt = in.dataLong()
-      if (is.null(loc.dt))
-        return(NULL)
-      
-      numericInput(
-        ns('inSetColBoundsHigh'),
-        label = 'Upper',
-        step = 0.1, 
-        value = signif(max(loc.dt[['y']], na.rm = T), digits = 3)
-      )
-    }
-  })
-  
+
   ## Processing ----
   
   # calculate distance matrix for further clustering
@@ -383,19 +254,13 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     if (is.null(loc.cl.hc)) {
       return(NULL)
     }
-
+    
     # number of clusters at which dendrogram is cut
     loc.k = returnNclust()
     
     # make a palette with the amount of colours equal to the number of clusters
     #loc.col = get(input$selectPlotHierPaletteDend)(n = loc.k)
     loc.col = ggthemes::tableau_color_pal(input$selectPlotHierPaletteDend)(n = loc.k)
-    
-    # take into account manual assignment of cluster numbers
-    # NOT USED AT THE MOMENT
-    #if (input$chBPlotHierClAss) {
-    #  loc.col = loc.col[as.numeric(input$inPlotHierClAss)]
-    #}
     
     loc.dend <- as.dendrogram(loc.cl.hc)
     loc.dend <- dendextend::color_branches(loc.dend, 
@@ -416,7 +281,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     loc.dend = calcDendCutColor()
     if (is.null(loc.dend))
       return(NULL)
-
+    
     # obtain relations between cluster and colors from the dendrogram
     loc.dt = LOCgetClCol(loc.dend, returnNclust())
     
@@ -427,7 +292,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
       loc.dt = loc.dt[gr.no %in% input$inPlotHierClSel]
       loc.dt[, gr.no := factor(gr.no, levels = input$inPlotHierClSel)]
     }
-
+    
     # set the key to allow sub-setting
     setkey(loc.dt, gr.no)
     
@@ -482,7 +347,7 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     }
     
     cat(file = stderr(), 'dataClWithCol: dt not NULL\n')
-
+    
     # Display clusters specified in the inPlotHierClSel field
     # Data is ordered according to the order of clusters specified in this field
     if(input$chBPlotHierClSel) {
@@ -513,6 +378,14 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     
     # get cellIDs with cluster assignments based on dendrogram cut
     loc.dt.cl = getDataCl(calcDendCutColor(), returnNclust())
+    
+    if (is.null(loc.dt.cl)) {
+      cat(file = stderr(), 'data4trajPlotCl: dt.cl is NULL\n')
+      
+      return(NULL)
+    }
+
+    cat(file = stderr(), 'data4trajPlotCl: dt.cl not NULL\n')
     
     # add the column with cluster assignemnt to the main dataset
     loc.dt = merge(loc.dt, loc.dt.cl, by = COLID)
@@ -613,81 +486,9 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
     
   })
   
-  ## Plot ----
-  
-  # Function instead of reactive as per:
-  # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
-  # This function is used to plot and to downoad a pdf
-  plotHier <- function() {
-    cat(file = stderr(), 'plotHier: in\n')
-    
-    # make the f-n dependent on the button click
-    locBut = input$butPlotHierHeatMap
-    
-    # Check if main data exists
-    # Thanks to isolate all mods in the left panel are delayed 
-    # until clicking the Plot button
-    loc.dm = shiny::isolate(in.dataWide())
-    loc.dend = shiny::isolate(calcDendCutColor())
-    
-    shiny::validate(
-      shiny::need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
-      shiny::need(!is.null(loc.dend), "Could not create dendrogram")
-    )
-    
-    # Dummy dependency to redraw the heatmap without clicking Plot
-    # when changing the number of clusters to highlight
-    loc.k = returnNclust()
-    
-    loc.col.bounds = NULL
-    if (input$chBsetColBounds)
-      loc.col.bounds = c(input$inSetColBoundsLow, 
-                         input$inSetColBoundsHigh)
-    else 
-      loc.col.bounds = NULL
-    
-    
-    loc.p = LOCplotHeatmap(loc.dm,
-                           loc.dend, 
-                           palette.arg = input$selectPlotHierPalette, 
-                           palette.rev.arg = input$inPlotHierRevPalette, 
-                           dend.show.arg = input$selectPlotHierDend, 
-                           key.show.arg = input$selectPlotHierKey, 
-                           margin.x.arg = input$inPlotHierMarginX, 
-                           margin.y.arg = input$inPlotHierMarginY, 
-                           nacol.arg = input$inPlotHierNAcolor, 
-                           font.row.arg = input$inPlotHierFontX, 
-                           font.col.arg = input$inPlotHierFontY, 
-                           breaks.arg = loc.col.bounds,
-                           title.arg = paste0(
-                             "Distance measure: ",
-                             input$selectPlotHierDiss,
-                             "\nLinkage method: ",
-                             input$selectPlotHierLinkage
-                           ))
-    
-    return(loc.p)
-  }
-  
-  
-  
-  #  Hierarchical - display heatmap
-  getPlotHierHeatMapHeight <- function() {
-    return (input$inPlotHierHeatMapHeight)
-  }
-  
-  output$outPlotHier <- renderPlot({
-    
-    plotHier()
-  }, height = getPlotHierHeatMapHeight)
-  
-  createFnameHeatMap = reactive({
-    
-    paste0('clust_hier_heatMap_',
-           input$selectPlotHierDiss,
-           '_',
-           input$selectPlotHierLinkage,
-           '.png')
+  createClustMethList = reactive({
+    return(list(diss = input$selectPlotHierDiss,
+                link = input$selectPlotHierLinkage))
   })
   
   createFnameTrajPlot = reactive({
@@ -735,11 +536,17 @@ clustHier <- function(input, output, session, in.dataWide, in.dataLong, in.dataS
            '.pdf')
   })
   
+  
+  
   ## Modules ----
+
+  # heatmap plot module 
+  callModule(modPlotHeatmap, 'modPlotHeatmap', 
+             inDataWide = in.dataWide, 
+             inDend = calcDendCutColor,
+             inMeth = createClustMethList)
   
-  #  Hierarchical - Heat Map - download pdf
-  callModule(downPlot, "downPlotHier", createFnameHeatMap, plotHier)
-  
+    
   # plot individual trajectories within clusters  
   callModule(modTrajPlot, 'modPlotHierTraj', 
              in.data = data4trajPlotCl, 
