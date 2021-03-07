@@ -21,11 +21,12 @@ modPCAplotUI =  function(id, label = "Plot PCA.") {
   tagList(
     actionLink(ns("alLearnMore"), "Learn more"),
     checkboxInput(ns('chBplotStyle'),
-                  'Adjust plot appearance',
+                  'Appearance',
                   FALSE),
     conditionalPanel(
       condition = "input.chBplotStyle",
       ns = ns,
+      
       fluidRow(
         column(
           2,
@@ -51,10 +52,8 @@ modPCAplotUI =  function(id, label = "Plot PCA.") {
         )
       )),
     
-    checkboxInput(ns('chBplotPCAint'), 'Interactive Plot'),
-
     checkboxInput(ns('chBdownload'),
-                  'Download plot or data',
+                  'Download',
                   FALSE),
     conditionalPanel(
       condition = "input.chBdownload",
@@ -64,6 +63,7 @@ modPCAplotUI =  function(id, label = "Plot PCA.") {
       downPlotUI(ns('downPlotPCA'), "")
     ),
     
+    checkboxInput(ns('chBplotPCAint'), 'Interactive'),
     #actionButton(ns('butPlot'), 'Plot!'),
     uiOutput(ns('uiPlotPCA'))
   )
