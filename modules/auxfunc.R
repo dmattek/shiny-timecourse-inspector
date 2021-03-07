@@ -758,13 +758,25 @@ LOCnbclust <-
 # in.dend  - dendrogram; usually output from as.dendrogram(hclust(distance_matrix))
 # in.k - level at which dendrogram should be cut
 
-getDataCl = function(in.dend, in.k) {
-  cat(file = stderr(), 'getDataCl \n')
+getDataCl = function(in.dend, in.k, in.deb = T) {
+  if (in.deb) {
+    cat(file = stderr(), 'getDataCl \n')
+  }
+
+  if (is.null(in.dend)) {
+    if (in.deb) {
+      cat(file = stderr(), 'getDataCl: in.dend is NULL \n')
+    }
+    
+    return(NULL)
+  } 
   
-  loc.clAssign = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE, )
+  loc.clAssign = dendextend::cutree(in.dend, 
+                                    in.k, 
+                                    order_clusters_as_data = TRUE, )
   #print(loc.m)
   
-  # The result of cutree containes named vector with names being cell id's
+  # The result of cutree contains named vector with names being cell id's
   # THIS WON'T WORK with sparse hierarchical clustering because there, the dendrogram doesn't have original id's
   loc.dt.clAssign = as.data.table(loc.clAssign, keep.rownames = T)
   setnames(loc.dt.clAssign, c(COLID, COLCL))
