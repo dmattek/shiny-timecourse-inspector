@@ -372,7 +372,7 @@ shinyServer(function(input, output, session) {
       tagList(
       radioButtons(
         'rBnormMeth',
-        label = 'Select method',
+        label = 'Method',
         choices = list('fold-change' = 'mean', 'z-score' = 'z.score'),
         width = "40%"
       ),
@@ -440,7 +440,7 @@ shinyServer(function(input, output, session) {
     if (input$chBnorm) {
       tagList(
       radioButtons('chBnormGroup',
-                   label = 'Normalisation grouping',
+                   label = 'Grouping',
                    choices = list('Entire dataset' = 'none', 'Per group' = 'group', 'Per trajectory' = 'id'), 
                    width = "40%"),
       bsTooltip('chBnormGroup', helpText.server[["chBnormGroup"]], placement = "top", trigger = "hover", options = NULL)
@@ -832,6 +832,12 @@ shinyServer(function(input, output, session) {
     loc.dt = dataLongNoOut()
     if (is.null(loc.dt))
       return(NULL)
+    
+    if (nrow(loc.dt) < 1)
+      return(NULL)
+    
+    if (DEB)
+      cat(file = stdout(), 'server:dataWide: dt not NULL\n')
     
     # convert from long to wide format
     loc.dt.wide = dcast(loc.dt, 
