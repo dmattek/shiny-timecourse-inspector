@@ -16,17 +16,8 @@ tabDistPlotUI =  function(id, label = "Snapshots at time points") {
     br(),
     
     uiOutput(ns('varSelTpts')),
-    
-    # This is an experimental feature to re-normalise data points with respect to a selected time point
-    # Current implementation is limited; in the future slider should be replaced by an input field or a choice list.
-    # currenlty, if the selected time point is larger than the smallest time point for snapshot plotting, error appears.
-    #checkboxInput(ns('chBfoldCh'), 'Fold change w.r.t. t-point:'),
-    #uiOutput(ns('uiSlFoldChTp')),
-    
-    modStatsUI(ns('dispStats')),
-    br(),
-   
-    modDistPlotUI(ns('distPlot')) 
+    modDistPlotUI(ns('distPlot')),
+    modStatsUI(ns('dispStats'))
   )
 }
 
@@ -79,22 +70,7 @@ tabDistPlot = function(input, output, session, in.data, in.fname) {
     if (is.null(loc.dt))
       return(NULL)
 
-    # This is part of re-nromalisation with respect to a time point.
-    # Test version here; works but needs improvements; see UI section
-    # if(input$chBfoldCh) {
-    #   out.dt = loc.dt[get(COLRT) %in% input$inSelTpts]
-    #   loc.dt.aux = loc.dt[get(COLRT) %in% c(as.numeric(input$inSelTpts) - input$slFoldChTp)]
-    #   loc.y.prev = loc.dt.aux[, y]
-    # 
-    #   out.dt[, y.prev := loc.y.prev]
-    # 
-    #   out.dt[, y := abs(y / y.prev)]
-    # 
-    #   out.dt[, y.prev := NULL]
-    # 
-    # } else
-      out.dt = loc.dt[get(COLRT) %in% input$inSelTpts]
-    
+    out.dt = loc.dt[get(COLRT) %in% input$inSelTpts]
     
     return(out.dt)
   })

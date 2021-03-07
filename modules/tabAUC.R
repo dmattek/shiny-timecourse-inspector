@@ -21,13 +21,10 @@ tabAUCplotUI =  function(id, label = "Plot Area Under Curves") {
     ),
     actionLink(ns("alAUC"), "Learn more"),
     br(),
-    br(),
     
     uiOutput(ns('uiSlTimeTrim')),
-    modStatsUI(ns('dispStats')),
-    br(),
-    modAUCplotUI(ns('aucPlot')
-    )
+    modAUCplotUI(ns('aucPlot')),
+    modStatsUI(ns('dispStats'))
   )
 }
 
