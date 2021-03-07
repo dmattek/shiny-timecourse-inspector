@@ -91,50 +91,72 @@ tabScatterPlotUI <-
             trigger = "hover",
             options = NULL
           )
-        ),
-        column(
-          4,
-          numericInput(
-            ns('inPlotHeight'),
-            'Height [px]',
-            value = PLOTSCATTERHEIGHT,
-            min = 100,
-            step = 100,
-            width = "100px"
+        )
+      ),
+      
+      checkboxInput(ns('chBplotStyle'),
+                    'Appearance',
+                    FALSE),
+      
+      conditionalPanel(
+        condition = "input.chBplotStyle",
+        ns = ns,
+        
+        fluidRow(
+          column(4,
+                 numericInput(
+                   ns('inPlotHeight'),
+                   'Height [px]',
+                   value = PLOTSCATTERHEIGHT,
+                   min = 100,
+                   step = 100,
+                   width = "100px"
+                 ),
+                 bsTooltip(
+                   ns('inPlotHeight'),
+                   helpText.tabScatter[["inPlotHeight"]],
+                   placement = "top",
+                   trigger = "hover",
+                   options = NULL
+                 )
           ),
-          bsTooltip(
-            ns('inPlotHeight'),
-            helpText.tabScatter[["inPlotHeight"]],
-            placement = "top",
-            trigger = "hover",
-            options = NULL
-          ),
-          
-          numericInput(
-            ns('inPlotNcolFacet'),
-            '#columns',
-            value = PLOTNFACETDEFAULT,
-            min = 1,
-            step = 1,
-            width = "100px"
-          ),
-          bsTooltip(
-            ns('inPlotNcolFacet'),
-            helpText.tabScatter[["inPlotNcolFacet"]],
-            placement = "top",
-            trigger = "hover",
-            options = NULL
+          column(4,
+                 numericInput(
+                   ns('inPlotNcolFacet'),
+                   '#columns',
+                   value = PLOTNFACETDEFAULT,
+                   min = 1,
+                   step = 1,
+                   width = "100px"
+                 ),
+                 bsTooltip(
+                   ns('inPlotNcolFacet'),
+                   helpText.tabScatter[["inPlotNcolFacet"]],
+                   placement = "top",
+                   trigger = "hover",
+                   options = NULL
+                 )
           )
         )
       ),
       
-      br(),
-      checkboxInput(ns('plotInt'),
-                    'Interactive Plot',
-                    value = FALSE),
-      actionButton(ns('butPlot'), 'Plot!'),
+      checkboxInput(ns('chBdownload'),
+                    'Download',
+                    FALSE),
+      conditionalPanel(
+        condition = "input.chBdownload",
+        ns = ns,
+        
+        downPlotUI(ns('downPlotScatter'), "Download")
+      ),
+      
+      fluidRow(
+        column(2,
+               actionButton(ns('butPlot'), 'Plot!')),
+        column(2,
+               checkboxInput(ns('plotInt'), 'Interactive'))),
+      
       uiOutput(ns("plotInt_ui")),
-      downPlotUI(ns('downPlotScatter'), "Download Plot")
     )
   }
 

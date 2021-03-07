@@ -10,66 +10,85 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)
   
   tagList(
-    fluidRow(
-      column(
-        3,
-        radioButtons(ns('rBlegendPos'), 'Legend', list('top' = 'top', 'right' = 'right')),
-        checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
-        actionButton(ns('butPlotTraj'), 'Plot!')
-      ),
-      column(
-        2,
-        radioButtons(ns('rBPlotTrajStat'), 'Display', list('Mean only' = 'Mean',
-                                                            'Add 95% CI' = 'CI', 
-                                                            'Add SE' = 'SE'))
-      ),
-      column(
-        3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point', min = 1, max = 10, value = 1, step = 1),
-        
-        checkboxInput(ns('chBsetXbounds'), 'Bounds for X', FALSE),
-        fluidRow(
-          column(6,
-                 uiOutput(ns('uiSetXboundsLow'))
-          ),
-          column(6,
-                 uiOutput(ns('uiSetXboundsHigh'))
-          )),
-        
-        checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
-        fluidRow(
-          column(6,
-                 uiOutput(ns('uiSetYboundsLow'))
-          ),
-          column(6,
-                 uiOutput(ns('uiSetYboundsHigh'))
-          ))
-      ),
-      column(
-        2,
-        numericInput(
-          ns('inPlotTrajWidth'),
-          'Width [%]',
-          value = PLOTWIDTH,
-          min = 10,
-          width = '100px',
-          step = 5
+    checkboxInput(ns('chBplotStyle'),
+                  'Appearance',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBplotStyle",
+      ns = ns,
+      fluidRow(
+        column(
+          3,
+          radioButtons(ns('rBlegendPos'), 'Legend', list('top' = 'top', 'right' = 'right'))
         ),
-        numericInput(
-          ns('inPlotTrajHeight'),
-          'Height [px]',
-          value = PLOTRIBBONHEIGHT,
-          min = 100,
-          width = '100px',
-          step = 50
+        column(
+          2,
+          radioButtons(ns('rBPlotTrajStat'), 'Display', list('Mean only' = 'Mean',
+                                                             'Add 95% CI' = 'CI', 
+                                                             'Add SE' = 'SE'))
+        ),
+        column(
+          3,
+          sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point', min = 1, max = 10, value = 1, step = 1),
+          
+          checkboxInput(ns('chBsetXbounds'), 'Bounds for X', FALSE),
+          fluidRow(
+            column(6,
+                   uiOutput(ns('uiSetXboundsLow'))
+            ),
+            column(6,
+                   uiOutput(ns('uiSetXboundsHigh'))
+            )),
+          
+          checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
+          fluidRow(
+            column(6,
+                   uiOutput(ns('uiSetYboundsLow'))
+            ),
+            column(6,
+                   uiOutput(ns('uiSetYboundsHigh'))
+            ))
+        ),
+        column(
+          2,
+          numericInput(
+            ns('inPlotTrajWidth'),
+            'Width [%]',
+            value = PLOTWIDTH,
+            min = 10,
+            width = '100px',
+            step = 5
+          ),
+          numericInput(
+            ns('inPlotTrajHeight'),
+            'Height [px]',
+            value = PLOTRIBBONHEIGHT,
+            min = 100,
+            width = '100px',
+            step = 50
+          )
         )
       )
     ),
+    
+    checkboxInput(ns('chBdownload'),
+                  'Download',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBdownload",
+      ns = ns,
+      
+      downPlotUI(ns('downPlotTraj'), "")
+    ),
+    
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlotTraj'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
     uiOutput(ns('uiPlotTraj')),
-    br(),
-    modTrackStatsUI(ns('dispTrackStats')),
-    br(),
-    downPlotUI(ns('downPlotTraj'), "Download Plot")
+    
+    modTrackStatsUI(ns('dispTrackStats'))
   )
 }
 
@@ -195,11 +214,11 @@ modTrajRibbonPlot = function(input, output, session,
   
   output$uiPlotTraj = renderUI({
     if (input$chBplotTrajInt)
-       plotlyOutput(
-       ns("outPlotTrajInt"),
-       width = paste0(input$inPlotTrajWidth, '%'),
-       height = paste0(input$inPlotTrajHeight, 'px')
-    ) else
+      plotlyOutput(
+        ns("outPlotTrajInt"),
+        width = paste0(input$inPlotTrajWidth, '%'),
+        height = paste0(input$inPlotTrajHeight, 'px')
+      ) else
         plotOutput(
           ns("outPlotTraj"),
           width = paste0(input$inPlotTrajWidth, '%'),
@@ -308,7 +327,7 @@ modTrajRibbonPlot = function(input, output, session,
       # Use externally provided translation between groups/clusters and colors
       # Subset group-colour assignments with existing groups
       loc.group.color = in.group.color()[loc.groups][["gr.col"]]
-     
+      
       # IMPORTANT!!!
       # The vector with colours has to be named according to cluster numbers,
       # otherwise the manual colour assignment in scale_colour_manual won't match!
@@ -345,7 +364,7 @@ modTrajRibbonPlot = function(input, output, session,
     
     # set the grouing column to a factor (for plotting)
     loc.dt.aggr[, (in.group) := as.factor(get(in.group))]
-
+    
     # setting bounds for displaying of x and y axes
     loc.xlim.arg = NULL
     if(input$chBsetXbounds) {
@@ -358,18 +377,18 @@ modTrajRibbonPlot = function(input, output, session,
     } 
     
     p.out = LOCplotTrajRibbon(dt.arg = loc.dt.aggr, 
-                           x.arg = COLRT, 
-                           y.arg = 'Mean',
-                           col.arg = loc.group.color,
-                           group.arg = in.group,
-                           dt.stim.arg = loc.dt.stim,
-                           x.stim.arg = c('tstart', 'tend'),
-                           y.stim.arg = c('ystart', 'yend'), 
-                           ribbon.lohi.arg = loc.ribbon.lohi,
-                           xlim.arg = loc.xlim.arg,
-                           ylim.arg = loc.ylim.arg,
-                           xlab.arg = 'Time',
-                           ylab.arg = '') +
+                              x.arg = COLRT, 
+                              y.arg = 'Mean',
+                              col.arg = loc.group.color,
+                              group.arg = in.group,
+                              dt.stim.arg = loc.dt.stim,
+                              x.stim.arg = c('tstart', 'tend'),
+                              y.stim.arg = c('ystart', 'yend'), 
+                              ribbon.lohi.arg = loc.ribbon.lohi,
+                              xlim.arg = loc.xlim.arg,
+                              ylim.arg = loc.ylim.arg,
+                              xlab.arg = 'Time',
+                              ylab.arg = '') +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 

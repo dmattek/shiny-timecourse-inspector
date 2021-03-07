@@ -10,53 +10,74 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
   ns <- NS(id)
   
   tagList(
-    fluidRow(
-      column(
-        3,
-        radioButtons(ns('rBPSDmethod'), 'Method for PSD estimation:', list('Smoothed Fourier' = 'pgram', 'AR Fit' = 'ar')),
-        checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
-        actionButton(ns('butPlotTraj'), 'Plot!')
-      ),
-      column(
-        2,
-        selectInput(ns('inPSDxchoice'), 'X-axis', list('Period'= TRUE, 'Frequency'= FALSE)),
-        numericInput(ns('ninPSDsamplFreq'), 'Time units between 2 points:', value = 1, min = 0, step = 1)
-      ),
-      column(
-        2,
-        selectInput(ns('inPSDtransXtype'), 'Transform X', list('none' = 'none',
-                                                                   '1/x'='inverse_trans', 
-                                                                   'log2'= 'log2', 
-                                                                   'log10'= 'log10', 
-                                                                   'ln'= 'log')),
-        selectInput(ns('inPSDtransYtype'), 'Transform Y', list('none' = 'none',
-                                                                   '1/y'='inverse_trans', 
-                                                                   'log2'= 'log2', 
-                                                                   'log10'= 'log10', 
-                                                                   'ln'= 'log'))
-      ),
-      column(
-        2,
-        numericInput(
-          ns('inPlotTrajWidth'),
-          'Width [%]',
-          value = 100,
-          min = 10,
-          width = '100px',
-          step = 5
+    checkboxInput(ns('chBplotStyle'),
+                  'Appearance',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBplotStyle",
+      ns = ns,
+      
+      fluidRow(
+        column(
+          3,
+          radioButtons(ns('rBPSDmethod'), 'Method for PSD estimation:', list('Smoothed Fourier' = 'pgram', 'AR Fit' = 'ar'))
         ),
-        numericInput(
-          ns('inPlotTrajHeight'),
-          'Height [px]',
-          value = PLOTPSDHEIGHT,
-          min = 100,
-          width = '100px',
-          step = 50
+        column(
+          2,
+          selectInput(ns('inPSDxchoice'), 'X-axis', list('Period'= TRUE, 'Frequency'= FALSE)),
+          numericInput(ns('ninPSDsamplFreq'), 'Time units between 2 points:', value = 1, min = 0, step = 1)
+        ),
+        column(
+          2,
+          selectInput(ns('inPSDtransXtype'), 'Transform X', list('none' = 'none',
+                                                                 '1/x'='inverse_trans', 
+                                                                 'log2'= 'log2', 
+                                                                 'log10'= 'log10', 
+                                                                 'ln'= 'log')),
+          selectInput(ns('inPSDtransYtype'), 'Transform Y', list('none' = 'none',
+                                                                 '1/y'='inverse_trans', 
+                                                                 'log2'= 'log2', 
+                                                                 'log10'= 'log10', 
+                                                                 'ln'= 'log'))
+        ),
+        column(
+          2,
+          numericInput(
+            ns('inPlotTrajWidth'),
+            'Width [%]',
+            value = 100,
+            min = 10,
+            width = '100px',
+            step = 5
+          ),
+          numericInput(
+            ns('inPlotTrajHeight'),
+            'Height [px]',
+            value = PLOTPSDHEIGHT,
+            min = 100,
+            width = '100px',
+            step = 50
+          )
         )
       )
     ),
-    uiOutput(ns('uiPlotTraj')),
-    downPlotUI(ns('downPlotTraj'), "Download Plot")
+    
+    checkboxInput(ns('chBdownload'),
+                  'Download',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBdownload",
+      ns = ns,
+      
+      downPlotUI(ns('downPlotTraj'), "")
+    ),
+    
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlotTraj'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotTraj'))
   )
 }
 

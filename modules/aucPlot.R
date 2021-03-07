@@ -17,46 +17,108 @@ modAUCplotUI =  function(id, label = "Plot AUC distributions") {
     fluidRow(
       column(
         4,
-        checkboxInput(ns("chBPlotTypeBox"),  "Box-plot", value = T),
-        checkboxInput(ns("chBPlotTypeDot"),  "Dot-plot", value = F),
-        checkboxInput(ns("chBPlotTypeViol"), "Violin-plot", value = F),
-        checkboxInput(ns('chBPlotInt'), 'Interactive Plot'),
-        actionButton(ns('butPlot'), 'Plot!')
+        checkboxInput(ns("chBplotTypeBox"),  "Box-plot", value = T),
+        checkboxInput(ns("chBplotTypeDot"),  "Dot-plot", value = F),
+        checkboxInput(ns("chBplotTypeViol"), "Violin-plot", value = F)
       ),
-      column(
-        4,
-        uiOutput(ns('uiPlotBoxNotches')),
-        uiOutput(ns('uiPlotBoxOutliers')),
-        uiOutput(ns('uiPlotDotNbins')),
-        uiOutput(ns('uiPlotDotShade'))
-      ),
-      column(
-        4,
-        radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
-                     c("horizontal" = 0,
-                       "45 deg" = 45,
-                       "90 deg" = 90)),
-        numericInput(
-          ns('inPlotBoxWidth'),
-          'Width [%]',
-          value = PLOTWIDTH,
-          min = 10,
-          width = '100px',
-          step = 10
-        ),
-        numericInput(
-          ns('inPlotBoxHeight'),
-          'Height [px]',
-          value = PLOTBOXHEIGHT,
-          min = 100,
-          width = '100px',
-          step = 50
+      
+      column(4,
+             conditionalPanel(
+               condition = "input.chBplotTypeBox",
+               ns = ns,
+               
+               checkboxInput(ns('chBplotBoxNotches'), 
+                             'Notches in box-plot ', 
+                             FALSE),
+               checkboxInput(ns('chBplotBoxOutliers'), 
+                             'Outliers in box-plot', 
+                             FALSE)
+             ),
+             
+             conditionalPanel(
+               condition = "input.chBplotTypeDot",
+               ns = ns,
+               
+               sliderInput(ns('slPlotDotNbins'), 
+                           'Number of bins in dot-plot', 
+                           min = 2, 
+                           max = 50, 
+                           value = 30, 
+                           step = 1),
+               sliderInput(ns('slPlotDotShade'), 
+                           "Shade of grey in dot-plot", 
+                           min = 0, 
+                           max = 1, 
+                           value = 0.5, 
+                           step = 0.1)
+             )
+      )
+    ),
+    
+    checkboxInput(ns('chBplotStyle'),
+                  'Appearance',
+                  FALSE),
+    
+    conditionalPanel(
+      condition = "input.chBplotStyle",
+      ns = ns,
+      
+      fluidRow(
+        column(4,
+               selectInput(
+                 ns('selPlotBoxLegendPos'),
+                 label = 'Legend position',
+                 choices = list(
+                   "Top" = 'top',
+                   "Right" = 'right',
+                   "Bottom" = 'bottom'
+                 ), 
+                 width = "120px",
+                 selected = 'top'
+               )),
+        column(4,
+               radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
+                            c("horizontal" = 0,
+                              "45 deg" = 45,
+                              "90 deg" = 90))),
+        column(4,
+               numericInput(
+                 ns('inPlotBoxWidth'),
+                 'Width [%]',
+                 value = PLOTWIDTH,
+                 min = 10,
+                 width = '100px',
+                 step = 10
+               ),
+               numericInput(
+                 ns('inPlotBoxHeight'),
+                 'Height [px]',
+                 value = PLOTBOXHEIGHT,
+                 min = 100,
+                 width = '100px',
+                 step = 50
+               )
         )
       )
     ),
     
-    uiOutput(ns('uiPlotBox')),
-    downPlotUI(ns('downPlotBox'), "Download Plot")
+    
+    checkboxInput(ns('chBdownload'),
+                  'Download',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBdownload",
+      ns = ns,
+      
+      downPlotUI(ns('downPlotBox'), "Download")
+    ),
+    
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlot'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotBox'))
   )
 }
 
@@ -73,52 +135,13 @@ modAUCplot = function(input, output, session,
                       in.fname) {                      # file name for saving the plot                 
   
   ns <- session$ns
-  
-  # optional UI depending on the type of the plot chosen
-  output$uiPlotBoxNotches = renderUI({
-    cat(file = stderr(), 'aucPlot:uiPlotBoxNotches\n')
-    
-    ns <- session$ns
-    
-    if(input$chBPlotTypeBox)
-      checkboxInput(ns('chBplotBoxNotches'), 'Notches in box-plot', FALSE)
-  })
-  
-  output$uiPlotBoxOutliers = renderUI({
-    cat(file = stderr(), 'aucPlot:uiPlotBoxNotches\n')
-    
-    ns <- session$ns
-    
-    if(input$chBPlotTypeBox)
-      checkboxInput(ns('chBplotBoxOutliers'), 'Outliers in box-plot', FALSE)
-  })
-  
-  
-  output$uiPlotDotShade = renderUI({
-    cat(file = stderr(), 'aucPlot:uiPlotDotShade\n')
-    
-    ns <- session$ns
-    
-    if(input$chBPlotTypeDot)
-      sliderInput(ns('slPlotDotShade'), "Shade of grey in dot-plot", min = 0, max = 1, value = 0.5, step = 0.1)
-  })
-  
-  output$uiPlotDotNbins = renderUI({
-    cat(file = stderr(), 'aucPlot:uiPlotDotNbins\n')
-    
-    ns <- session$ns
-    
-    if(input$chBPlotTypeDot)
-      sliderInput(ns('slPlotDotNbins'), 'Number of bins in dot-plot', min = 2, max = 50, value = 30, step = 1)
-  })
-  
+
   # Boxplot - display
   output$outPlotBox = renderPlot({
     
     plotBox()
     
   })
-  
   
   output$outPlotBoxInt = renderPlotly({
     
@@ -137,7 +160,7 @@ modAUCplot = function(input, output, session,
   output$uiPlotBox <- renderUI({
     ns <- session$ns
     
-    if (input$chBPlotInt)
+    if (input$chBplotInt)
       plotlyOutput(ns("outPlotBoxInt"), 
                    width = paste0(input$inPlotBoxWidth, '%'),
                    height = paste0(input$inPlotBoxHeight, 'px'))
@@ -174,7 +197,7 @@ modAUCplot = function(input, output, session,
                                       y = in.cols$meas.y)) 
     
     
-    if(input$chBPlotTypeDot) {
+    if(input$chBplotTypeDot) {
       # calculate bin width for dot-plot based on nBins provided in the UI
       loc.binwidth = abs(max(loc.dt[[ in.cols$meas.y ]], 
                              na.rm = T) - 
@@ -190,13 +213,13 @@ modAUCplot = function(input, output, session,
       
     }
     
-    if(input$chBPlotTypeViol)
+    if(input$chBplotTypeViol)
       p.out = p.out + 
       geom_violin(fill = NA,
                   color = "black",
                   width = 0.2)
     
-    if (input$chBPlotTypeBox)
+    if (input$chBplotTypeBox)
       p.out = p.out + geom_boxplot(
         fill = NA,
         color = "black",

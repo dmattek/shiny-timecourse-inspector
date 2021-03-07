@@ -2,7 +2,7 @@
 # Time Course Inspector: Shiny app for plotting time series data
 # Author: Maciej Dobrzynski
 #
-# This module is for plotting distrubutions at selected time points as a choice of box/violin/dot-plots
+# This module is for plotting distributions at selected time points as a choice of box/violin/dot-plots
 # Assumes in.data contains columns:
 # realtime
 # y
@@ -20,151 +20,168 @@ modDistPlotUI =  function(id, label = "Plot distributions") {
         checkboxInput(ns("chBplotTypeBox"),  "Box-plot", value = T),
         checkboxInput(ns("chBplotTypeDot"),  "Dot-plot", value = F),
         checkboxInput(ns("chBplotTypeViol"), "Violin-plot", value = F),
-        checkboxInput(ns("chBplotTypeLine"), "Line-plot", value = F),
-        checkboxInput(ns('chBplotInt'), 'Interactive Plot'),
-        actionButton(ns('butPlot'), 'Plot!')
+        checkboxInput(ns("chBplotTypeLine"), "Line-plot", value = F)
       ),
-      column(
-        4,
-        uiOutput(ns('uiPlotBoxNotches')),
-        uiOutput(ns('uiPlotBoxOutliers')),
-        uiOutput(ns('uiPlotBoxDodge')),
-        uiOutput(ns('uiPlotBoxAlpha')),
-        uiOutput(ns('uiPlotDotNbins')),
-        uiOutput(ns('uiPlotDotAlpha')),
-        uiOutput(ns('uiPlotViolAlpha')),
-        uiOutput(ns('uiPlotLineAlpha'))
-      ),
-      column(
-        4,
-        selectInput(
-          ns('selPlotBoxLegendPos'),
-          label = 'Legend position',
-          choices = list(
-            "Top" = 'top',
-            "Right" = 'right',
-            "Bottom" = 'bottom'
-          ), 
-          width = "120px",
-          selected = 'top'
-        ),
-        radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
-                     c("horizontal" = 0,
-                       "45 deg" = 45,
-                       "90 deg" = 90)),
-        numericInput(
-          ns('inPlotBoxWidth'),
-          'Width [%]',
-          value = PLOTWIDTH,
-          min = 10,
-          width = '100px',
-          step = 10
-        ),
-        numericInput(
-          ns('inPlotBoxHeight'),
-          'Height [px]',
-          value = PLOTBOXHEIGHT,
-          min = 100,
-          width = '100px',
-          step = 50
+      
+      column(4,
+             conditionalPanel(
+               condition = "input.chBplotTypeBox",
+               ns = ns,
+               
+               checkboxInput(ns('chBplotBoxNotches'), 
+                             'Notches in box-plot ', 
+                             FALSE),
+               checkboxInput(ns('chBplotBoxOutliers'), 
+                             'Outliers in box-plot', 
+                             FALSE),
+               sliderInput(ns('slPlotBoxAlpha'), 
+                           'Box-plot transparency', 
+                           min = 0, 
+                           max = 1, 
+                           value = 1, 
+                           step = 0.1)
+             ),
+             
+             
+             conditionalPanel(
+               condition = "!(input.chBplotTypeLine)",
+               ns = ns,
+               
+               # Adjust spacing between box-, violin-, dot-plots.
+               # Valid only when plotting multiple groups at a time point.
+               # For line plot, each group is drawn separately per facet, thus no need for dodging..
+               
+               sliderInput(ns('slPlotBoxDodge'), 
+                           'Space between groups', 
+                           min = 0, 
+                           max = 1, 
+                           value = .4, 
+                           step = 0.05)
+             ),
+             
+             conditionalPanel(
+               condition = "input.chBplotTypeDot",
+               ns = ns,
+               
+               sliderInput(ns('slPlotDotNbins'), 
+                           'Number of bins in dot-plot', 
+                           min = 2, 
+                           max = 50, 
+                           value = 30, 
+                           step = 1),
+               sliderInput(ns('slPlotDotAlpha'), 
+                           'Dot-plot transparency', 
+                           min = 0, 
+                           max = 1, 
+                           value = 1, 
+                           step = 0.1)
+             ),
+             
+             conditionalPanel(
+               condition = "input.chBplotTypeViol",
+               ns = ns,
+               
+               sliderInput(ns('slPlotViolAlpha'), 
+                           'Violin-plot transparency', 
+                           min = 0, 
+                           max = 1, 
+                           value = 1, 
+                           step = 0.1)
+             ),
+             
+             conditionalPanel(
+               condition = "input.chBplotTypeLine",
+               ns = ns,
+               
+               sliderInput(ns('slPlotLineAlpha'), 
+                           'Line-plot transparency', 
+                           min = 0, 
+                           max = 1, 
+                           value = 1, 
+                           step = 0.1)
+             )
+      )
+    ),
+    
+    checkboxInput(ns('chBplotStyle'),
+                  'Appearance',
+                  FALSE),
+    
+    conditionalPanel(
+      condition = "input.chBplotStyle",
+      ns = ns,
+      
+      fluidRow(
+        column(4,
+               selectInput(
+                 ns('selPlotBoxLegendPos'),
+                 label = 'Legend position',
+                 choices = list(
+                   "Top" = 'top',
+                   "Right" = 'right',
+                   "Bottom" = 'bottom'
+                 ), 
+                 width = "120px",
+                 selected = 'top'
+               )),
+        column(4,
+               radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
+                            c("horizontal" = 0,
+                              "45 deg" = 45,
+                              "90 deg" = 90))),
+        column(4,
+               numericInput(
+                 ns('inPlotBoxWidth'),
+                 'Width [%]',
+                 value = PLOTWIDTH,
+                 min = 10,
+                 width = '100px',
+                 step = 10
+               ),
+               numericInput(
+                 ns('inPlotBoxHeight'),
+                 'Height [px]',
+                 value = PLOTBOXHEIGHT,
+                 min = 100,
+                 width = '100px',
+                 step = 50
+               )
         )
       )
     ),
     
-    uiOutput(ns('uiPlotBox')),
-    downPlotUI(ns('downPlotBox'), "Download Plot")
+    checkboxInput(ns('chBdownload'),
+                  'Download',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBdownload",
+      ns = ns,
+      
+      downPlotUI(ns('downPlotBox'), "Download")
+    ),
+    
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlot'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotBox'))
   )
 }
 
 # SERVER ----
 modDistPlot = function(input, output, session, 
-                      in.data,                       # input data table in long format
-                      in.cols = list(meas.x = COLRT, # column names
-                                     meas.y = COLY,
-                                     group = COLGR,
-                                     id = COLID), 
-                      in.labels = list(x = "",       # plot labels
-                                       y = "", 
-                                       legend = ""),
-                      in.fname) {                      # file name for saving the plot
-
+                       in.data,                       # input data table in long format
+                       in.cols = list(meas.x = COLRT, # column names
+                                      meas.y = COLY,
+                                      group = COLGR,
+                                      id = COLID), 
+                       in.labels = list(x = "",       # plot labels
+                                        y = "", 
+                                        legend = ""),
+                       in.fname) {                      # file name for saving the plot
+  
   ns <- session$ns
-  
-  output$uiPlotBoxNotches = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotBoxNotches\n')
-    
-    ns <- session$ns
-    
-    if(input$chBplotTypeBox)
-      checkboxInput(ns('chBplotBoxNotches'), 'Notches in box-plot ', FALSE)
-  })
-  
-  output$uiPlotBoxOutliers = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotBoxOutliers\n')
-    
-    ns <- session$ns
-    
-    if(input$chBplotTypeBox)
-      checkboxInput(ns('chBplotBoxOutliers'), 'Outliers in box-plot', FALSE)
-  })
-  
-  output$uiPlotBoxDodge = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotBoxDodge\n')
-    
-    ns <- session$ns
-    
-    # Adjust spacing between box-, violin-, dot-plots.
-    # Valid only when plotting multiple groups at a time point.
-    # For line plot, each group is drawn separately per facet, thus no need for dodging..
-    
-    if(!input$chBplotTypeLine)
-      sliderInput(ns('slPlotBoxDodge'), 'Space between groups', min = 0, max = 1, value = .4, step = 0.05)
-  })
-  
-  output$uiPlotBoxAlpha = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotBoxAlpha\n')
-    
-    ns <- session$ns
-    
-    if(input$chBplotTypeBox)
-      sliderInput(ns('slPlotBoxAlpha'), 'Box-plot transparency', min = 0, max = 1, value = 1, step = 0.1)
-  })
-  
-  output$uiPlotViolAlpha = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotViolAlpha\n')
-    
-    ns <- session$ns
-    
-    if(input$chBplotTypeViol)
-      sliderInput(ns('slPlotViolAlpha'), 'Violin-plot transparency', min = 0, max = 1, value = 1, step = 0.1)
-  })
-  
-  output$uiPlotDotAlpha = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotDotAlpha\n')
-    
-    ns <- session$ns
-    
-    if(input$chBplotTypeDot)
-      sliderInput(ns('slPlotDotAlpha'), 'Dot-plot transparency', min = 0, max = 1, value = 1, step = 0.1)
-  })
-  
-  output$uiPlotLineAlpha = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotLineAlpha\n')
-    
-    ns <- session$ns
-    
-    if(input$chBplotTypeLine)
-      sliderInput(ns('slPlotLineAlpha'), 'Line-plot transparency', min = 0, max = 1, value = 1, step = 0.1)
-  })
-  
-  output$uiPlotDotNbins = renderUI({
-    cat(file = stderr(), 'boxPlot:uiPlotDotNbins\n')
-    
-    ns <- session$ns
-    
-    if(input$chBplotTypeDot)
-      sliderInput(ns('slPlotDotNbins'), 'Number of bins in dot-plot', min = 2, max = 50, value = 30, step = 1)
-  })
   
   # Boxplot - display
   output$outPlotBox = renderPlot({
@@ -206,7 +223,7 @@ modDistPlot = function(input, output, session,
   
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
-  # This function is used to plot and to downoad a pdf
+  # This function is used to plot and to download the pdf
   
   plotBox <- function() {
     cat(file = stderr(), 'plotBox\n')
@@ -260,9 +277,9 @@ modDistPlot = function(input, output, session,
     
     if(input$chBplotTypeLine)
       p.out = p.out + 
-        geom_path(aes_string(group = in.cols$id),
-                  alpha = input$slPlotLineAlpha) +
-        facet_wrap(as.formula(paste("~", in.cols$group)))
+      geom_path(aes_string(group = in.cols$id),
+                alpha = input$slPlotLineAlpha) +
+      facet_wrap(as.formula(paste("~", in.cols$group)))
     
     if (input$chBplotTypeBox)
       p.out = p.out + geom_boxplot(

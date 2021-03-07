@@ -12,76 +12,96 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)
   
   tagList(
-    fluidRow(
-      column(
-        3,
-        numericInput(
-          ns('inPlotTrajFacetNcol'),
-          '#columns',
-          value = PLOTNFACETDEFAULT,
-          min = 1,
-          width = '100px',
-          step = 1
+    
+    checkboxInput(ns('chBplotStyle'),
+                  'Appearance',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBplotStyle",
+      ns = ns,
+      
+      fluidRow(
+        column(
+          3,
+          numericInput(
+            ns('inPlotTrajFacetNcol'),
+            '#columns',
+            value = PLOTNFACETDEFAULT,
+            min = 1,
+            width = '100px',
+            step = 1
+          )
         ),
-        checkboxInput(ns('chBplotTrajInt'), 'Interactive Plot'),
-        actionButton(ns('butPlotTraj'), 'Plot!')
-      ),
-      column(
-        2,
-        checkboxGroupInput(ns('chBPlotTrajStat'), 'Add', list('Mean' = 'mean', 
-                                                                   '95% conf. interv.' = 'CI', 
-                                                                   'Std. error' = 'SE'))
-      ),
-      column(
-        3,
-        sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point', 
-                    min = 1, max = 10, value = 1, step = 1),
-        
-        checkboxInput(ns('chBsetXbounds'), 'Bounds for X', FALSE),
-        fluidRow(
-          column(6,
-                 uiOutput(ns('uiSetXboundsLow'))
-          ),
-          column(6,
-                 uiOutput(ns('uiSetXboundsHigh'))
-          )),
-        
-        checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
-        fluidRow(
-          column(6,
-                 uiOutput(ns('uiSetYboundsLow'))
-          ),
-          column(6,
-                 uiOutput(ns('uiSetYboundsHigh'))
-          ))
-        
-        
-      ),
-      column(
-        2,
-        numericInput(
-          ns('inPlotTrajWidth'),
-          'Width [%]',
-          value = PLOTWIDTH,
-          min = 10,
-          width = '100px',
-          step = 5
+        column(
+          2,
+          checkboxGroupInput(ns('chBPlotTrajStat'), 'Add', list('Mean' = 'mean', 
+                                                                '95% conf. interv.' = 'CI', 
+                                                                'Std. error' = 'SE'))
         ),
-        numericInput(
-          ns('inPlotTrajHeight'),
-          'Height [px]',
-          value = PLOTTRAJHEIGHT,
-          min = 100,
-          width = '100px',
-          step = 50
+        column(
+          3,
+          sliderInput(ns('sliPlotTrajSkip'), 'Plot every n-th point', 
+                      min = 1, max = 10, value = 1, step = 1),
+          
+          checkboxInput(ns('chBsetXbounds'), 'Bounds for X', FALSE),
+          fluidRow(
+            column(6,
+                   uiOutput(ns('uiSetXboundsLow'))
+            ),
+            column(6,
+                   uiOutput(ns('uiSetXboundsHigh'))
+            )),
+          
+          checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
+          fluidRow(
+            column(6,
+                   uiOutput(ns('uiSetYboundsLow'))
+            ),
+            column(6,
+                   uiOutput(ns('uiSetYboundsHigh'))
+            ))
+        ),
+        column(
+          2,
+          numericInput(
+            ns('inPlotTrajWidth'),
+            'Width [%]',
+            value = PLOTWIDTH,
+            min = 10,
+            width = '100px',
+            step = 5
+          ),
+          numericInput(
+            ns('inPlotTrajHeight'),
+            'Height [px]',
+            value = PLOTTRAJHEIGHT,
+            min = 100,
+            width = '100px',
+            step = 50
+          )
         )
-      )
+      ),
+      
     ),
+
+    checkboxInput(ns('chBdownload'),
+                  'Download',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBdownload",
+      ns = ns,
+      
+      downPlotUI(ns('downPlotTraj'), "")
+    ),
+    
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlotTraj'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
     uiOutput(ns('uiPlotTraj')),
-    br(),
-    modTrackStatsUI(ns('dispTrackStats')),
-    br(),
-    downPlotUI(ns('downPlotTraj'), "Download Plot")
+    
+    modTrackStatsUI(ns('dispTrackStats'))
   )
 }
 
