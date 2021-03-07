@@ -9,12 +9,16 @@ helpText.dispStats = c("Display statistics aggregated per group, e.g. mean/media
 )
 
 # UI ----
-modStatsUI =  function(id, label = "Comparing t-points") {
+modStatsUI =  function(id, label = "Stats at time points") {
   ns <- NS(id)
   
   tagList(
-    checkboxInput(ns('chbTabStats'), 'Show statistics', FALSE),
-    bsTooltip(ns('chbTabStats'), helpText.dispStats[1], placement = "bottom", trigger = "hover", options = NULL),
+    checkboxInput(ns('chbTabStats'), 'Stats', FALSE),
+    bsTooltip(ns('chbTabStats'), 
+              helpText.dispStats[1], 
+              placement = "bottom", 
+              trigger = "hover", 
+              options = NULL),
     
     uiOutput(ns('uiTabStats')),
     uiOutput(ns('uiDownSingleCellData'))
@@ -23,10 +27,10 @@ modStatsUI =  function(id, label = "Comparing t-points") {
 
 # SERVER ----
 modStats = function(input, output, session, 
-                   in.data, 
-                   in.meascol = 'meas.y', 
-                   in.bycols = c('meas.x', 'group'),
-                   in.fname = 'data.csv') {
+                    in.data, 
+                    in.meascol = 'meas.y', 
+                    in.bycols = c('meas.x', 'group'),
+                    in.fname = 'data.csv') {
   
   ns <- session$ns
   
@@ -59,14 +63,18 @@ modStats = function(input, output, session,
     
     if (is.null(loc.dt))
       return(NULL)
-
-    loc.dt.aggr = loc.dt[, sapply(.SD, function(x) list('N' = .N, 
-                                                        'Mean' = mean(x), 
-                                                        'CV' = sd(x)/mean(x), 
-                                                        'Median' = median(x), 
-                                                        'rCV' = IQR(x)/median(x))), .SDcols = in.meascol, by = in.bycols]
     
-    setnames(loc.dt.aggr, c(in.bycols, 'nPoints', 'Mean', 'CV', 'Median', 'rCV'))
+    loc.dt.aggr = loc.dt[, 
+                         sapply(.SD, function(x) list('N' = .N, 
+                                                      'Mean' = mean(x), 
+                                                      'CV' = sd(x)/mean(x), 
+                                                      'Median' = median(x), 
+                                                      'rCV' = IQR(x)/median(x))), 
+                         .SDcols = in.meascol, 
+                         by = in.bycols]
+    
+    setnames(loc.dt.aggr, 
+             c(in.bycols, 'nPoints', 'Mean', 'CV', 'Median', 'rCV'))
     
     return(loc.dt.aggr)
   })
@@ -90,8 +98,6 @@ modStats = function(input, output, session,
     if (is.null(loc.dt))
       return(NULL)
     
-    loc.n.bycols = length(in.bycols)
-    
     datatable(loc.dt, 
               rownames = FALSE,
               extensions = 'Buttons', 
@@ -106,7 +112,7 @@ modStats = function(input, output, session,
                                                         filename = 'hitStats'),
                                                    list(extend='pdf',
                                                         filename= 'hitStats')),
-                                    text = 'Download')))) %>% formatSignif(seq(loc.n.bycols + 2, loc.n.bycols + 1 + 5), 
+                                    text = 'Download')))) %>% formatSignif(c("Mean", "CV", "Median", "rCV"),
                                                                            digits = SIGNIFDIGITSINTAB)
   })
   

@@ -6,11 +6,11 @@
 #
 
 # UI ----
-modTrackStatsUI =  function(id, label = "Comparing t-points") {
+modTrackStatsUI =  function(id, label = "Track stats") {
   ns <- NS(id)
   
   tagList(
-    checkboxInput(ns('chbTabStats'), 'Show stats', FALSE),
+    checkboxInput(ns('chbTabStats'), 'Stats', FALSE),
     uiOutput(ns('uiTabStats'))
   )
 }
@@ -133,7 +133,9 @@ modTrackStats = function(input, output, session,
                                                           filename = 'hitStats'),
                                                      list(extend='pdf',
                                                           filename= 'hitStats')),
-                                      text = 'Download')))) %>% formatSignif(5:6, digits = SIGNIFDIGITSINTAB)
+                                      text = 'Download')))) %>% formatSignif(c('Mean Length', 'SD', 
+                                                                               'Median Length', 'IQR'), 
+                                                                             digits = SIGNIFDIGITSINTAB)
     else
       return(NULL)
   })
@@ -168,7 +170,10 @@ modTrackStats = function(input, output, session,
                                                           filename = 'hitStats'),
                                                      list(extend='pdf',
                                                           filename= 'hitStats')),
-                                      text = 'Download')))) %>% formatSignif(3:10, digits = SIGNIFDIGITSINTAB)
+                                      text = 'Download')))) %>% formatSignif(c('Min Y', 'Max Y', 
+                                                                               'Mean Y', 'SD', 'CV', 
+                                                                               'Median Y', 'IQR', 'rCV'), 
+                                                                             digits = SIGNIFDIGITSINTAB)
     else
       return(NULL)
   })
