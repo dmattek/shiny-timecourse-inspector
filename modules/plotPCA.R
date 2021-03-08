@@ -11,11 +11,11 @@
 
 ## Help text ----
 helpText.pca = c(alLearnMore = paste0("<p>Display first two <a href=https://en.wikipedia.org/wiki/Principal_component_analysis target=\"_blank\" title=\"External link\">principal components</a> ",
-                                          "coloured by clusters.<p>"))
-                     
+                                      "coloured by clusters.<p>"))
+
 
 # UI ----
-modPCAplotUI =  function(id, label = "Plot PCA.") {
+plotPCAUI =  function(id, label = "Plot PCA.") {
   ns <- NS(id)
   
   tagList(
@@ -52,6 +52,14 @@ modPCAplotUI =  function(id, label = "Plot PCA.") {
         )
       )),
     
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlot'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotInt'), 'Interactive'))),
+    
+    uiOutput(ns('uiPlotPCA')),
+
     checkboxInput(ns('chBdownload'),
                   'Download',
                   FALSE),
@@ -61,26 +69,22 @@ modPCAplotUI =  function(id, label = "Plot PCA.") {
       
       downCsvUI(ns('downDataPCA'), ""),
       downPlotUI(ns('downPlotPCA'), "")
-    ),
-    
-    checkboxInput(ns('chBplotPCAint'), 'Interactive'),
-    #actionButton(ns('butPlot'), 'Plot!'),
-    uiOutput(ns('uiPlotPCA'))
+    )
   )
 }
 
 # Server ----
 # Requires:
-# in.dataWide - data as a matrix in wide format for prcomp
-# in.idWithCl - a table with track IDs matched to clusters
-# in.clWithCol- a table with clusters matched to colours
-# in.fname - filename generating function, clustHier::createFnamePCAplot
-modPCAplot = function(input, output, session, 
-                      in.dataWide,
-                      in.idWithCl,
-                      in.clWithCol,
-                      in.fname
-) {
+# inDataWide - data as a matrix in wide format for prcomp
+# inIdWithCl - a table with track IDs matched to clusters
+# inClWithCol- a table with clusters matched to colours
+# inMeth - list with names of distance and linkage methods
+
+plotPCA = function(input, output, session, 
+                      inDataWide,
+                      inIdWithCl,
+                      inClWithCol,
+                      inMeth) {
   
   ns <- session$ns
   
@@ -89,13 +93,25 @@ modPCAplot = function(input, output, session,
   
   ## Processing ----
   
+  # Create the string for the file name based on distance and linkage methods
+  createPlotFname = reactive({
+    
+    locMeth = inMeth()
+    
+    paste0('clust_hier_pca_',
+           locMeth$diss,
+           '_',
+           locMeth$link, 
+           '.pdf')
+  })
+  
   # Calculate PCA
   # Return a list with a data.table with 3 columns (PC1, PC2, id)
   # and the percentage of explained variance
   calcPCA <- reactive({
-    cat(file = stderr(), 'clustValid:calcPCA \n')
+    cat(file = stderr(), 'plotPCA:calcPCA \n')
     
-    locM = in.dataWide()
+    locM = inDataWide()
     
     shiny::validate(
       shiny::need(!is.null(locM),   "Nothing to plot. Load data first!"),
@@ -128,34 +144,13 @@ modPCAplot = function(input, output, session,
                 varEx = locVarExpl))
   })
   
-  # calculate dendrogram for a chosen number of clusters and the linkage method
-  calcDendCut = reactive({
-    cat(file = stderr(), 'clustValid:calcDendCut \n')
-    
-    loc.dist = in.dist()
-    
-    if (is.null(loc.dist)) {
-      return(NULL)
-    }
-    
-    
-    # HERE!!!
-    # pass linkage and metric from outside
-    return(LOChcut(x = loc.dist,
-                   k = in.nclust(),
-                   hc_func = "hclust",
-                   hc_method = "complete",
-                   hc_metric = "euclidean"
-    ))    
-  })
-  
   ## Plotting ----
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to downoad a pdf
   
   output$uiPlotPCA = renderUI({
-    if (input$chBplotPCAint) {
+    if (input$chBplotInt) {
       plotlyOutput(
         ns("outPlotPCAint"),
         width = paste0(input$inPlotPCAwidth, '%'),
@@ -196,26 +191,29 @@ modPCAplot = function(input, output, session,
   })
   
   # PCA data - download CSV
+  # Note: to make the filename contain the distance and linkage methods,
+  # the function downCsv would need to accept the function that generates the name
+  # instead of a fixed string with the filename. Similar to the downPlot function.
   callModule(downCsv, "downDataPCA", 
              in.fname = "pca.csv",
              calcPCA()$pcaDT)
-    
+  
   # PCA plot - download pdf
   callModule(downPlot, "downPlotPCA", 
-             in.fname = in.fname,
+             in.fname = createPlotFname,
              plotClPCA, TRUE)
   
   # PCA visualization of partitioning methods 
   plotClPCA <- function() {
-    cat(file = stderr(), 'trajPCAplot:plotClPCA: in\n')
+    cat(file = stderr(), 'plotPCA:plotClPCA: in\n')
     
     # make the f-n dependent on the button click
-    # locBut = input$butPlot
+    locBut = input$butPlot
     
     # until clicking the Plot button
     locPCAres = calcPCA()
-    locIDwithCl = in.idWithCl()
-    locClWithCol = in.clWithCol()
+    locIDwithCl = inIdWithCl()
+    locClWithCol = inClWithCol()
     
     shiny::validate(
       shiny::need(!is.null(locPCAres), "Data not loaded or missing values present. Cannot calculate PCA!"),
