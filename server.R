@@ -1011,12 +1011,17 @@ shinyServer(function(input, output, session) {
              dataLongNoOut, 
              in.fname = function() return(FPDFSCATTER))
   
-  ##### Hierarchical validation
-  callModule(clustValid, 'tabClValid', dataWide)
-
   ##### Hierarchical clustering
-  callModule(clustHier, 'tabClHier', dataWide, dataLongNoOut, dataStim)
+  callModule(tabClHier, 'tabClHier', 
+             inDataLong = dataLongNoOut, 
+             inDataStim = dataStim)
   
   ##### Sparse hierarchical clustering using sparcl
-  callModule(clustHierSpar, 'tabClHierSpar', dataWide, dataLongNoOut, dataStim)
+  callModule(clustHierSpar, 'tabClHierSpar', 
+             dataWide, dataLongNoOut, dataStim)
+  
+  ##### Hierarchical validation
+  callModule(tabClValid, 'tabClValid', 
+             dataWide)
+  
 })
