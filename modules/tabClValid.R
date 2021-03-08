@@ -41,7 +41,7 @@ helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected 
 
 
 # UI ----
-clustValidUI <- function(id, label = "Validation") {
+tabClValidUI <- function(id, label = "Validation") {
   ns <- NS(id)
   
   tagList(
@@ -138,8 +138,9 @@ clustValidUI <- function(id, label = "Validation") {
                         )
                         )
                ),
-               br(),
-               withSpinner(plotOutput(ns('outPlotTree'))),
+               # Skip the dendrogram plot because the plotting routine is very slow at the moment.
+               #br(),
+               #withSpinner(plotOutput(ns('outPlotTree'))),
                br(),
                withSpinner(plotOutput(ns('outPlotSilhForCut'))),
                br(),
@@ -150,7 +151,7 @@ clustValidUI <- function(id, label = "Validation") {
 }
 
 # SERVER ----
-clustValid <- function(input, output, session, in.dataWide) {
+tabClValid <- function(input, output, session, in.dataWide) {
 
   ns = session$ns
   
