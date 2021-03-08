@@ -9,7 +9,7 @@ helpText.plotHeatmap = c(downCellCl = "Download a CSV with cluster assignments t
 
 
 # UI ----
-modPlotHeatmapUI <- function(id, label = "Hierarchical Clustering") {
+plotHeatmapUI <- function(id, label = "Hierarchical Clustering") {
   ns <- NS(id)
   
   tagList(
@@ -96,7 +96,6 @@ modPlotHeatmapUI <- function(id, label = "Hierarchical Clustering") {
       )
     ),
     
-    
     checkboxInput(ns('chBdownload'),
                   'Download',
                   FALSE),
@@ -113,7 +112,7 @@ modPlotHeatmapUI <- function(id, label = "Hierarchical Clustering") {
 }
 
 # SERVER ----
-modPlotHeatmap <- function(input, output, session, 
+plotHeatmap <- function(input, output, session, 
                            inDataWide, 
                            inDend,
                            inMeth) {
@@ -160,7 +159,8 @@ modPlotHeatmap <- function(input, output, session,
   
   ## Processing ----
   
-  createHeatmapFname = reactive({
+  # Create the string for the file name based on distance and linkage methods
+  createPlotFname = reactive({
     
     locMeth = inMeth()
     
@@ -171,7 +171,8 @@ modPlotHeatmap <- function(input, output, session,
            '.png')
   })
   
-  createHeatmapTitle = reactive({
+  # Create the string for the plot title based on distance and linkage methods
+  createPlotTitle = reactive({
     
     locMeth = inMeth()
     
@@ -189,7 +190,7 @@ modPlotHeatmap <- function(input, output, session,
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
   # This function is used to plot and to download a pdf
   plotHier <- function() {
-    cat(file = stderr(), 'plotHier: in\n')
+    cat(file = stderr(), 'plotHeatmap:plotHier: in\n')
     
     # make the f-n dependent on the button click
     locBut = input$butPlotHierHeatMap
@@ -205,6 +206,14 @@ modPlotHeatmap <- function(input, output, session,
       shiny::need(!is.null(locDend), "Could not create dendrogram")
     )
     
+    if (is.null(locDM)) {
+      return(NULL)
+    }
+
+    if (is.null(locDend)) {
+      return(NULL)
+    }
+        
     # Dummy dependency to redraw the heatmap without clicking Plot
     # when changing the number of clusters to highlight
     #loc.k = returnNclust()
@@ -229,7 +238,7 @@ modPlotHeatmap <- function(input, output, session,
                            font.row.arg = input$inPlotHierFontX, 
                            font.col.arg = input$inPlotHierFontY, 
                            breaks.arg = loc.col.bounds,
-                           title.arg = createHeatmapTitle())
+                           title.arg = createPlotTitle())
     
     return(loc.p)
   }
@@ -250,7 +259,7 @@ modPlotHeatmap <- function(input, output, session,
   #  Hierarchical - Heat Map - download pdf
   callModule(downPlot, 
              "downPlotHier", 
-             createHeatmapFname, 
+             createPlotFname, 
              plotHier)
   
 }
