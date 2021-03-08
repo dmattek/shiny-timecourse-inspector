@@ -157,7 +157,7 @@ shinyUI(fluidPage(
         # hierarchical clustering
         tabPanel(
           'Hierarchical',
-          clustHierUI('tabClHier')
+          tabClHierUI('tabClHier')
         ),
         
         # sparse hierarchical clustering package sparcl temporarily unavailable from CRAN
@@ -169,7 +169,7 @@ shinyUI(fluidPage(
         # cluster validation
         tabPanel(
           'Validation',
-          clustValidUI('tabClValid')
+          tabClValidUI('tabClValid')
         )
       ))
   )
