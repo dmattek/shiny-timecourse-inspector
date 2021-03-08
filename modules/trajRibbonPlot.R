@@ -264,7 +264,7 @@ modTrajRibbonPlot = function(input, output, session,
     locBut = input$butPlotTraj
     
     # Check if main data exists
-    # Thanks to solate all mods in the left panel are delayed 
+    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dt = shiny::isolate(in.data())
     
