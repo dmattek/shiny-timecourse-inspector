@@ -185,7 +185,6 @@ helpText.server = c(
   chBnormGroup   = "Normalise to mean/median of selected time calculated globally, per group, or for individual time series.",
   downloadDataClean = "Download all time series after modifications in this panel.",
   alertNAsPresent              = "NAs present in the measurement column. Consider interpolation.",
-  alertNAsPresentLong2WideConv = "Missing rows. Consider interpolation.",
   alertTimeFreq0 = "The interval between 2 time points has to be greater than 0.",
   alertWideMissesNumericTime = "Non-numeric headers of time columns. Data in wide format should have numeric column headers corresponding to time points.",
   alertWideTooFewColumns     = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point."
@@ -649,7 +648,8 @@ LOCremoveOutTracks = function(inDT, inDTout, inColID, inGapLen = 0, inDeb = F) {
 
 # Cluster validation ----
 
-#Customize factoextra functions to accept dissimilarity matrix from start. Otherwise can't use distance functions that are not in base R, like DTW.
+# Customize factoextra functions to accept dissimilarity matrix from the start. 
+# Otherwise can't use distance functions that are not in base R, like DTW.
 # Inherit and adapt hcut function to take input from UI, used for fviz_clust
 
 LOChcut <-
@@ -760,12 +760,12 @@ LOCnbclust <-
 
 getDataCl = function(in.dend, in.k, in.deb = T) {
   if (in.deb) {
-    cat(file = stderr(), 'getDataCl \n')
+    cat(file = stderr(), 'auxfunc:getDataCl \n')
   }
 
   if (is.null(in.dend)) {
     if (in.deb) {
-      cat(file = stderr(), 'getDataCl: in.dend is NULL \n')
+      cat(file = stderr(), 'auxfunc:getDataCl: in.dend is NULL \n')
     }
     
     return(NULL)
@@ -796,7 +796,7 @@ getDataCl = function(in.dend, in.k, in.deb = T) {
 # in.id - vector of cell id's
 
 getDataClSpar = function(in.dend, in.k, in.id) {
-  cat(file = stderr(), 'getDataClSpar \n')
+  cat(file = stderr(), 'auxfunc:getDataClSpar \n')
   
   loc.m = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE)
   #print(loc.m)
