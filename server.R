@@ -90,7 +90,7 @@ shinyServer(function(input, output, session) {
     if (is.null(locFilePath) || locFilePath == '')
       return(NULL)
     else {
-      return(fread(locFilePath, strip.white = T))
+      return(fread(locFilePath, strip.white = T, header = T))
     }
   })
   
@@ -505,7 +505,9 @@ shinyServer(function(input, output, session) {
       # - the first row with a header: group, track id, time points as columns with numeric header
       # - consecutive rows with time series, where columns are time points
       if (input$inRbutLongWide == 1) {
-        print(length(names(dm)))
+        if (DEB) {
+          cat(sprintf("server:dataInBoth The number of columns in wide format: %d\n", length(names(dm)))) 
+        }
         
         # data in wide format requires at least 3 columns: grouping, track id, 1 time point
         if (length(names(dm)) < 3) {
@@ -525,6 +527,12 @@ shinyServer(function(input, output, session) {
           # headers for grouping and track id columns
           loc.cols.idvars = names(dm)[1:2]
           
+          if (DEB) {
+            cat(sprintf("server:dataInBoth Grouping and ID columns in wide format:\n   %s\n   %s\n",
+                        loc.cols.idvars[1],
+                        loc.cols.idvars[2])) 
+          }
+          
           # headers for time columns
           loc.cols.time = names(dm)[c(-1, -2)]
           
@@ -537,7 +545,10 @@ shinyServer(function(input, output, session) {
             closeAlert(session, "alertWideMissesNumericTime")
             
             # long to wide
-            dm = melt(dm, id.vars = loc.cols.idvars, variable.name = COLRT, value.name = COLY)
+            dm = melt(dm, 
+                      id.vars = loc.cols.idvars, 
+                      variable.name = COLRT, 
+                      value.name = COLY)
             
             # convert column names with time points to a number
             dm[, (COLRT) := as.numeric(levels(get(COLRT)))[get(COLRT)]]
