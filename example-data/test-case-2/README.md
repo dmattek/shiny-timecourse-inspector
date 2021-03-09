@@ -8,7 +8,7 @@ Files in this set:
 
 **`sustained_EGF_ekar.csv.gz`**
 
-Main dataset in the long format has following columns:
+Main dataset in the **long format** has following columns:
 
 - `treat` with a grouping according to 4 concentrations of EGF,
 - `fov` with an additional grouping according to the field of view during experiment acquisition,
@@ -21,21 +21,41 @@ Note, the `trackid` column contains identifiers that are unique only within a si
 
 The compressed `csv.gz` file can be uploaded directly into Time-Course Inspector (TCI).
 
-
 **`sustained_EGF_badTraj.csv`**
 
 A single-column CSV file with identifiers of outlier trajectories. This file can be uploaded into TCI, and listed time series will be removed from further analysis. The IDs need to be in the same format as in the app. If a unique identifier was created within the app (e.g. by combining `fov` and `id` columns), then the IDs in this file need to have the same format.
 
 **`tCoursesProcessed.csv.gz`**
 
-Single-cell time series after pre-processing in the app. The measurement is trimmed from 0'-200' down to 20'-150', normalised per time series to the 20'-40' range, and NA's and missing rows are interpolated.
+Single-cell time series in **long format** after pre-processing in the app. The measurement is trimmed from 0'-200' down to 20'-150', normalised per time series to the 20'-40' range, and NA's and missing rows are interpolated.
 
 The columns include:
 
 - `group` with grouping according to treatment with 4 concentrations of EGF,
 - `id` with a data-wide unique time series identifier,
 - `time` with time points in minutes,
-- `meas` with ERK activity from the measurement of the FRET ratio.
+- `y` with ERK activity from the measurement of the FRET ratio.
+
+**`tCoursesProcessed_wide.csv.gz`**
+
+The same data as above but in **wide format**. Can be obtained from the long format file `tCoursesProcessed.csv.gz` by invoking the following R command:
+
+```
+dt.long = fread("tCoursesProcessed.csv.gz")
+dt.wide = dcast(dt.long, 
+                group+id ~ time, 
+                value.var = "y")
+```
+
+To convert back to long format use:
+
+```
+dt.long2 = melt(dt.wide, 
+                id.vars = c("group", 
+                            "id"), 
+                variable.name = "time", 
+                value.name = "y")
+```
 
 **`sustained_EGF_y1100.csv`** and **`sustained_EGF_y0-97.csv`**
 
