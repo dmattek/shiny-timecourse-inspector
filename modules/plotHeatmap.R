@@ -4,11 +4,12 @@
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
+## Help text ----
 helpText.plotHeatmap = c(downCellCl = "Download a CSV with cluster assignments to time series ID",
                          downDend = "Download an RDS file with dendrogram object. Read later with readRDS() function.")
 
 
-# UI ----
+## UI ----
 plotHeatmapUI <- function(id, label = "Hierarchical Clustering") {
   ns <- NS(id)
   
@@ -111,7 +112,7 @@ plotHeatmapUI <- function(id, label = "Hierarchical Clustering") {
   )
 }
 
-# SERVER ----
+## SERVER ----
 plotHeatmap <- function(input, output, session, 
                            inDataWide, 
                            inDend,
@@ -119,7 +120,7 @@ plotHeatmap <- function(input, output, session,
   
   ns <- session$ns
   
-  ## UI ----
+  ## UI rendering ----
   
   # UI for setting lower and upper bounds for the heatmap colour scale  
   output$uiSetColBoundsLow = renderUI({
@@ -159,17 +160,7 @@ plotHeatmap <- function(input, output, session,
   
   ## Processing ----
   
-  # Create the string for the file name based on distance and linkage methods
-  createPlotFname = reactive({
-    
-    locMeth = inMeth()
-    
-    paste0('clust_hier_heatmap_',
-           locMeth$diss,
-           '_',
-           locMeth$link, 
-           '.png')
-  })
+  ## Plotting ----
   
   # Create the string for the plot title based on distance and linkage methods
   createPlotTitle = reactive({
@@ -183,8 +174,6 @@ plotHeatmap <- function(input, output, session,
       locMeth$link
     )
   })
-  
-  ## Plot ----
   
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
@@ -254,7 +243,19 @@ plotHeatmap <- function(input, output, session,
   }, height = getPlotHierHeatMapHeight)
   
   
-  ## Modules ----
+  ## Download ----
+  
+  # Create the string for the file name based on distance and linkage methods
+  createPlotFname = reactive({
+    
+    locMeth = inMeth()
+    
+    paste0('clust_hier_heatmap_',
+           locMeth$diss,
+           '_',
+           locMeth$link, 
+           '.png')
+  })
   
   #  Hierarchical - Heat Map - download pdf
   callModule(downPlot, 

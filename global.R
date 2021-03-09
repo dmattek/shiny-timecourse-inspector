@@ -38,20 +38,25 @@ if (length(missing_packages)) {
 
 # Load modules
 source('modules/auxfunc.R')
-source('modules/selOutliers.R')
+
 source('modules/downPlot.R')
 source('modules/downCSV.R')
+
 source('modules/dispStats.R')
 source('modules/dispTrackStats.R')
-source('modules/trajPlot.R')
-source('modules/trajRibbonPlot.R')
-source('modules/trajPsdPlot.R')
+
+
+source('modules/plotTraj.R')
+source('modules/plotTrajRibbon.R')
+source('modules/plotPSD.R')
+source('modules/plotAUC.R')
+source('modules/plotDist.R')
+source('modules/plotHeatmap.R')
 source('modules/plotPCA.R')
 source('modules/plotSilh.R')
-source('modules/aucPlot.R')
-source('modules/distPlot.R')
-source('modules/clDistPlot.R')
-source('modules/plotHeatmap.R')
+source('modules/plotClDist.R')
+
+source('modules/tabSelOutliers.R')
 source('modules/tabScatter.R')
 source('modules/tabDist.R')
 source('modules/tabAUC.R')

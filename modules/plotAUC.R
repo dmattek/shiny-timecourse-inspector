@@ -102,6 +102,13 @@ modAUCplotUI =  function(id, label = "Plot AUC distributions") {
       )
     ),
     
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlot'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotBox')),
+    
     
     checkboxInput(ns('chBdownload'),
                   'Download',
@@ -111,14 +118,7 @@ modAUCplotUI =  function(id, label = "Plot AUC distributions") {
       ns = ns,
       
       downPlotUI(ns('downPlotBox'), "Download")
-    ),
-    
-    fluidRow(
-      column(2,
-             actionButton(ns('butPlot'), 'Plot!')),
-      column(2,
-             checkboxInput(ns('chBplotInt'), 'Interactive'))),
-    uiOutput(ns('uiPlotBox'))
+    )
   )
 }
 
@@ -136,6 +136,8 @@ modAUCplot = function(input, output, session,
   
   ns <- session$ns
 
+  ## Plotting ----
+  
   # Boxplot - display
   output$outPlotBox = renderPlot({
     
@@ -178,13 +180,15 @@ modAUCplot = function(input, output, session,
   # This function is used to plot and to downoad a pdf
   
   plotBox <- function() {
-    cat(file = stderr(), 'aucPlot:plotBox\n')
+    if (DEB) {
+      cat(file = stderr(), 'plotAUC:plotBox\n')
+    }
     
     # make the f-n dependent on the button click
     locBut = input$butPlot
     
     # Check if main data exists
-    # Thanks to solate all mods in the left panel are delayed 
+    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dt = shiny::isolate(in.data())
     shiny::validate(

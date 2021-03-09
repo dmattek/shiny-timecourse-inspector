@@ -5,6 +5,7 @@
 # This module is for plotting group averages as ribbon plots (mean + 95%CI)
 #
 
+## UI ----
 
 modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)
@@ -70,6 +71,13 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
         )
       )
     ),
+
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlotTraj'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotTraj')),
     
     checkboxInput(ns('chBdownload'),
                   'Download',
@@ -81,17 +89,12 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
       downPlotUI(ns('downPlotTraj'), "")
     ),
     
-    fluidRow(
-      column(2,
-             actionButton(ns('butPlotTraj'), 'Plot!')),
-      column(2,
-             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
-    uiOutput(ns('uiPlotTraj')),
-    
     modTrackStatsUI(ns('dispTrackStats'))
   )
 }
 
+
+## SERVER ----
 
 #' Module for plotting an aggregated ribbon plot of time series
 #'
@@ -120,8 +123,9 @@ modTrajRibbonPlot = function(input, output, session,
   
   ns <- session$ns
   
+  ## UI rendering ----
   
-  # UI for bounding the x-axis ====
+  # UI for bounding the x-axis
   output$uiSetXboundsLow = renderUI({
     ns <- session$ns
     
@@ -166,7 +170,7 @@ modTrajRibbonPlot = function(input, output, session,
   })
   
   
-  # UI for bounding the y-axis ====
+  # UI for bounding the y-axis
   output$uiSetYboundsLow = renderUI({
     ns <- session$ns
     
@@ -210,7 +214,7 @@ modTrajRibbonPlot = function(input, output, session,
     }
   })
   
-  # Plotting ====
+  ## Plotting ====
   
   output$uiPlotTraj = renderUI({
     if (input$chBplotTrajInt)
@@ -399,6 +403,7 @@ modTrajRibbonPlot = function(input, output, session,
     return(p.out)
   }
   
+  ## Download ----
   # Trajectory plot - download pdf
   callModule(downPlot, "downPlotTraj", 
              in.fname = in.fname, 

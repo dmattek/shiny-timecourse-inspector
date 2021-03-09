@@ -62,6 +62,14 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
       )
     ),
     
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlotTraj'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotTraj')),
+    
+    
     checkboxInput(ns('chBdownload'),
                   'Download',
                   FALSE),
@@ -70,14 +78,7 @@ modPSDPlotUI =  function(id, label = "Plot PSD of average trajectory.") {
       ns = ns,
       
       downPlotUI(ns('downPlotTraj'), "")
-    ),
-    
-    fluidRow(
-      column(2,
-             actionButton(ns('butPlotTraj'), 'Plot!')),
-      column(2,
-             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
-    uiOutput(ns('uiPlotTraj'))
+    )
   )
 }
 

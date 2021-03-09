@@ -14,6 +14,8 @@
 # callModule(clustHier, 'TabClustHier', dataMod)
 # where dataMod is the output from a reactive function that returns dataset ready for clustering
 
+## Help ----
+
 helpText.tabScatter = c(
   alScatter = paste0(
     "Display a relationship between measurements at two different time points as a scatter plot. ",
@@ -35,7 +37,7 @@ helpText.tabScatter = c(
   alertSmoothWrong = "Smoothing window smaller than the interval between existing time points."
 )
 
-# UI ----
+## UI ----
 tabScatterPlotUI <-
   function(id, label = "Scatter plot between two time points") {
     ns <- NS(id)
@@ -140,6 +142,14 @@ tabScatterPlotUI <-
         )
       ),
       
+      fluidRow(
+        column(2,
+               actionButton(ns('butPlot'), 'Plot!')),
+        column(2,
+               checkboxInput(ns('plotInt'), 'Interactive'))),
+      
+      uiOutput(ns("plotInt_ui")),
+      
       checkboxInput(ns('chBdownload'),
                     'Download',
                     FALSE),
@@ -148,15 +158,7 @@ tabScatterPlotUI <-
         ns = ns,
         
         downPlotUI(ns('downPlotScatter'), "Download")
-      ),
-      
-      fluidRow(
-        column(2,
-               actionButton(ns('butPlot'), 'Plot!')),
-        column(2,
-               checkboxInput(ns('plotInt'), 'Interactive'))),
-      
-      uiOutput(ns("plotInt_ui")),
+      )
     )
   }
 
@@ -216,6 +218,8 @@ tabScatterPlot <-
         )
       }
     })
+    
+    ## Processing ----
     
     # prepare a dataset for scatter plot from long format
     # picks y values from two time points as selected in the UI
@@ -291,7 +295,8 @@ tabScatterPlot <-
     })
     
     
-    # Plotting ----
+    ## Plotting ----
+    
     # Function instead of reactive as per:
     # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
     # This function is used to plot and to downoad a pdf
@@ -322,7 +327,7 @@ tabScatterPlot <-
       return(p.out)
     }
     
-    # Plot rendering ----
+    # Plot rendering
     output$outPlotScatter <- renderPlot({
       plotScatter()
     })
@@ -341,9 +346,6 @@ tabScatterPlot <-
       
     })
     
-    # download pdf
-    callModule(downPlot, "downPlotScatter", in.fname, plotScatter, TRUE)
-    
     # Scatter plot - choose to display regular or interactive plot
     output$plotInt_ui <- renderUI({
       ns <- session$ns
@@ -357,6 +359,11 @@ tabScatterPlot <-
           ns('outPlotScatter'), height = paste0(input$inPlotHeight, "px")
         )))
     })
+    
+    ## Download ----
+    # download pdf
+    callModule(downPlot, "downPlotScatter", in.fname, plotScatter, TRUE)
+    
     
     # Pop-overs ----
     addPopover(

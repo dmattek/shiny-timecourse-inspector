@@ -24,56 +24,7 @@ tabDistPlotUI =  function(id, label = "Snapshots at time points") {
 # SERVER ----
 tabDistPlot = function(input, output, session, in.data, in.fname) {
   
-  callModule(modStats, 'dispStats',
-             in.data = data4boxPlot,
-             in.meascol = 'y',
-             in.bycols = c(COLRT, COLGR),
-             in.fname = 'individualsTP.csv')
-  
-  callModule(modDistPlot, 'distPlot', 
-             in.data = data4boxPlot, 
-             in.cols = list(meas.x = COLRT,
-                            meas.y = COLY,
-                            group = COLGR,
-                            id = COLID),
-             in.labels = list(x = "Time points", y = "", legend = "Groups:"),
-             in.fname = in.fname)
-  
-  # return all unique time points (real time)
-  # This will be used to display in UI for box-plot
-  # These timepoints are from the original dt and aren't affected by trimming of x-axis
-  getDataTpts <- reactive({
-    cat(file = stderr(), 'getDataTpts\n')
-    loc.dt = in.data()
-    
-    if (is.null(loc.dt))
-      return(NULL)
-    else
-      return(unique(loc.dt[[COLRT]])) # column name specified in data4trajPlot
-  })
-
-  output$uiSlFoldChTp = renderUI({
-    ns <- session$ns
-
-    if(input$chBfoldCh)
-      sliderInput(ns('slFoldChTp'), 'Time before:', min = 0, max = 10, value = 1)
-    
-  })
-    
-  # prepare data for plotting boxplots
-  # uses the same dt as for trajectory plotting
-  # returns dt with these columns:
-  data4boxPlot <- reactive({
-    cat(file = stderr(), 'data4boxPlot\n')
-    
-    loc.dt = in.data()
-    if (is.null(loc.dt))
-      return(NULL)
-
-    out.dt = loc.dt[get(COLRT) %in% input$inSelTpts]
-    
-    return(out.dt)
-  })
+  ## UI rendering ----
   
   output$varSelTpts = renderUI({
     cat(file = stderr(), 'UI varSelTpts\n')
@@ -93,6 +44,60 @@ tabDistPlot = function(input, output, session, in.data, in.fname) {
       )
     }
   })
+  
+  output$uiSlFoldChTp = renderUI({
+    ns <- session$ns
+    
+    if(input$chBfoldCh)
+      sliderInput(ns('slFoldChTp'), 'Time before:', min = 0, max = 10, value = 1)
+    
+  })
+    
+  ## Processing ----
+  
+  # return all unique time points (real time)
+  # This will be used to display in UI for box-plot
+  # These time points are from the original dt and aren't affected by trimming of x-axis
+  getDataTpts <- reactive({
+    cat(file = stderr(), 'getDataTpts\n')
+    loc.dt = in.data()
+    
+    if (is.null(loc.dt))
+      return(NULL)
+    else
+      return(unique(loc.dt[[COLRT]])) # column name specified in data4trajPlot
+  })
+  
+  # prepare data for plotting boxplots
+  # uses the same dt as for trajectory plotting
+  # returns dt with these columns:
+  data4boxPlot <- reactive({
+    cat(file = stderr(), 'data4boxPlot\n')
+    
+    loc.dt = in.data()
+    if (is.null(loc.dt))
+      return(NULL)
 
+    out.dt = loc.dt[get(COLRT) %in% input$inSelTpts]
+    
+    return(out.dt)
+  })
  
+  ## Modules ----
+  callModule(modStats, 'dispStats',
+             in.data = data4boxPlot,
+             in.meascol = 'y',
+             in.bycols = c(COLRT, COLGR),
+             in.fname = 'individualsTP.csv')
+  
+  callModule(modDistPlot, 'distPlot', 
+             in.data = data4boxPlot, 
+             in.cols = list(meas.x = COLRT,
+                            meas.y = COLY,
+                            group = COLGR,
+                            id = COLID),
+             in.labels = list(x = "Time points", y = "", legend = "Groups:"),
+             in.fname = in.fname)
+  
+  
 }

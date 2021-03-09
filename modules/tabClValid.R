@@ -4,6 +4,8 @@
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
+## Help text ----
+
 helpText.clValid = c(alertClValidNAsPresent = paste0("NAs present. The selected distance measure will work, ",
                                               "however PCA will not be avaliable."),
                      alertClValidNAsPresentDTW = paste0("NAs present. DTW distance measure will NOT work."),
@@ -113,9 +115,30 @@ tabClValidUI <- function(id, label = "Validation") {
                ),
                br(),
                withSpinner(plotOutput(ns('outPlotSilhAvg'))),
-               br(),
-               withSpinner(plotOutput(ns('outPlotWss')))
+
+               checkboxInput(ns('chBdownPlotSilhAvg'),
+                             'Download',
+                             FALSE),
+               conditionalPanel(
+                 condition = "input.chBdownPlotSilhAvg",
+                 ns = ns,
+                 
+                 downPlotUI(ns('downPlotSilhAvg'), "")
+               ),
                
+               
+               br(),
+               withSpinner(plotOutput(ns('outPlotWss'))),
+
+               checkboxInput(ns('chBdownPlotWss'),
+                             'Download',
+                             FALSE),
+               conditionalPanel(
+                 condition = "input.chBdownPlotWss",
+                 ns = ns,
+                 
+                 downPlotUI(ns('downPlotWss'), "")
+               )
       ),
       tabPanel("Internal",
                br(),
@@ -496,6 +519,38 @@ tabClValid <- function(input, output, session, in.dataWide) {
     return(loc.p)
   })
   
+  ## Download plots ----
+  
+  # Create the string for the file name based on distance and linkage methods
+  createPlotSilhAvgFname = reactive({
+    
+    paste0('valid_silhAvg_',
+           input$selectDiss,
+           '_',
+           input$selectLinkage, 
+           '.pdf')
+  })
+  
+  createPlotWssFname = reactive({
+    
+    paste0('valid_wss_',
+           input$selectDiss,
+           '_',
+           input$selectLinkage, 
+           '.pdf')
+  })
+  
+  # Avg Silh plot - download pdf
+  callModule(downPlot, "downPlotSilhAvg", 
+             in.fname = createPlotSilhAvgFname,
+             plotSilhAvg, TRUE)
+
+  # Avg Silh plot - download pdf
+  callModule(downPlot, "downPlotWss", 
+             in.fname = createPlotWssFname,
+             plotWss, TRUE)
+  
+    
   # Pop-overs ----
   addPopover(session, 
              ns("alLearnMore"),

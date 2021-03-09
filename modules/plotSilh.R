@@ -87,22 +87,9 @@ plotSilh = function(input, output, session,
   
   ns <- session$ns
   
-  ## UI ----
-  
+  ## UI rendering ----
   
   ## Processing ----
-  
-  # Create the string for the file name based on distance and linkage methods
-  createPlotFname = reactive({
-    
-    locMeth = inMeth()
-    
-    paste0('clust_hier_silh_',
-           locMeth$diss,
-           '_',
-           locMeth$link, 
-           '.pdf')
-  })
   
   # calculate dendrogram for a chosen number of clusters and the linkage method
   # using factoextra::hcut
@@ -180,11 +167,6 @@ plotSilh = function(input, output, session,
     return(plotly_build(loc.p))
   })
   
-  # Silh plot - download pdf
-  callModule(downPlot, "downPlotSilh", 
-             in.fname = createPlotFname,
-             plotClSilh, TRUE)
-  
   # Silh visualization of partitioning methods 
   plotClSilh <- function() {
     if (DEB)
@@ -228,7 +210,27 @@ plotSilh = function(input, output, session,
     return(locP)
   }
   
-  # Pop-overs ----
+  ## Download plots ----
+  
+  # Create the string for the file name based on distance and linkage methods
+  createPlotFname = reactive({
+    
+    locMeth = inMeth()
+    
+    paste0('clust_hier_silh_',
+           locMeth$diss,
+           '_',
+           locMeth$link, 
+           '.pdf')
+  })
+  
+  
+  # Silh plot - download pdf
+  callModule(downPlot, "downPlotSilh", 
+             in.fname = createPlotFname,
+             plotClSilh, TRUE)
+  
+  ## Pop-overs ----
   addPopover(session, 
              ns("alLearnMore"),
              title = "Silhouette",

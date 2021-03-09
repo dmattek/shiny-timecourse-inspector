@@ -9,7 +9,7 @@
 # group
 # id
 
-# UI ----
+## UI ----
 modDistPlotUI =  function(id, label = "Plot distributions") {
   ns <- NS(id)
   
@@ -150,6 +150,13 @@ modDistPlotUI =  function(id, label = "Plot distributions") {
       )
     ),
     
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlot'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotBox')),
+    
     checkboxInput(ns('chBdownload'),
                   'Download',
                   FALSE),
@@ -158,18 +165,11 @@ modDistPlotUI =  function(id, label = "Plot distributions") {
       ns = ns,
       
       downPlotUI(ns('downPlotBox'), "Download")
-    ),
-    
-    fluidRow(
-      column(2,
-             actionButton(ns('butPlot'), 'Plot!')),
-      column(2,
-             checkboxInput(ns('chBplotInt'), 'Interactive'))),
-    uiOutput(ns('uiPlotBox'))
+    )
   )
 }
 
-# SERVER ----
+## SERVER ----
 modDistPlot = function(input, output, session, 
                        in.data,                       # input data table in long format
                        in.cols = list(meas.x = COLRT, # column names
@@ -183,6 +183,7 @@ modDistPlot = function(input, output, session,
   
   ns <- session$ns
   
+  ## Plotting ----
   # Boxplot - display
   output$outPlotBox = renderPlot({
     

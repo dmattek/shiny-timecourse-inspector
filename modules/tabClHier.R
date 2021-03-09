@@ -4,6 +4,8 @@
 #
 # This module is a tab for hierarchical clustering (base R hclust + dist)
 
+## Help text ----
+
 helpText.clHier = c(alertNAsPresentClDTW = paste0("NAs (still) present. DTW cannot calculate the distance. ",
                                                   "If interpolation is active in the left panel, missing data can be due to removed outlier time points."),
                     alertNAsPresentCl = paste0("NAs (still) present, caution recommended. If interpolation is active in the left panel, ",
@@ -156,7 +158,7 @@ tabClHier <- function(input, output, session,
   
   ns <- session$ns
   
-  ## UI ----
+  ## UI rendering ----
   # Return the number of clusters from the slider 
   # and delay by a constant in milliseconds defined in auxfunc.R
   returnNclust = reactive({

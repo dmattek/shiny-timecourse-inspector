@@ -6,7 +6,7 @@
 #
 
 
-# UI ----
+## UI ----
 
 modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
   ns <- NS(id)
@@ -84,6 +84,13 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       
     ),
 
+    fluidRow(
+      column(2,
+             actionButton(ns('butPlotTraj'), 'Plot!')),
+      column(2,
+             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
+    uiOutput(ns('uiPlotTraj')),
+    
     checkboxInput(ns('chBdownload'),
                   'Download',
                   FALSE),
@@ -94,18 +101,11 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       downPlotUI(ns('downPlotTraj'), "")
     ),
     
-    fluidRow(
-      column(2,
-             actionButton(ns('butPlotTraj'), 'Plot!')),
-      column(2,
-             checkboxInput(ns('chBplotTrajInt'), 'Interactive'))),
-    uiOutput(ns('uiPlotTraj')),
-    
     modTrackStatsUI(ns('dispTrackStats'))
   )
 }
 
-# Server ----
+## Server ----
 modTrajPlot = function(input, output, session, 
                        in.data, 
                        in.data.stim,
@@ -116,6 +116,7 @@ modTrajPlot = function(input, output, session,
   
   ns <- session$ns
   
+  ## UI rendering ----
   output$uiPlotTraj = renderUI({
     if (input$chBplotTrajInt)
       withSpinner(plotlyOutput(
@@ -130,7 +131,7 @@ modTrajPlot = function(input, output, session,
         )
   })
   
-  # UI for bounding the x-axis ====
+  # UI for bounding the x-axis
   output$uiSetXboundsLow = renderUI({
     ns <- session$ns
     
@@ -175,7 +176,7 @@ modTrajPlot = function(input, output, session,
   })
   
   
-  # UI for bounding the y-axis ====
+  # UI for bounding the y-axis
   output$uiSetYboundsLow = renderUI({
     ns <- session$ns
     
@@ -219,13 +220,8 @@ modTrajPlot = function(input, output, session,
     }
   })
   
-  # Plotting ====
-  
-  callModule(modTrackStats, 'dispTrackStats',
-             in.data = in.data,
-             in.bycols = in.facet)
-  
-  
+  ## Plotting ====
+
   output$outPlotTraj <- renderPlot({
     
     loc.p = plotTraj()
@@ -234,7 +230,6 @@ modTrajPlot = function(input, output, session,
     
     return(loc.p)
   })
-  
   
   output$outPlotTrajInt <- renderPlotly({
     # This is required to avoid
@@ -251,12 +246,6 @@ modTrajPlot = function(input, output, session,
     
     return(ggplotly(loc.p))
   })
-  
-  
-  
-  # Trajectory plot - download pdf
-  callModule(downPlot, "downPlotTraj", in.fname, plotTraj, TRUE)
-  
   
   plotTraj <- function() {
     cat(file = stderr(), 'plotTraj: in\n')
@@ -359,4 +348,19 @@ modTrajPlot = function(input, output, session,
     
     return(p.out)
   }
+  
+  ## Download ----
+
+  # Trajectory plot - download pdf
+  callModule(downPlot, "downPlotTraj", 
+             in.fname, 
+             plotTraj, 
+             TRUE)
+  
+  ## Modules ----
+  
+  callModule(modTrackStats, 'dispTrackStats',
+             in.data = in.data,
+             in.bycols = in.facet)
+  
 }

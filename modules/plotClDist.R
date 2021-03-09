@@ -5,7 +5,7 @@
 # This module is for plotting stacked bar plot with percentages of time series in clusters
 #
 
-# UI ----
+## UI ----
 modClDistPlotUI =  function(id, label = "Plot distribution of clusters per groupd") {
   ns <- NS(id)
   
@@ -16,13 +16,22 @@ modClDistPlotUI =  function(id, label = "Plot distribution of clusters per group
                    "90 deg" = 90), inline = T),
     actionButton(ns('butPlotClDist'), 'Plot!'),
     plotOutput(ns('outPlotClDist'), height = PLOTBOXHEIGHT, width = 'auto'),
-    downPlotUI(ns('downPlotClDist'), "Download Plot")
+
+    checkboxInput(ns('chBdownload'),
+                  'Download',
+                  FALSE),
+    conditionalPanel(
+      condition = "input.chBdownload",
+      ns = ns,
+      
+      downPlotUI(ns('downPlotClDist'), "Download")
+    )
   )
 }
 
 
 
-# SERVER ----
+## SERVER ----
 
 # Params:
 # in.data - data prepared with data4clDistPlot f-n
@@ -37,6 +46,8 @@ modClDistPlot = function(input, output, session,
                          in.fname = 'clDist.pdf') {
   
   ns <- session$ns
+  
+  ## Plotting ----
   
   # Barplot with distribution of clusters across conditions
   plotClDist = function() {
@@ -100,7 +111,12 @@ modClDistPlot = function(input, output, session,
     plotClDist()
   })
   
+  ## Modules ----
+  
   # bar Plot - download pdf
-  callModule(downPlot, "downPlotClDist", in.fname, plotClDist, TRUE)
+  callModule(downPlot, "downPlotClDist", 
+             in.fname, 
+             plotClDist, 
+             TRUE)
   
 }

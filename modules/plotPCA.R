@@ -88,22 +88,9 @@ plotPCA = function(input, output, session,
   
   ns <- session$ns
   
-  ## UI ----
-  
+  ## UI rendering ----
   
   ## Processing ----
-  
-  # Create the string for the file name based on distance and linkage methods
-  createPlotFname = reactive({
-    
-    locMeth = inMeth()
-    
-    paste0('clust_hier_pca_',
-           locMeth$diss,
-           '_',
-           locMeth$link, 
-           '.pdf')
-  })
   
   # Calculate PCA
   # Return a list with a data.table with 3 columns (PC1, PC2, id)
@@ -190,19 +177,6 @@ plotPCA = function(input, output, session,
     return(plotly_build(loc.p))
   })
   
-  # PCA data - download CSV
-  # Note: to make the filename contain the distance and linkage methods,
-  # the function downCsv would need to accept the function that generates the name
-  # instead of a fixed string with the filename. Similar to the downPlot function.
-  callModule(downCsv, "downDataPCA", 
-             in.fname = "pca.csv",
-             calcPCA()$pcaDT)
-  
-  # PCA plot - download pdf
-  callModule(downPlot, "downPlotPCA", 
-             in.fname = createPlotFname,
-             plotClPCA, TRUE)
-  
   # PCA visualization of partitioning methods 
   plotClPCA <- function() {
     cat(file = stderr(), 'plotPCA:plotClPCA: in\n')
@@ -275,7 +249,34 @@ plotPCA = function(input, output, session,
     return(locP)
   }
   
-  # Pop-overs ----
+  ## Download ----
+  
+  # PCA data - download CSV
+  # Note: to make the filename contain the distance and linkage methods,
+  # the function downCsv would need to accept the function that generates the name
+  # instead of a fixed string with the filename. Similar to the downPlot function.
+  callModule(downCsv, "downDataPCA", 
+             in.fname = "pca.csv",
+             calcPCA()$pcaDT)
+  
+  # PCA plot - download pdf
+  callModule(downPlot, "downPlotPCA", 
+             in.fname = createPlotFname,
+             plotClPCA, TRUE)
+  
+  # Create the string for the file name based on distance and linkage methods
+  createPlotFname = reactive({
+    
+    locMeth = inMeth()
+    
+    paste0('clust_hier_pca_',
+           locMeth$diss,
+           '_',
+           locMeth$link, 
+           '.pdf')
+  })
+  
+  ## Pop-overs ----
   addPopover(session, 
              ns("alLearnMore"),
              title = "Principal Component Analysis",
