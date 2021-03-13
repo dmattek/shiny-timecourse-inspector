@@ -4,6 +4,12 @@
 #
 # This is a module of a Shiny web application.
 # Outlier identification, selection
+#
+# Input:
+# - time-series data in long format
+#
+# Output
+# - time-series data in long format without outlier time points and/or outlier time series
 
 helpText.selOutliers = c(chbRemoveOut = "Remove outlier time points. Gaps created by removing outliers can be interpolated or you can choose to remove entire trajectories that contain outlier time points.",
                          numOutliersPerc = 'Percentage of data points to remove from pooled data from all time points.',
