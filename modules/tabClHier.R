@@ -50,7 +50,7 @@ tabClHierUI <- function(id, label = "Hierarchical Clustering") {
     fluidRow(
       column(3,
              selectInput(
-               ns("selectPlotHierDiss"),
+               ns("selDiss"),
                label = ("Dissimilarity measure"),
                choices = list("Euclidean" = "euclidean",
                               "Manhattan" = "manhattan",
@@ -61,7 +61,7 @@ tabClHierUI <- function(id, label = "Hierarchical Clustering") {
              ),
              bsAlert("alertAnchorClHierNAsPresent"),
              selectInput(
-               ns("selectPlotHierLinkage"),
+               ns("selLink"),
                label = ("Linkage method"),
                choices = list(
                  "Average"  = "average",
@@ -77,7 +77,7 @@ tabClHierUI <- function(id, label = "Hierarchical Clustering") {
       ),
       column(6,
              sliderInput(
-               ns('slPlotHierNclust'),
+               ns('slNclust'),
                'Number of dendrogram branches to cut',
                min = 1,
                max = 20,
@@ -87,12 +87,12 @@ tabClHierUI <- function(id, label = "Hierarchical Clustering") {
                round = TRUE
              ),
              
-             checkboxInput(ns('chBPlotHierClSel'), 'Select clusters to display'),
-             uiOutput(ns('uiPlotHierClSel')),
+             checkboxInput(ns('chBclDisp'), 'Select clusters to display'),
+             uiOutput(ns('selClDispUI')),
       ),
       column(3,
              selectInput(
-               ns("selectPlotHierPaletteDend"),
+               ns("selPalDend"),
                label = "Cluster colour palette",
                choices = l.col.pal.dend.2,
                selected = 'Color Blind'
@@ -161,16 +161,16 @@ tabClHier <- function(input, output, session,
   ## UI rendering ----
   # Return the number of clusters from the slider 
   # and delay by a constant in milliseconds defined in auxfunc.R
-  returnNclust = reactive({
-    return(input$slPlotHierNclust)
+  intNclust = reactive({
+    return(input$slNclust)
   }) %>% debounce(MILLIS)
   
   # Manually choose clusters to display
-  output$uiPlotHierClSel = renderUI({
+  output$selClDispUI = renderUI({
     
-    if(input$chBPlotHierClSel) {
-      selectInput(ns('inPlotHierClSel'), 'Select clusters to display', 
-                  choices = seq(1, returnNclust(), 1),
+    if(input$chBclDisp) {
+      selectInput(ns('selClDisp'), 'Select clusters to display', 
+                  choices = seq(1, intNclust(), 1),
                   multiple = TRUE, 
                   selected = 1)
     }
@@ -227,8 +227,8 @@ tabClHier <- function(input, output, session,
   # Calculate distance/dissimilarity matrix using a selected distance metric.
   # The result will be used for further clustering.
   # Requires data in wide format with time series arranged in rows and time points in columns.
-  calcDiss <- reactive({
-    cat(file = stderr(), 'tabClHier:calcDiss\n')
+  dmDiss <- reactive({
+    cat(file = stderr(), 'tabClHier:dmDiss\n')
     
     locDM = dataWide()
     
@@ -242,7 +242,7 @@ tabClHier <- function(input, output, session,
     # NAs in the wide format can result from explicit NAs in the measurment column or
     # from missing rows that cause NAs to appear when convertinf from long to wide (dcast)
     if(sum(is.na(locDM)) > 0) {
-      if (input$selectPlotHierDiss == "DTW") {
+      if (input$selDiss == "DTW") {
         createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentClDTW", title = "Error",
                     content = helpText.clHier[["alertNAsPresentClDTW"]], 
                     append = FALSE,
@@ -265,7 +265,7 @@ tabClHier <- function(input, output, session,
     
     #pr_DB$set_entry(FUN = fastDTW, names = c("fastDTW"))
     locDist = proxy::dist(locDM, 
-                          method = input$selectPlotHierDiss)
+                          method = input$selDiss)
     
     # Check if distance matrix has NAs.
     # If NAs present, hclust will throw an error.
@@ -283,162 +283,166 @@ tabClHier <- function(input, output, session,
   })
   
   # perform hierarchical clustering using a selected linkage method
-  calcHclust <- reactive({
-    cat(file = stderr(), 'tabClHier:calcHclust\n')
+  # return hclust object
+  objHclust <- reactive({
+    cat(file = stderr(), 'tabClHier:objHclust\n')
     
     # calculate distance matrix
-    locDist = calcDiss()
+    locDist = dmDiss()
     
     if (is.null(locDist)) {
       return(NULL)
     }
     
     locHC = hclust(locDist, 
-                   method = input$selectPlotHierLinkage)
+                   method = input$selLink)
     
     return(locHC)
   })
   
   # Return a cut dendrogram with branches coloured according to a chosen palette.
   # The colouring of branches performed using the dendextend package.
-  calcDendCutColor <- reactive({
-    cat(file = stderr(), 'tabClHier:calcDendCutColor\n')
+  # Used to plot the heatmap.
+  dendCutColor <- reactive({
+    if (DEB) {
+      cat(file = stderr(), 'tabClHier:dendCutColor\n')
+    }
     
     # calculate hierarchical clustering
-    locHc = calcHclust()
+    locHc = objHclust()
     
     if (is.null(locHc)) {
       return(NULL)
     }
     
     # number of clusters at which dendrogram is cut
-    locK = returnNclust()
+    locK = intNclust()
     
-    # make a palette with the amount of colours equal to the number of clusters
-    locColors = ggthemes::tableau_color_pal(input$selectPlotHierPaletteDend)(n = locK)
-    
-    # colour the branches
-    locDend <- as.dendrogram(locHc)
-    locDend <- dendextend::color_branches(locDend, 
-                                          col = locColors, 
-                                          k = locK)
+    locDend = LOCdendCutColor(inHclust = locHc,
+                              inK = locK,
+                              inColPal = input$selPalDend)
     
     return(locDend)
   }) 
   
   
-  # Returns a table prepared with f-n getClCol
-  # for hierarchical clustering.
-  # The table contains colours assigned to clusters.
-  # Colours are obtained from the dendrogram using dendextend::get_leaves_branches_col
-  getClColHier <- reactive({
-    cat(file = stderr(), 'tabClHier:getClColHier\n')
-    
-    loc.dend = calcDendCutColor()
-    if (is.null(loc.dend))
-      return(NULL)
-    
-    # obtain relations between cluster and colors from the dendrogram
-    loc.dt = LOCgetClCol(loc.dend, returnNclust())
-    
-    # Display clusters specified in the inPlotHierClSel field
-    # Clusters are ordered according to the order of clusters specified in this field
-    if(input$chBPlotHierClSel) {
-      # keep only clusters specified in input$inPlotHierClSel
-      loc.dt = loc.dt[gr.no %in% input$inPlotHierClSel]
-      loc.dt[, gr.no := factor(gr.no, levels = input$inPlotHierClSel)]
+  
+  # Return a named vector with colours and cluster numbers
+  # Input:
+  # - a data.table with track IDs, cluster colours, and cluster numbers
+  #
+  # Output:
+  # - vector with colours, named according to cluster numbers
+  vecColWithCl = reactive({
+    if (DEB) {
+      cat(file = stderr(), 'tabClHier:vecColWithCl: in\n')
     }
     
-    # set the key to allow sub-setting
-    setkey(loc.dt, gr.no)
+    locDend = dendCutColor()
     
-    return(loc.dt)
+    # Number of clusters at which the dendrogram is cut.
+    # The dendrogram has to be re-cut in LOCvecColWithCl to obtain the number of clusters.
+    locK = intNclust()
+    
+    locVecCol = LOCvecColWithCl(locDend,
+                                locK)
+    
+    return(locVecCol)
   })
-  
+
+  # Returns a table with:
+  # - time series IDs, 
+  # - cluster numbers
+  # 
+  # Clusters are subset based on manual cluster selection and ordering
+  dtIDwithCl <- reactive({
+    cat(file = stderr(), 'tabClHier:dtIDwithCl\n')
+    
+    # calculate hierarchical clustering
+    locHc = objHclust()
+    
+    if (is.null(locHc)) {
+      return(NULL)
+    }
+    
+    # number of clusters at which dendrogram is cut
+    locK = intNclust()
+    
+    # Obtain time-series IDs with cluster numbers
+    locDT = LOCdtIDwithCl(inHclust = locHc,
+                          inK = locK,
+                          inDeb = F)
+    
+    if (is.null(locDT)) {
+      return(NULL)
+    }
+    
+    return(locDT)
+    
+  })
   
   # Return dt with track IDs and their corresponding condition name.
   # The condition is the column defined by the facet grouping.
-  getDataCond <- reactive({
-    cat(file = stderr(), 'tabClHier:getDataCond\n')
+  dtIDwithCond <- reactive({
+    cat(file = stderr(), 'tabClHier:dtIDwithCond\n')
     loc.dt = inDataLong()
     
     if (is.null(loc.dt))
       return(NULL)
     else
-      return(unique(loc.dt[, .(id, group)]))
+      return(unique(loc.dt[, 
+                           c(COLID, COLGR),
+                           with = F]))
   })
-  
-  
-  
-  # Prepare data with track IDs and cluster numbers
-  # Used for colouring points by cluster numbers in PCA
-  # If manual cluster selection switched on, 
-  # return only those clusters specified in the inPlotHierClSel field
-  dataIDwithCl <- reactive({
-    cat(file = stderr(), 'tabClHier:dataIDwithCl: in\n')
-    
-    # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(calcDendCutColor(), returnNclust())
-    
-    
-    if (is.null(loc.dt.cl)) {
-      cat(file = stderr(), 'tabClHier:dataClWithCol: dt is NULL\n')
-      return(NULL)
-    }
-    
-    cat(file = stderr(), 'tabClHier:dataClWithCol: dt not NULL\n')
-    
-    # Display clusters specified in the inPlotHierClSel field
-    # Data is ordered according to the order of clusters specified in this field
-    if(input$chBPlotHierClSel) {
-      loc.dt.cl = loc.dt.cl[get(COLCL) %in% input$inPlotHierClSel]
-      loc.dt.cl[, (COLCL) := factor(get(COLCL), levels = input$inPlotHierClSel)]
-      setkeyv(loc.dt.cl, COLCL)
-    } else {
-      loc.dt.cl[, (COLCL) := as.factor(get(COLCL))]
-    }
-    
-    return(loc.dt.cl)    
-  })
+
   
   # Prepare data for plotting trajectories per cluster.
   # Outputs dt as data4trajPlot but with an additional column 'cl' that holds cluster numbers.
   # Additionally, some clusters are omitted according to the manual selection.
+  
   data4trajPlotCl <- reactive({
-    cat(file = stderr(), 'tabClHier:data4trajPlotCl: in\n')
-    
-    loc.dt = inDataLong()
-    
-    if (is.null(loc.dt)) {
-      cat(file = stderr(), 'tabClHier:data4trajPlotCl: dt is NULL\n')
-      return(NULL)
+    if (DEB) {
+      cat(file = stderr(), 'tabClHier:data4trajPlotCl: in\n')
     }
     
-    cat(file = stderr(), 'tabClHier:data4trajPlotCl: dt not NULL\n')
+    locDT = inDataLong()
     
-    # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataCl(calcDendCutColor(), returnNclust())
-    
-    if (is.null(loc.dt.cl)) {
-      cat(file = stderr(), 'tabClHier:data4trajPlotCl: dt.cl is NULL\n')
+    if (is.null(locDT)) {
+      if (DEB) {
+        cat(file = stderr(), 'tabClHier:data4trajPlotCl: dt is NULL\n')
+      }
       
       return(NULL)
     }
     
-    cat(file = stderr(), 'tabClHier:data4trajPlotCl: dt.cl not NULL\n')
+    # get cellIDs with cluster assignments based on the dendrogram cut
+    locDTcl = dtIDwithCl()
     
-    # add the column with cluster assignemnt to the main dataset
-    loc.dt = merge(loc.dt, loc.dt.cl, by = COLID)
-    
-    # Display clusters specified in the inPlotHierClSel field
-    # Data is ordered according to the order of clusters specified in this field
-    if(input$chBPlotHierClSel) {
-      loc.dt = loc.dt[get(COLCL) %in% input$inPlotHierClSel]
-      loc.dt[, (COLCL) := factor(get(COLCL), levels = input$inPlotHierClSel)]
-      setkeyv(loc.dt, COLCL)
+    if (is.null(locDTcl)) {
+      if(DEB) {
+        cat(file = stderr(), 'tabClHier:data4trajPlotCl: dt.cl is NULL\n')
+      }
+      
+      return(NULL)
     }
     
-    return(loc.dt)    
+    
+    # Keep only clusters manually specified in input$selClDisp
+    # The order of clusters in the input field doesn't matter!
+    if(input$chBclDisp) {
+      if (length(input$selClDisp) > 0) {
+        locDTcl = locDTcl[get(COLCL) %in% input$selClDisp]
+      } else {
+        return(NULL)
+      }
+    }
+    
+    # add the column with cluster assignment to the main dataset
+    locDT = merge(locDT, 
+                  locDTcl, 
+                  by = COLID)
+    
+    return(locDT)    
   })
   
   data4stimPlotCl <- reactive({
@@ -455,60 +459,69 @@ tabClHier <- function(input, output, session,
     return(loc.dt)
   })
   
-  # prepare data for barplot with distribution of items per condition  
+
+  # Prepare data for barplot with distribution of items per condition
+  # Return a data.table with 3 columns:
+  # - grouping
+  # - cluster numbers
+  # - aggregated number of trajectories per group&cluster
   data4clDistPlot <- reactive({
     cat(file = stderr(), 'tabClHier:data4clDistPlot: in\n')
     
-    # get cell IDs with cluster assignments depending on dendrogram cut
-    loc.dend <- calcDendCutColor()
-    if (is.null(loc.dend)) {
-      cat(file = stderr(), 'tabClHier:data4clDistPlot: loc.dend is NULL\n')
-      return(NULL)
-    }
-    
     # get cell id's with associated cluster numbers
-    loc.dt.cl = getDataCl(loc.dend, returnNclust())
-    if (is.null(loc.dt.cl)) {
-      cat(file = stderr(), 'tabClHier:data4clDistPlot: loc.dt.cl is NULL\n')
+    locDTcl = dtIDwithCl()
+    if (is.null(locDTcl)) {
+      cat(file = stderr(), 'tabClHier:data4clDistPlot: dt.cl is NULL\n')
       return(NULL)
     }
     
     # get cellIDs with condition name
-    loc.dt.gr = getDataCond()
-    if (is.null(loc.dt.gr)) {
-      cat(file = stderr(), 'tabClHier:data4clDistPlot: loc.dt.gr is NULL\n')
+    locDTgr = dtIDwithCond()
+    if (is.null(locDTgr)) {
+      cat(file = stderr(), 'tabClHier:data4clDistPlot: dt.gr is NULL\n')
       return(NULL)
     }
     
     # add grouping to clusters+ids
-    loc.dt = merge(loc.dt.cl, loc.dt.gr, by = COLID)
+    locDT = merge(locDTcl, 
+                  locDTgr, 
+                  by = COLID)
     
-    # count number of time series per group, per cluster
-    loc.dt.aggr = loc.dt[, .(xxx = .N), by = c(COLGR, COLCL)]
-    setnames(loc.dt.aggr, "xxx", COLNTRAJ)
-    
-    # Display clusters specified in the inPlotHierClSel field
-    # Data is ordered according to the order of clusters specified in this field
-    if(input$chBPlotHierClSel) {
-      loc.dt.aggr = loc.dt.aggr[cl %in% input$inPlotHierClSel]
-      loc.dt.aggr[, (COLCL) := factor(get(COLCL), levels = input$inPlotHierClSel)]
-      setkeyv(loc.dt.aggr, COLCL)
+    # Keep only clusters manually specified in input$selClDisp
+    # The order of clusters in the input field doesn't matter!
+    if(input$chBclDisp) {
+      if (length(input$selClDisp) > 0) {
+        locDT = locDT[get(COLCL) %in% input$selClDisp]
+      } else {
+        return(NULL)
+      }
     }
-    return(loc.dt.aggr)
+    
+    # Count the number of time series per group, per cluster
+    locDTaggr = locDT[, 
+                      .(xxx = .N), 
+                      by = c(COLGR, 
+                             COLCL)]
+    
+    setnames(locDTaggr, "xxx", COLNTRAJ)
+    
+    return(locDTaggr)
     
   })
+  
+  
   
   # download a CSV with a list of cellIDs with cluster assignments
   output$downCellCl <- downloadHandler(
     filename = function() {
       paste0('clust_hier_data_',
-             input$selectPlotHierDiss,
+             input$selDiss,
              '_',
-             input$selectPlotHierLinkage, '.csv')
+             input$selLink, '.csv')
     },
     
     content = function(file) {
-      write.csv(x = getDataCl(calcDendCutColor(), returnNclust()), file = file, row.names = FALSE)
+      write.csv(x = dtIDwithCl(), file = file, row.names = FALSE)
     }
   )
   
@@ -516,74 +529,74 @@ tabClHier <- function(input, output, session,
   output$downDend <- downloadHandler(
     filename = function() {
       paste0('clust_hier_dend_',
-             input$selectPlotHierDiss,
+             input$selDiss,
              '_',
-             input$selectPlotHierLinkage, '.rds')
+             input$selLink, '.rds')
     },
     
     content = function(file) {
-      saveRDS(object = calcDendCutColor(), file = file)
+      saveRDS(object = dendCutColor(), file = file)
     }
   )
   
   # Create a list with names of the distance metric and the linkage method.
   # Used for passing to plotting functions.
   createClustMethList = reactive({
-    return(list(diss = input$selectPlotHierDiss,
-                link = input$selectPlotHierLinkage))
+    return(list(diss = input$selDiss,
+                link = input$selLink))
   })
   
   createFnameTrajPlot = reactive({
     
     paste0('clust_hier_tCourses_',
-           input$selectPlotHierDiss,
+           input$selDiss,
            '_',
-           input$selectPlotHierLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
   createFnameRibbonPlot = reactive({
     
     paste0('clust_hier_tCoursesMeans_',
-           input$selectPlotHierDiss,
+           input$selDiss,
            '_',
-           input$selectPlotHierLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
   createFnamePsdPlot = reactive({
     
     paste0('clust_hier_tCoursesPsd_',
-           input$selectPlotHierDiss,
+           input$selDiss,
            '_',
-           input$selectPlotHierLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
   createFnameDistPlot = reactive({
     
     paste0('clust_hier_clDist_',
-           input$selectPlotHierDiss,
+           input$selDiss,
            '_',
-           input$selectPlotHierLinkage, '.pdf')  
+           input$selLink, '.pdf')  
   })
   
   
   createFnamePCAplot = reactive({
     
     paste0('clust_hier_tCoursesPCA_',
-           input$selectPlotHierDiss,
+           input$selDiss,
            '_',
-           input$selectPlotHierLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
   createFnameSilhPlot = reactive({
     
     paste0('clust_hier_tCoursesSilh_',
-           input$selectPlotHierDiss,
+           input$selDiss,
            '_',
-           input$selectPlotHierLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
@@ -593,7 +606,7 @@ tabClHier <- function(input, output, session,
   # heatmap plot module 
   callModule(plotHeatmap, 'plotHeatmap', 
              inDataWide = dataWide, 
-             inDend = calcDendCutColor,
+             inDend = dendCutColor,
              inMeth = createClustMethList)
   
   
@@ -602,7 +615,7 @@ tabClHier <- function(input, output, session,
              in.data = data4trajPlotCl, 
              in.data.stim = data4stimPlotCl,
              in.facet = COLCL,  
-             in.facet.color = getClColHier,
+             in.facet.color = vecColWithCl,
              in.fname = createFnameTrajPlot)
   
   # plot cluster means
@@ -610,34 +623,33 @@ tabClHier <- function(input, output, session,
              in.data = data4trajPlotCl, 
              in.data.stim = data4stimPlotCl,
              in.group = COLCL,  
-             in.group.color = getClColHier,
+             in.group.color = vecColWithCl,
              in.fname = createFnameRibbonPlot)
   
   # plot cluster PSD
   callModule(modPSDPlot, 'modPlotHierPsd',
              in.data = data4trajPlotCl,
              in.facet = COLCL,
-             in.facet.color = getClColHier,
+             in.facet.color = vecColWithCl,
              in.fname = createFnamePsdPlot)
   
   # plot distribution barplot
   callModule(modClDistPlot, 'hierClDistPlot', 
              in.data = data4clDistPlot,
-             in.colors = getClColHier,
+             in.colors = vecColWithCl,
              in.fname = createFnameDistPlot)
   
   # plot cluster PCA
   callModule(plotPCA, 'plotHierPCA',
              inDataWide = dataWide,
-             inIdWithCl = dataIDwithCl,
-             inClWithCol = getClColHier,
+             inIdWithCl = dtIDwithCl,
+             inColWithCl = vecColWithCl,
              inMeth = createClustMethList)
   
   # plot cluster Silhouette
   callModule(plotSilh, 'plotHierSilh',
-             inDist = calcDiss,
-             inNclust = returnNclust,
-             inClWithCol = getClColHier,
+             inDist = dmDiss,
+             inColWithCl = vecColWithCl,
              inMeth = createClustMethList)
   
   

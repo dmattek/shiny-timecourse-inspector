@@ -33,13 +33,19 @@ modClDistPlotUI =  function(id, label = "Plot distribution of clusters per group
 
 ## SERVER ----
 
-# Params:
-# in.data - data prepared with data4clDistPlot f-n
-# in.colors - table with two columns:
-#             - gr.no - with group/cluster number, 
-#             - gr.col - with colour assignments
-#             prepared with getClColHier
-# in.fname - file name for plot download
+#' Cluster distribution barplot
+#'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param in.data a data.table prepared with data4clDistPlot f-n with 3 columns: grouping, cluster number, number of trajectories.
+#' @param in.colors a named vector with colours named according to cluster numbers.
+#' @param in.fname a string with a file name for plot download.
+#'
+#' @return
+#' @export
+#'
+#' @examples
 modClDistPlot = function(input, output, session, 
                          in.data, 
                          in.colors = NULL, 
@@ -58,30 +64,31 @@ modClDistPlot = function(input, output, session,
       shiny::need(!is.null(loc.dt), "Nothing to plot. Load data first!")
     )
     
+    if (is.null(loc.dt))
+      return(NULL)
+    
     # Two statements: "position_fill(reverse = TRUE)" and "guide_legend(reverse = T)"
     # result in a stacked bar plot with categories ordered from the bottom to top of the stacked bar
-    p.out = ggplot(loc.dt, aes_string(x = COLGR, y = COLNTRAJ)) +
+    p.out = ggplot(loc.dt, 
+                   aes_string(x = COLGR, 
+                              y = COLNTRAJ)) +
       geom_bar(aes_string(fill = paste0("as.factor(", COLCL, ")")), 
                stat = 'identity', 
                position = position_fill(reverse = TRUE)) +
       guides(fill = guide_legend(reverse = T))
     
     if(is.null(in.colors)) {
-      p.out = p.out + 
-        scale_fill_discrete(name = "Cluster")
+      # If no colour scale provided, assign a default palette from Tableau
+      loc.col.vec = LOCreturnTableauPalette("Color Blind", nrow(loc.groups))
+
     }
     else {
-      # Create a named vector with colours to make sure
-      # that colours correspond to correct clusters.
-      # The names come from cluster numbers.
-      loc.col.dt = in.colors()
-      loc.col.vec = loc.col.dt[["gr.col"]]
-      names(loc.col.vec) = loc.col.dt[["gr.no"]]
-      
-      p.out = p.out + 
-        scale_fill_manual(name = "Cluster", 
-                          values = loc.col.vec)
+      loc.col.vec = in.colors()
     }
+    
+    p.out = p.out +
+      scale_fill_manual(name = "Cluster",
+                        values = loc.col.vec)
     
     loc.rads = as.numeric(input$rBAxisLabelsRotate) * pi / 180
     loc.hjust = 0.5*(1-sin(loc.rads))

@@ -73,16 +73,24 @@ plotSilhUI =  function(id, label = "Plot Silhouette") {
 }
 
 # Server ----
-# Requires:
-# inDist - distance matrix
-# inNclust- number of clusters
-# inClWithCol- a table with cluster numbers matched to colours
-# inMeth - list with names of distance and linkage methods
+
+#' Silhoouette plot
+#'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param inDist a distance matrix
+#' @param inColWithCl a list with names of distance and linkage methods
+#' @param inMeth 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotSilh = function(input, output, session, 
-                       inDist,
-                       inNclust,
-                       inClWithCol,
-                       inMeth
+                    inDist,
+                    inColWithCl,
+                    inMeth
 ) {
   
   ns <- session$ns
@@ -104,21 +112,56 @@ plotSilh = function(input, output, session,
       return(NULL)
     }
     
-    if (DEB) {
-      cat(file = stderr(), 'plotSilh:calcDendCut locDist not NULL\n')
-    }
+    #locNclust = inNclust()
     
-    locNclust = inNclust()
+    # Get the number of clusters from the named colour vector
+    locNclust = length(inColWithCl())
     
     if (locNclust < 2) {
       return(NULL)
     }
     
-    return(LOChcut(x = locDist,
-                   k = inNclust(),
-                   hc_func = "hclust",
-                   hc_method = inMeth()$link
-    ))    
+    ## HERE!!!
+    ## The resulting cluster numbers are different from those in other modules???
+    locHcut = factoextra::hcut(
+      x = locDist,
+      k = locNclust,
+      isdiss = TRUE,
+      hc_func = "hclust",
+      hc_method = inMeth()$link
+    )
+    
+    cat("calcDendCut\n")
+    print(locHcut$cluster)
+    
+    return(locHcut)    
+  })
+  
+  calcSilh <- reactive({
+    if (DEB) {
+      cat(file = stderr(), 'plotSilh:calcSilh in\n')
+    }
+    
+    locDist = inDist()
+    
+    if (is.null(locDist)) {
+      return(NULL)
+    }
+    
+    locHclust = hclust(locDist, 
+                       method = inMeth()$link)
+    
+    # Get the number of clusters from the named colour vector
+    locNclust = length(inColWithCl())
+    
+    locClust = dendextend::cutree(locHclust,
+                                  k = locNclust,
+                                  order_clusters_as_data = F)
+
+    locClust = locClust[sort(names(locClust))]
+
+    locSilh = LOCcalcSil(inCluster = locClust,
+                         inDiss = locDist)
   })
   
   ## Plotting ----
@@ -176,36 +219,41 @@ plotSilh = function(input, output, session,
     locBut = input$butPlot
     
     # until clicking the Plot button
-    locDend = calcDendCut()
-    locClWithCol = inClWithCol()
+    locSilh = calcSilh()
+    locColWithCl = inColWithCl()
     
     shiny::validate(
-      shiny::need(!is.null(locDend), "Nothing to plot. Load data first or set the dendrogram cut > 1!"),
-      shiny::need(!is.null(locClWithCol), "Cl ~ Color assignments missing.")
+      shiny::need(!is.null(locSilh), "Nothing to plot. Load data first or set the dendrogram cut > 1!"),
+      shiny::need(!is.null(locColWithCl), "Cl ~ Color assignments missing.")
     )    
     
-    if (is.null(locClWithCol)) {
+    if (is.null(locSilh))
       return(NULL)
-    } else {
-      locColors = locClWithCol[["gr.col"]]
-      names(locColors) = locClWithCol[["gr.no"]]
-    }
     
-    locP = factoextra::fviz_silhouette(locDend, 
-                                       print.summary = FALSE, 
-                                       label = F,
-                                       main = "Silhouette") +
+    if (is.null(locColWithCl))
+      return(NULL)
+
+    locP = ggplot(locSilh,
+                  aes_string(x = COLID,
+                             y = COLSILW)) +
+      geom_bar(aes_string(color = COLCL,
+                          fill = COLCL),
+               stat = "identity") +
+      geom_hline(yintercept = mean(locSilh[[COLSILW]]),
+                 linetype = "dashed", 
+                 color = "red") +
       xlab("Time series") +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) +
-      theme(axis.text.x = element_blank()) +
+      theme(axis.text.x = element_blank(),
+            axis.ticks.x = element_blank()) +
       scale_fill_manual(name = "Cluster",
-                        values = locColors) +
+                        values = locColWithCl) +
       scale_colour_manual(name = "Cluster",
-                          values = locColors)
+                          values = locColWithCl)
     
     return(locP)
   }

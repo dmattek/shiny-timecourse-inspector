@@ -35,8 +35,8 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
         column(
           2,
           checkboxGroupInput(ns('chBPlotTrajStat'), 'Add', list('Mean' = 'mean', 
-                                                                '95% conf. interv.' = 'CI', 
-                                                                'Std. error' = 'SE'))
+                                                                '95% CI' = 'CI', 
+                                                                'SE' = 'SE'))
         ),
         column(
           3,
@@ -106,6 +106,23 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
 }
 
 ## Server ----
+
+#' Title
+#'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param in.data time-series data in long format (data.table)
+#' @param in.data.stim segments for plotting perturbations underneath time series (data.table)
+#' @param in.fname string with a file name for saving plots
+#' @param in.facet string with the grouping column for facetting
+#' @param in.facet.color named vector with colours, named according to groups
+#' @param in.ylab y-axis label (unused atm)
+#'
+#' @return
+#' @export
+#'
+#' @examples
 modTrajPlot = function(input, output, session, 
                        in.data, 
                        in.data.stim,
@@ -261,15 +278,11 @@ modTrajPlot = function(input, output, session,
       shiny::need(!is.null(loc.dt), "Nothing to plot. Load data first!")
     )
     
-    cat(file = stderr(), 'plotTraj: dt not NULL\n')
-    
     # check if stim data exists
     loc.dt.stim = shiny::isolate(in.data.stim())
     
     if (is.null(loc.dt.stim)) {
       cat(file = stderr(), 'plotTraj: dt.stim is NULL\n')
-    } else {
-      cat(file = stderr(), 'plotTraj: dt.stim not NULL\n')
     }
     
     # Future: change such that a column with colouring status is chosen by the user
@@ -281,7 +294,11 @@ modTrajPlot = function(input, output, session,
       loc.line.col.arg = NULL
     
     # select every other point for plotting
-    loc.dt = loc.dt[, .SD[seq(1, .N, input$sliPlotTrajSkip)], by = id]
+    loc.dt = loc.dt[, 
+                    .SD[seq(1, 
+                            .N, 
+                            input$sliPlotTrajSkip)], 
+                    by = id]
     
     # check if columns with XY positions are present
     if (sum(names(loc.dt) %like% 'pos') == 2)
@@ -301,16 +318,7 @@ modTrajPlot = function(input, output, session,
     if (is.null(in.facet.color)) {
       loc.facet.color = NULL
     } else {
-      # get existing groups in dt;
-      loc.facets = unique(loc.dt[, ..in.facet])
-      
-      # subset group-color assignments with existing groups
-      loc.facet.color = in.facet.color()[loc.facets][["gr.col"]]
-      
-      # IMPORTANT!!!
-      # The vector with colours has to be named according to cluster numbers,
-      # otherwise the manual colour assignment in scale_colour_manual won't match!
-      names(loc.facet.color) = loc.facets[[COLCL]]
+      loc.facet.color = in.facet.color()
     }
     
     

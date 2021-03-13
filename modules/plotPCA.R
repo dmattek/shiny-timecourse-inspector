@@ -74,16 +74,25 @@ plotPCAUI =  function(id, label = "Plot PCA.") {
 }
 
 # Server ----
-# Requires:
-# inDataWide - data as a matrix in wide format for prcomp
-# inIdWithCl - a table with track IDs matched to clusters
-# inClWithCol- a table with clusters matched to colours
-# inMeth - list with names of distance and linkage methods
 
+#' Plot PCA
+#'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param inDataWide a matrix in wide format for prcomp.
+#' @param inIdWithCl a data.table with track IDs matched to clusters
+#' @param inColWithCl a named vector of colours with colours matched to clusters
+#' @param inMeth a list with names of distance and linkage methods
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotPCA = function(input, output, session, 
                       inDataWide,
                       inIdWithCl,
-                      inClWithCol,
+                      inColWithCl,
                       inMeth) {
   
   ns <- session$ns
@@ -174,6 +183,8 @@ plotPCA = function(input, output, session,
     if(is.null(loc.p))
       return(NULL)
     
+    loc.p = LOCremoveGeom(loc.p, "GeomPolygon")
+    
     return(plotly_build(loc.p))
   })
   
@@ -187,14 +198,13 @@ plotPCA = function(input, output, session,
     # until clicking the Plot button
     locPCAres = calcPCA()
     locIDwithCl = inIdWithCl()
-    locClWithCol = inClWithCol()
+    locColWithCl = inColWithCl()
     
     shiny::validate(
       shiny::need(!is.null(locPCAres), "Data not loaded or missing values present. Cannot calculate PCA!"),
       shiny::need(!is.null(locIDwithCl), "ID ~ Cl identifiers missing."),
-      shiny::need(!is.null(locClWithCol), "Cl ~ Color assignments missing.")
+      shiny::need(!is.null(locColWithCl), "Cl ~ Color assignments missing.")
     )
-    
     
     if (is.null(locPCAres))
       return(NULL)
@@ -202,12 +212,8 @@ plotPCA = function(input, output, session,
     if (is.null(locIDwithCl))
       return(NULL)
     
-    if (is.null(locClWithCol)) {
+    if (is.null(locColWithCl))
       return(NULL)
-    } else {
-      locColors = locClWithCol[["gr.col"]]
-      names(locColors) = locClWithCol[["gr.no"]]
-    }
     
     # Add cluster numbers to each track based on track ID
     # When manual tracks are selected for display in the UI,
@@ -215,6 +221,10 @@ plotPCA = function(input, output, session,
     locPCAres$pcaDT = merge(locPCAres$pcaDT,
                             locIDwithCl,
                             by = COLID)
+    
+    # Turn cluster numbers into factors for plotting
+    locPCAres$pcaDT[,
+                    (COLCL) := as.factor(get(COLCL))]
     
     # Calculate convex hulls around clusters
     locCH = locPCAres$pcaDT[,
@@ -242,9 +252,9 @@ plotPCA = function(input, output, session,
                      in.font.strip = PLOTFONTFACETSTRIP, 
                      in.font.legend = PLOTFONTLEGEND) +
       scale_fill_manual(name = "Cluster",
-                        values = locColors) +
+                        values = locColWithCl) +
       scale_colour_manual(name = "Cluster",
-                          values = locColors)
+                          values = locColWithCl)
     
     return(locP)
   }

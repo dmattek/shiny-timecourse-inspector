@@ -23,6 +23,7 @@ SIGNIFDIGITSINTAB = 3
 
 # if true, additional output printed to R console
 DEB = T
+DEB2 = T
 
 # font sizes in pts for plots in the manuscript
 # PLOTFONTBASE = 8
@@ -62,7 +63,9 @@ COLPOSY = 'pos.y'
 COLIDX = 'IDX'
 COLIDXDIFF = 'IDXdiff'
 COLCL = 'cl'
+COLCLCOLOR = 'clColor'
 COLNTRAJ = "nCells"
+COLSILW = "silWidth"
 
 # file names
 FCSVOUTLIERS = 'outliers.csv'
@@ -150,7 +153,7 @@ helpText.server = c(
     "<br>",
     "<p><b>Wide format</b> - a row is a time series with columns as time points.",
     "At least 3 columns shuold be present:</p>",
-    "<li>First two columns in wide format should contain grouping and track IDs</li>",
+    "<li>First two columns in wide format should contain the grouping and track IDs</li>",
     "<li>A column with a time point. Headers of columns with time points need to be numeric</li>"
   ),
   inDataGen1 =   paste0(
@@ -376,8 +379,8 @@ LOCgenTraj2 <-
   function(n_perGroup = 20,
            sd_noise = 0.01,
            sampleFreq = 0.2,
-           endTime = 50)
-  {
+           endTime = 50) {
+    
     # Function definition ----------------------------------
     sim_expodecay_lagged_stim <-
       function (n,
@@ -648,6 +651,51 @@ LOCremoveOutTracks = function(inDT, inDTout, inColID, inGapLen = 0, inDeb = F) {
 
 # Cluster validation ----
 
+#' Calculate silhouette widths
+#'
+#' Adapted from .get_silinfo in the factoextra package 
+#' (https://github.com/kassambara/factoextra/blob/master/R/cluster_utilities.R).
+#'
+#' @param inCluster an integer vector with k different integer cluster codes, e.g. from cutree. IMPORTANT: cluster codes should be ordered the same as data because they are added as a column to existing columns ordered according to labels from the dissimilarity matrix.
+#' @param inDiss a distance/dissimilarity matrix, e.g. from dist.
+#'
+#' @return a data.table with 3 columns: id, cluster (as.factor), silhouette width
+#' @export
+#'
+#' @examples
+#' 
+#' m = iris[, -5]
+#' diss <- dist(m, method = "manhattan")
+#' hc <- hclust(diss, method = "complete")
+#' cl <- cutree(locDend, 3, order_clusters_as_data = T)
+#' LOCcalcSil(cl, diss)
+#' 
+LOCcalcSil <- function(inCluster, inDiss){
+  
+  k <- length(unique(inCluster))
+  if(k > 1) {
+    locSilObj <- cluster::silhouette(inCluster, inDiss)
+    locDT <- as.data.table(locSilObj[, c(1,3)])
+    
+    setnames(locDT, c(COLCL, COLSILW))
+    locDT[,
+          (COLID) := colnames(as.matrix(inDiss))]
+    
+    locDT[,
+          (COLCL) := as.factor(get(COLCL))]
+    
+    setorderv(locDT, 
+              c(COLCL, COLSILW),
+              order = c(1,-1))
+    
+    locDT[,
+          (COLID) := factor(get(COLID), levels = get(COLID))]
+    
+    return(locDT)
+  } else
+    return(NULL)
+}
+
 # Customize factoextra functions to accept dissimilarity matrix from the start. 
 # Otherwise can't use distance functions that are not in base R, like DTW.
 # Inherit and adapt hcut function to take input from UI, used for fviz_clust
@@ -751,42 +799,6 @@ LOCnbclust <-
 
 # Clustering ----
 
-# Return a dt with tracks IDs and corresponding cluster assignments depending on the sdendrogram cut (in.k)
-# This one works wth dist & hclust pair
-# For sparse hierarchical clustering use getDataClSpar
-# Arguments:
-# in.dend  - dendrogram; usually output from as.dendrogram(hclust(distance_matrix))
-# in.k - level at which dendrogram should be cut
-
-getDataCl = function(in.dend, in.k, in.deb = T) {
-  if (in.deb) {
-    cat(file = stderr(), 'auxfunc:getDataCl \n')
-  }
-
-  if (is.null(in.dend)) {
-    if (in.deb) {
-      cat(file = stderr(), 'auxfunc:getDataCl: in.dend is NULL \n')
-    }
-    
-    return(NULL)
-  } 
-  
-  loc.clAssign = dendextend::cutree(in.dend, 
-                                    in.k, 
-                                    order_clusters_as_data = TRUE, )
-  #print(loc.m)
-  
-  # The result of cutree contains named vector with names being cell id's
-  # THIS WON'T WORK with sparse hierarchical clustering because there, the dendrogram doesn't have original id's
-  loc.dt.clAssign = as.data.table(loc.clAssign, keep.rownames = T)
-  setnames(loc.dt.clAssign, c(COLID, COLCL))
-  
-  
-  #cat('===============\ndataCl:\n')
-  #print(loc.dt.cl)
-  return(loc.dt.clAssign)
-}
-
 
 # Return a dt with cell IDs and corresponding cluster assignments depending on dendrogram cut (in.k)
 # This one works with sparse hierarchical clustering!
@@ -798,7 +810,9 @@ getDataCl = function(in.dend, in.k, in.deb = T) {
 getDataClSpar = function(in.dend, in.k, in.id) {
   cat(file = stderr(), 'auxfunc:getDataClSpar \n')
   
-  loc.m = dendextend::cutree(in.dend, in.k, order_clusters_as_data = TRUE)
+  loc.m = dendextend::cutree(in.dend, 
+                             in.k, 
+                             order_clusters_as_data = TRUE)
   #print(loc.m)
   
   # The result of cutree containes named vector with names being cell id's
@@ -812,47 +826,119 @@ getDataClSpar = function(in.dend, in.k, in.id) {
 }
 
 
+#' Time-series IDs with cluster numbers
+#' 
+#' Process the dendrogram to relate IDs of time series to colours and 
+#' cluster numbers based on the dendrogram cut and colouring by dendextend::color_branches.
+#' 
+#' The dendrogram is cut again in this function to obtain the number of clusters.
+#' In principle, we could extract the number of clusters from the number of colours in
+#' the cut and coloured dendrogram as returned by dendextend::color_branches.
+#' However (!), if the colour palette is smaller than the number of clusters,
+#' and the colours are recycled (e.g. using LOCreturnTableauPalette),
+#' the number of clusters would be smaller than the true number.
+#'
+#' @param inHclust a cut and coloured dendrogram as returned by dendextend::color_branches
+#' @param inK an integer with the number of clusters
+#' @param inDeb print additional debugging info (unused)
+#'
+#' @return Return a data.table with 2 columns: COLID - time series ID, COLCL - cluster number
+#' @export
+#'
+#' @examples
 
-# Returns a table with 2 columns:
-# - gr.no - group numbers, e.g. cluster,
-# - gr.col - colour assignments.
-#
-# Used to pass the cluster-colour relationship to plotting functions
-# to keep the same colour assignments across plots.
-# Thanks to data.table, the order can be specified when selecting clusters to display in UI.
-# 
-# The number of rows is determined by dendrogram cut, parameter in.k.
-# Colours are obtained from the dendrogram, parameter in.dend, using dendextend::get_leaves_branches_col
-LOCgetClCol <- function(in.dend, in.k) {
-  loc.col_labels <- dendextend::get_leaves_branches_col(in.dend)
-  loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
+LOCdtIDwithCl <- function(inHclust, inK, inDeb = F) {
   
-  return(unique(
-    data.table(
-      gr.no = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE),
-      gr.col = loc.col_labels
-    )
-  ))
+  # To obtain cluster assignments, the tree has to be cut again;
+  # reason: see explanation above.
+  # DO NOT order clusters by data!
+  locDend  = dendextend::cutree(inHclust, 
+                                k = inK, 
+                                order_clusters_as_data = F)
+  
+  locDT = data.table(col1 = labels(locDend),
+                     col2 = as.numeric(locDend))
+  setnames(locDT,
+           c(COLID, COLCL))
+  
+  if (inDeb) {
+    cat("auxfunc:LOCdtIDwithCl: locDT=\n")
+    print(locDT)
+  }
+  
+  return(locDT)
 }
 
-## NOT USED ATM
-# Returns a named vector with:
-# colour assignments as values and cluster numbers as names.
-# Same as LOCgetClCol but returns a vector instead of a data.table
-# 
-# Vector length is determined by dendrogram cut, parameter in.k.
-# Colours are obtained from the dendrogram, parameter in.dend, using dendextend::get_leaves_branches_col
-LOCgetClColVec <- function(in.dend, in.k) {
-  loc.col_labels <- dendextend::get_leaves_branches_col(in.dend)
-  loc.col_labels <- loc.col_labels[order(order.dendrogram(in.dend))]
+#' Assign cluster numbers to colours
+#' 
+#' Vector length is determined by the dendrogram cut, parameter inK.
+#'
+#' @param inDend a cut and coloured dendrogram obtained using dendextend::get_leaves_branches_col
+#' @param inK an integer for the number of clusters to cut.
+#' @param inDeb logical, print additional debug info.
+#'
+#' @return a named vector with colours as values and cluster numbers as names.
+#' @export
+#'
+#' @examples
+LOCvecColWithCl <- function(inDend, inK, inDeb = F) {
   
-  names(loc.col_labels) = dendextend::cutree(in.dend, k = in.k, order_clusters_as_data = TRUE)
+  # Obtain colours from the dendrogram
+  locColors <- dendextend::get_leaves_branches_col(inDend)
+  
+  # Re-cut the dendrogram to obtain cluster numbers
+  # 
+  # IMPORTANT: do not set order_clusters_as_data to TRUE!
+  # Colours are extracted from the coloured dendrogram 
+  # that is passed to this function. They are ordered
+  # the same way as the dendrogram. The assignment of
+  # cluster numbers during the re-cutting has to
+  # assign cluster numbers in the same order as the dendrogram.
+  # 
+  locClust = dendextend::cutree(inDend, 
+                                k = inK, 
+                                order_clusters_as_data = F)
+  
+  # Name the colour vector according to cluster numbers
+  names(locColors) = as.numeric(locClust)
   
   # To return unique vector elements and to keep the names
   # via: https://stackoverflow.com/a/42714288/1898713
   return(
-    loc.col_labels[unique(names(loc.col_labels))]
+    locColors[unique(names(locColors))]
   )
+}
+
+
+#' Cut & colour the dendrogram
+#' 
+#' Cut the dendrogram to yield a given number of clusters and 
+#' colour the dendrogram with a provided colour palette.
+#' 
+#' The output passed to the heatmap plotting function.
+#' 
+#' @param inHclust an hclust object
+#' @param inK an integer with the number of clusters
+#' @param inColPal a palette name from the Tableau package
+#'
+#' @return
+#' @export
+#'
+#' @examples
+LOCdendCutColor = function(inHclust, inK, inColPal) {
+  # Make a palette with the amount of colours equal to the number of clusters
+  # If more clusters required than colours in the palette, the colours will be RECYCLED!
+  # Warning thrown in the console.
+  locColors = LOCreturnTableauPalette(inPalName = inColPal, 
+                                      inNcolors = inK)
+  
+  # colour the branches
+  locDend <- as.dendrogram(inHclust)
+  locDend <- dendextend::color_branches(locDend, 
+                                        col = locColors, 
+                                        k = inK)
+  
+  return(locDend)
 }
 
 
@@ -898,6 +984,22 @@ LOCggplotTheme = function(in.font.base = 12,
   return(loc.theme)
 }
 
+#From: https://stackoverflow.com/a/46221054/1898713
+LOCremoveGeom <- function(ggplot2_object, geom_type) {
+  # Delete layers that match the requested type.
+  layers <- lapply(ggplot2_object$layers, function(x) {
+    if (class(x$geom)[1] == geom_type) {
+      NULL
+    } else {
+      x
+    }
+  })
+  # Delete the unwanted layers.
+  layers <- layers[!sapply(layers, is.null)]
+  ggplot2_object$layers <- layers
+  ggplot2_object
+}
+
 # Build Function to Return Element Text Object
 # From: https://stackoverflow.com/a/36979201/1898713
 LOCrotatedAxisElementText = function(angle,
@@ -940,12 +1042,16 @@ LOCrotatedAxisElementText = function(angle,
 #' @export
 #'
 #' @examples
-#' # The Color Blind palette has only 10 colors; here the 11th will be recycled
+#' # The Colour Blind palette has only 10 colours; here the 11th will be recycled
 #' LOCreturnTableauPalette("Color Blind", 11)
-LOCreturnTableauPalette = function(inPalName, inNcolors = 10) {
+LOCreturnTableauPalette = function(inPalName, inNcolors = 10, inDeb = F) {
   
   # get the max N of colours in the palette
   loc.max.col = attr(ggthemes::tableau_color_pal(inPalName), "max_n")
+  
+  if (loc.max.col < inNcolors) {
+    cat(file = stderr(), 'auxfunc:LOCreturnTableauPalette Warning! The palette provides less colours than required in UI.\n')
+  }
   
   # get all colours in the palette
   loc.col = ggthemes::tableau_color_pal(inPalName)(n = loc.max.col)
@@ -953,7 +1059,12 @@ LOCreturnTableauPalette = function(inPalName, inNcolors = 10) {
   # repeat the full palette for the required number of colours
   loc.col = rep(loc.col, ((inNcolors-1) %/% loc.max.col) + 1)
   
-  # return only the required number of colurs
+  if (inDeb) {
+    cat("auxfunc:LOCreturnTableauPalette: loc.col[1:inNcolors]=\n")
+    print(loc.col[1:inNcolors])
+  }
+  
+  # return only the required number of colours
   return(loc.col[1:inNcolors])
 }
 
@@ -1000,9 +1111,9 @@ LOCplotTraj = function(dt.arg,
                        aux.label2 = NULL,
                        aux.label3 = NULL,
                        stat.arg = c('', 'mean', 'CI', 'SE')) {
+  
   # match arguments for stat plotting
   loc.stat = match.arg(stat.arg, several.ok = TRUE)
-  
   
   # aux.label12 are required for plotting XY positions in the tooltip of the interactive (plotly) graph
   p.tmp = ggplot(dt.arg,
@@ -1012,10 +1123,6 @@ LOCplotTraj = function(dt.arg,
                    group = group.arg,
                    label = group.arg
                  ))
-  #,
-  #                          label  = aux.label1,
-  #                          label2 = aux.label2,
-  #                          label3 = aux.label3))
   
   if (is.null(line.col.arg)) {
     p.tmp = p.tmp +
@@ -1042,17 +1149,25 @@ LOCplotTraj = function(dt.arg,
   # Use only when plotting traj from clustering!
   # A horizontal line is added above the data
   if (!is.null(facet.color.arg)) {
+    
     loc.y.max = max(dt.arg[, 
                            c(y.arg), 
                            with = FALSE])
     
-    # cat("auxfunc::LOCplotTraj::facet.color.arg\n")
-    # print(facet.color.arg)
-    # cat("\n\n")
+    # The named vector facet.color.arg with colours and facet numbers
+    # is used to plot a horizontal bar above the time series.
+    # Note, the named vector for colouring the horizontal bar
+    # has to have the same number of elements as the number of facets!
     
+    loc.facet.color = 
+      facet.color.arg[
+        sort(
+          unique(
+            dt.arg[[facet.arg]]))]
+
     p.tmp = p.tmp +
       geom_hline(
-        colour = facet.color.arg[sort(names(facet.color.arg))],
+        color = loc.facet.color,
         yintercept = loc.y.max,
         size = 4
       )
@@ -1095,8 +1210,6 @@ LOCplotTraj = function(dt.arg,
       group = 1
     )
   
-  
-  
   p.tmp = p.tmp +
     facet_wrap(as.formula(paste("~", facet.arg)),
                ncol = facet.ncol.arg,
@@ -1120,7 +1233,9 @@ LOCplotTraj = function(dt.arg,
     )
   }
   
-  p.tmp = p.tmp + coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
+  p.tmp = p.tmp + 
+    coord_cartesian(xlim = xlim.arg, 
+                    ylim = ylim.arg)
   
   p.tmp = p.tmp +
     xlab(paste0(xlab.arg, "\n")) +
@@ -1181,14 +1296,6 @@ LOCplotTrajRibbon = function(dt.arg,
                              xlab.arg = NULL,
                              ylab.arg = NULL,
                              plotlab.arg = NULL) {
-  
-  # cat("auxfunc::LOCplotTrajRibbon::unique(dt.arg[[group.arg]])\n")
-  # print(unique(dt.arg[[group.arg]]))
-  # cat("\n\n")
-  # 
-  # cat("auxfunc::LOCplotTrajRibbon::col.arg\n")
-  # print(col.arg)
-  # cat("\n\n")
   
   p.tmp = ggplot(dt.arg, aes_string(x = x.arg, 
                                     group = group.arg))
@@ -1257,39 +1364,55 @@ LOCplotPSD <- function(dt.arg,
                        # string with column name for grouping time series (here, it's a column corresponding to grouping by condition)
                        xlab.arg = x.arg,
                        ylab.arg = y.arg,
-                       facet.color.arg = NULL) {
+                       facet.color.arg = NULL,
+                       inDeb = F) {
+  
   require(ggplot2)
+  
   if (length(setdiff(c(x.arg, y.arg, group.arg), colnames(dt.arg))) > 0) {
     stop(paste("Missing columns in dt.arg: ", setdiff(
       c(x.arg, y.arg, group.arg), colnames(dt.arg)
     )))
   }
+  
   p.tmp <- ggplot(dt.arg, aes_string(x = x.arg, y = y.arg)) +
     geom_line() +
     geom_rug(sides = "b",
              alpha = 1,
-             color = "lightblue") +
-    facet_wrap(group.arg) +
-    labs(x = xlab.arg, y = ylab.arg)
+             color = "lightblue")
   
+  # Add a horizontal bar with colours according to cluster numbers.
+  # Use only when plotting traj from clustering!
+  # A horizontal line is added above the data
   if (!is.null(facet.color.arg)) {
-    loc.y.max = max(dt.arg[, c(y.arg), with = FALSE])
-    loc.dt.cl = data.table(xx = 1:length(facet.color.arg), yy = loc.y.max)
-    setnames(loc.dt.cl, 'xx', group.arg)
     
-    # adjust facet.color.arg to plot
+    loc.y.max = max(dt.arg[, 
+                           c(y.arg), 
+                           with = FALSE])
+    
+    # The named vector facet.color.arg with colours and facet numbers
+    # is used to plot a horizontal bar above the time series.
+    # Note, the named vector for colouring the horizontal bar
+    # has to have the same number of elements as the number of facets!
+    
+    loc.facet.color = 
+      facet.color.arg[
+        sort(
+          unique(
+            dt.arg[[group.arg]]))]
     
     p.tmp = p.tmp +
       geom_hline(
-        data = loc.dt.cl,
-        colour = facet.color.arg,
+        color = loc.facet.color,
         yintercept = loc.y.max,
         size = 4
-      ) +
-      scale_colour_manual(values = facet.color.arg,
-                          name = '')
+      )
   }
-  
+
+  p.tmp = p.tmp +
+    facet_wrap(group.arg) +
+    labs(x = xlab.arg, y = ylab.arg)
+    
   return(p.tmp)
 }
 

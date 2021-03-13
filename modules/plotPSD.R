@@ -193,13 +193,15 @@ modPSDPlot = function(input, output, session,
       # get group numbers in dt; 
       # loc.dt[, c(in.facet), with = FALSE] returns a data table with a single column
       # [[1]] at the end extracts the first column and returns as a vector
-      loc.groups = unique(loc.dt[, c(in.facet), with = FALSE][[1]])
+      #loc.groups = unique(loc.dt[, c(in.facet), with = FALSE][[1]])
       
       # get colour palette
       # the length is equal to the number of groups in the original dt.
       # When plotting time series within clusters, the length equals the number of clusters.
-      loc.facet.col = in.facet.color()$cl.col
-      loc.facet.col = loc.facet.col[loc.groups]
+      #loc.facet.col = in.facet.color()$cl.col
+      #loc.facet.col = loc.facet.col[loc.groups]
+      
+      loc.facet.col = in.facet.color()
     }
     
 
@@ -211,7 +213,6 @@ modPSDPlot = function(input, output, session,
                               in.return.period = input$inPSDxchoice,
                               in.time.btwPoints = input$ninPSDsamplFreq
                               )
-    loc.dt.aggr[, (in.facet) := as.factor(get(in.facet))]
     
     x_arg <- ifelse('period' %in% colnames(loc.dt.aggr), 'period', 'frequency')
     x_arg_str <- paste0(toupper(substr(x_arg, 1, 1)), tolower(substring(x_arg, 2)))  # capitalized
