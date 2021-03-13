@@ -162,7 +162,7 @@ shinyUI(fluidPage(
         
         # sparse hierarchical clustering package sparcl temporarily unavailable from CRAN
         tabPanel(
-           'Hierarchical Sparse',
+           'Hier. Sparse',
            clustHierSparUI('tabClHierSpar')
         ),
         
