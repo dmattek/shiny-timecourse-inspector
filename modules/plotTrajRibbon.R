@@ -325,17 +325,10 @@ modTrajRibbonPlot = function(input, output, session,
     loc.groups = unique(loc.dt[, ..in.group])
     
     if (is.null(in.group.color)) {
-      # Assign ColorBlind palette from Tableau
+      # If no colour scale provided, assign a default palette from Tableau
       loc.group.color = LOCreturnTableauPalette("Color Blind", nrow(loc.groups))
     } else {
-      # Use externally provided translation between groups/clusters and colors
-      # Subset group-colour assignments with existing groups
-      loc.group.color = in.group.color()[loc.groups][["gr.col"]]
-      
-      # IMPORTANT!!!
-      # The vector with colours has to be named according to cluster numbers,
-      # otherwise the manual colour assignment in scale_colour_manual won't match!
-      names(loc.group.color) = loc.groups[[COLCL]]
+      loc.group.color = in.group.color()
     }
     
     # aggregate data; calculate Mean, CI or SE
