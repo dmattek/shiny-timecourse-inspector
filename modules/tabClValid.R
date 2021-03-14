@@ -154,7 +154,7 @@ tabClValidUI <- function(id, label = "Validation") {
                           'Number of clusters to evaluate',
                           min = 2,
                           max = 20,
-                          value = 1,
+                          value = 2,
                           step = 1,
                           ticks = TRUE,
                           round = TRUE
