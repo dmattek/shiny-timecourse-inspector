@@ -147,8 +147,8 @@ modPSDPlot = function(input, output, session,
     # make the f-n dependent on the button click
     locBut = input$butPlotTraj
     
-    # Check if main data exists
-    # Thanks to solate all mods in the left panel are delayed 
+    # Check if data exists
+    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dt = shiny::isolate(in.data())
     shiny::validate(
