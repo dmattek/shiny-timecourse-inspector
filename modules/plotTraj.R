@@ -270,13 +270,25 @@ modTrajPlot = function(input, output, session,
     # make the f-n dependent on the button click
     locBut = input$butPlotTraj
     
-    # Check if main data exists
-    # Thanks to solate all mods in the left panel are delayed 
+    # Check if data exists
+    # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
-    loc.dt = isolate(in.data())
+    loc.dt = shiny::isolate(in.data())
     shiny::validate(
       shiny::need(!is.null(loc.dt), "Nothing to plot. Load data first!")
     )
+    
+    if (is.null(loc.dt)) {
+      cat(file = stderr(), 'plotTraj: dt is NULL\n')
+      
+      return(NULL)
+    }
+    
+    if (nrow(loc.dt) < 1) {
+      cat(file = stderr(), 'plotTraj: dt has 0 rows\n')
+      
+      return(NULL)
+    }
     
     # check if stim data exists
     loc.dt.stim = shiny::isolate(in.data.stim())

@@ -267,7 +267,7 @@ modTrajRibbonPlot = function(input, output, session,
     cat(file = stderr(), 'plotTrajRibbon: in\n')
     locBut = input$butPlotTraj
     
-    # Check if main data exists
+    # Check if data exists
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dt = shiny::isolate(in.data())
@@ -276,10 +276,20 @@ modTrajRibbonPlot = function(input, output, session,
       shiny::need(!is.null(loc.dt), message = "Nothing to plot. Load data first!")
     )
     
-    cat(file = stderr(), 'plotTrajRibbon: dt not NULL\n')
+    if (is.null(loc.dt)) {
+      cat(file = stderr(), 'plotTrajRibbon: dt is NULL\n')
+      
+      return(NULL)
+    }
+      
+    if (nrow(loc.dt) < 1) {
+      cat(file = stderr(), 'plotTrajRibbon: dt has 0 rows\n')
+      
+      return(NULL)
+    }
     
     # check if stim data exists
-    loc.dt.stim = isolate(in.data.stim())
+    loc.dt.stim = shiny::isolate(in.data.stim())
     
     if (is.null(loc.dt.stim)) {
       cat(file = stderr(), 'plotTrajRibbon: stim is NULL\n')
