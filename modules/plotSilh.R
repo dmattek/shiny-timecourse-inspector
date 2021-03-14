@@ -243,6 +243,7 @@ plotSilh = function(input, output, session,
                  linetype = "dashed", 
                  color = "red") +
       xlab("Time series") +
+      ylab("Silhouette width") +
       LOCggplotTheme(in.font.base = PLOTFONTBASE, 
                      in.font.axis.text = PLOTFONTAXISTEXT, 
                      in.font.axis.title = PLOTFONTAXISTITLE, 
