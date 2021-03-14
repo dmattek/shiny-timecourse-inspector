@@ -30,11 +30,88 @@ modSelOutliersUI = function(id, label = "Outlier Selection") {
     checkboxInput(ns('chbRemoveOut'), 'Remove outliers', value = F),
     bsTooltip(ns('chbRemoveOut'), helpText.selOutliers[["chbRemoveOut"]], placement = "top", trigger = "hover", options = NULL),
     
-    uiOutput(ns('uiSelOutliers'))
+    conditionalPanel(
+      condition = "input.chbRemoveOut",
+      ns = ns,
+      
+      fluidRow(
+        column(2, 
+               numericInput(ns('numOutliersPerc'),
+                            label = '% of data',
+                            min = 0,
+                            max = 100,
+                            value = 0, 
+                            step = 0.05, width = '100px'),
+               bsTooltip(ns('numOutliersPerc'), helpText.selOutliers[["numOutliersPerc"]], placement = "top", trigger = "hover", options = NULL),
+               
+               checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F),
+               bsTooltip(ns('chBtrajInter'), helpText.selOutliers[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL),
+               
+               # Provide interval between 2 time points (for interpolation of NAs and missing time points)
+               conditionalPanel(
+                 condition = "input.chBtrajInter && input.slOutliersGapLen > 0",
+                 ns = ns,
+                 
+                 numericInput(
+                   ns('inSelTimeFreq'),
+                   'Interval between 2 time points',
+                   min = 0,
+                   step = 1,
+                   width = '100%',
+                   value = 1
+                 )
+               ),
+               
+               uiOutput(ns('varSelTimeFreq'))
+        ),
+        column(2, 
+               radioButtons(ns('rbOutliersType'), 
+                            label = 'From', 
+                            choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot')),
+               bsTooltip(ns('rbOutliersType'), helpText.selOutliers[["rbOutliersType"]], placement = "top", trigger = "hover", options = NULL)
+        ),
+        column(3,
+               sliderInput(ns('slOutliersGapLen'),
+                           label = 'Max allowed gap duration',
+                           min = 0,
+                           max = 10,
+                           value = 0, 
+                           step = 1),
+               bsTooltip(ns('slOutliersGapLen'), helpText.selOutliers[["slOutliersGapLen"]], placement = "top", trigger = "hover", options = NULL)
+        ),
+        column(3,
+               downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
+               htmlOutput(ns("txtOutliersPerc"))
+        )
+      ),
+      checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
+      bsTooltip(ns('chBplotDist'), helpText.selOutliers[["chBplotDist"]], placement = "top", trigger = "hover", options = NULL),
+      
+      conditionalPanel(
+        condition = "input.chBplotDist",
+        ns = ns,
+        
+        plotOutput(ns("plotDist"))
+      )
+    )
   )
 }
 
 # Server-remove-outliers ----
+
+#' Outlier removal
+#' 
+#' Server part of the outlier removal module
+#'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param in.data a data.table with time series in long format.
+#'
+#' @return
+#' @export
+#'
+#' @examples
 modSelOutliers = function(input, output, session, in.data) {
   
   ns = session$ns
@@ -51,71 +128,6 @@ modSelOutliers = function(input, output, session, in.data) {
     id = NULL
   )
   
-  # UI for the entire module
-  output$uiSelOutliers = renderUI({
-    cat(file = stderr(), 'modSelOutliers:uiSelOutliers\n')
-    ns <- session$ns
-    
-    if(input$chbRemoveOut) {
-      tagList(
-        fluidRow(
-          column(2, 
-                 numericInput(ns('numOutliersPerc'),
-                              label = '% of data',
-                              min = 0,
-                              max = 100,
-                              value = 0, 
-                              step = 0.05, width = '100px'),
-                 bsTooltip(ns('numOutliersPerc'), helpText.selOutliers[["numOutliersPerc"]], placement = "top", trigger = "hover", options = NULL),
-                 
-                 checkboxInput(ns('chBtrajInter'), 'Interpolate gaps', value = F),
-                 bsTooltip(ns('chBtrajInter'), helpText.selOutliers[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL),
-                 uiOutput(ns('varSelTimeFreq'))
-          ),
-          column(2, 
-                 radioButtons(ns('rbOutliersType'), 
-                              label = 'From', 
-                              choices = c('top' = 'top', 'top & bottom' = 'mid', 'bottom' = 'bot')),
-                 bsTooltip(ns('rbOutliersType'), helpText.selOutliers[["rbOutliersType"]], placement = "top", trigger = "hover", options = NULL)
-          ),
-          column(3,
-                 sliderInput(ns('slOutliersGapLen'),
-                             label = 'Max allowed gap duration',
-                             min = 0,
-                             max = 10,
-                             value = 0, 
-                             step = 1),
-                 bsTooltip(ns('slOutliersGapLen'), helpText.selOutliers[["slOutliersGapLen"]], placement = "top", trigger = "hover", options = NULL)
-          ),
-          column(3,
-                 downloadButton(ns('downOutlierCSV'), label = 'CSV with outlier IDs'),
-                 htmlOutput(ns("txtOutliersPerc"))
-          )
-        ),
-        checkboxInput(ns('chBplotDist'), 'Plot data distribution', value = F),
-        bsTooltip(ns('chBplotDist'), helpText.selOutliers[["chBplotDist"]], placement = "top", trigger = "hover", options = NULL),
-        
-        uiOutput(ns('uiDistPlot'))
-      )
-    }
-  })
-  
-  # Provide interval between 2 time points (for interpolation of NAs and missing time points)
-  output$varSelTimeFreq = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:varSelTimeFreq\n')
-    
-    if (input$chBtrajInter & input$slOutliersGapLen > 0) {
-      numericInput(
-        ns('inSelTimeFreq'),
-        'Interval between 2 time points',
-        min = 0,
-        step = 1,
-        width = '100%',
-        value = 1
-      )
-    }
-  })
   
   # Display number of tracks and outliers  
   output$txtOutliersPerc <- renderText({ 
@@ -141,114 +153,108 @@ modSelOutliers = function(input, output, session, in.data) {
   )
   
   # Plot of value distribution
-  output$uiDistPlot <- renderUI({
-    ns <- session$ns
+  output$plotDist <- renderPlot({
+    cat(file = stderr(), 'tabSelOutliers:plotDist: in\n')
     
-    if (input$chBplotDist) {
+    locDT = in.data()
+    
+    shiny::validate(
+      shiny::need(!is.null(locDT), "Nothing to plot. Load data first!")
+    )
+    
+    if (is.null(locDT)) {
+      return(NULL)
+    }
+    
+    
+    # main density plot
+    locP = ggplot(locDT, aes_string(x = COLY)) +
+      geom_density()
+    
+    # Shade regions of the density plot according to
+    # value set in input$numOutliersPerc.
+    
+    # extract data from density plot
+    locDTtmp = as.data.table(ggplot_build(locP)$data[[1]])
+    
+    # shade region on the right
+    if (input$rbOutliersType == 'top') {
       
-      locDT = in.data()
+      # find position of the right boundary
+      locQuantR = quantile(locDT[[COLY]], 
+                           1 - input$numOutliersPerc * 0.01, 
+                           na.rm = T, 
+                           type = 3)
       
-      if (is.null(locDT)) {
-        return(NULL)
-      }
+      # select only those points of the density plot right to the right boundary
+      locDTtmpSub = locDTtmp[x > locQuantR]
       
-      output$densPlot = renderPlot({
+      # add shaded RIGHT region to the plot
+      if (nrow(locDTtmpSub) > 0 )
+        locP = locP + 
+        geom_area(data = locDTtmpSub, aes(x=x, y=y), fill="red") +
+        geom_vline(xintercept = locQuantR, linetype = 'dashed', color = 'red')
+    } else 
+      # shade region on the left
+      if (input$rbOutliersType == 'bot') {
         
-        # main density plot
-        locP = ggplot(locDT, aes_string(x = COLY)) +
-          geom_density()
+        # find position of the right boundary
+        locQuantL = quantile(locDT[[COLY]], 
+                             input$numOutliersPerc * 0.01, 
+                             na.rm = T, 
+                             type = 3)
         
-        # Shade regions of the density plot according to
-        # value set in input$numOutliersPerc.
+        # select only those points of the density plot left to the left boundary
+        locDTtmpSub = locDTtmp[x < locQuantL]
         
-        # extract data from density plot
-        locDTtmp = as.data.table(ggplot_build(locP)$data[[1]])
+        # add shaded LEFT region to the plot
+        if (nrow(locDTtmpSub) > 0 )
+          locP = locP + 
+          geom_area(data = locDTtmpSub, aes(x=x, y=y), fill="red") +
+          geom_vline(xintercept = locQuantL, linetype = 'dashed', color = 'red')
         
-        # shade region on the right
-        if (input$rbOutliersType == 'top') {
+      } else 
+        # shade region on the left
+        if (input$rbOutliersType == 'mid') {
           
           # find position of the right boundary
           locQuantR = quantile(locDT[[COLY]], 
-                               1 - input$numOutliersPerc * 0.01, 
+                               1 - input$numOutliersPerc * 0.005, 
                                na.rm = T, 
                                type = 3)
           
-          # select only those points of the density plot right to the right boundary
-          locDTtmpSub = locDTtmp[x > locQuantR]
+          # find position of the left boundary
+          locQuantL = quantile(locDT[[COLY]], 
+                               input$numOutliersPerc * 0.005, 
+                               na.rm = T, 
+                               type = 3)
           
-          # add shaded RIGHT region to the plot
-          if (nrow(locDTtmpSub) > 0 )
+          # select only those points of the density plot left or right of the boundaries
+          locDTtmpSubL = locDTtmp[x < locQuantL]
+          locDTtmpSubR = locDTtmp[x > locQuantR]
+          
+          # add shaded LEFT region to the plot
+          if (nrow(locDTtmpSubL) > 0 )
             locP = locP + 
-            geom_area(data = locDTtmpSub, aes(x=x, y=y), fill="red") +
+            geom_area(data = locDTtmpSubL, aes(x=x, y=y), fill="red") +
+            geom_vline(xintercept = locQuantL, linetype = 'dashed', color = 'red')
+          
+          
+          if (nrow(locDTtmpSubR) > 0 )
+            locP = locP + 
+            geom_area(data = locDTtmpSubR, aes(x=x, y=y), fill="red") +
             geom_vline(xintercept = locQuantR, linetype = 'dashed', color = 'red')
-        } else 
-          # shade region on the left
-          if (input$rbOutliersType == 'bot') {
-            
-            # find position of the right boundary
-            locQuantL = quantile(locDT[[COLY]], 
-                                 input$numOutliersPerc * 0.01, 
-                                 na.rm = T, 
-                                 type = 3)
-            
-            # select only those points of the density plot left to the left boundary
-            locDTtmpSub = locDTtmp[x < locQuantL]
-            
-            # add shaded LEFT region to the plot
-            if (nrow(locDTtmpSub) > 0 )
-              locP = locP + 
-              geom_area(data = locDTtmpSub, aes(x=x, y=y), fill="red") +
-              geom_vline(xintercept = locQuantL, linetype = 'dashed', color = 'red')
-            
-          } else 
-            # shade region on the left
-            if (input$rbOutliersType == 'mid') {
-              
-              # find position of the right boundary
-              locQuantR = quantile(locDT[[COLY]], 
-                                   1 - input$numOutliersPerc * 0.005, 
-                                   na.rm = T, 
-                                   type = 3)
-              
-              # find position of the left boundary
-              locQuantL = quantile(locDT[[COLY]], 
-                                   input$numOutliersPerc * 0.005, 
-                                   na.rm = T, 
-                                   type = 3)
-              
-              # select only those points of the density plot left or right of the boundaries
-              locDTtmpSubL = locDTtmp[x < locQuantL]
-              locDTtmpSubR = locDTtmp[x > locQuantR]
-              
-              # add shaded LEFT region to the plot
-              if (nrow(locDTtmpSubL) > 0 )
-                locP = locP + 
-                geom_area(data = locDTtmpSubL, aes(x=x, y=y), fill="red") +
-                geom_vline(xintercept = locQuantL, linetype = 'dashed', color = 'red')
-              
-              
-              if (nrow(locDTtmpSubR) > 0 )
-                locP = locP + 
-                geom_area(data = locDTtmpSubR, aes(x=x, y=y), fill="red") +
-                geom_vline(xintercept = locQuantR, linetype = 'dashed', color = 'red')
-            }
-        
-        locP = locP +
-          xlab('Measurement value') +
-          LOCggplotTheme(in.font.base = PLOTFONTBASE, 
-                         in.font.axis.text = PLOTFONTAXISTEXT, 
-                         in.font.axis.title = PLOTFONTAXISTITLE, 
-                         in.font.strip = PLOTFONTFACETSTRIP, 
-                         in.font.legend = PLOTFONTLEGEND)
-        
-        return(locP)
-        
-      })
-      
-    } else
-      return(NULL)
+        }
     
-    plotOutput(ns('densPlot'))
+    locP = locP +
+      xlab('Measurement value') +
+      LOCggplotTheme(in.font.base = PLOTFONTBASE, 
+                     in.font.axis.text = PLOTFONTAXISTEXT, 
+                     in.font.axis.title = PLOTFONTAXISTITLE, 
+                     in.font.strip = PLOTFONTFACETSTRIP, 
+                     in.font.legend = PLOTFONTLEGEND)
+    
+    locP
   })
   
   # Switch on the option to interpolate gaps only if "Max allowed gap duration" (slOutliersGapLen > 0)

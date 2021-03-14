@@ -42,20 +42,40 @@ shinyUI(fluidPage(
       checkboxInput('chBtrajRem', 'Upload tracks to remove'),
       bsTooltip('chBtrajRem', helpText.server[["chBtrajRem"]], placement = "top", trigger = "hover", options = NULL),
       
-      uiOutput('uiFileLoadTrajRem'),
-      uiOutput('uiButLoadTrajRem'),
+      conditionalPanel(
+        condition = "input.chBtrajRem",
+        
+        fileInput(
+          'inFileLoadTrajRem',
+          "Select file and click Load Data",
+          accept = c("text/csv", 
+                     "text/comma-separated-values,text/plain", 
+                     "application/gzip", 
+                     "application/bz2"), 
+        ),
+        actionButton("inButLoadTrajRem", "Load Data")
+      ),
       
-      #tags$hr(),
       checkboxInput('chBstim', 'Upload stimulation pattern'),
       bsTooltip('chBstim', helpText.server[["chBstim"]], placement = "top", trigger = "hover", options = NULL),
       
-      uiOutput('uiFileLoadStim'),
-      uiOutput('uiButLoadStim'),
+      conditionalPanel(
+        condition = "input.chBtrajRem",
+        
+        fileInput(
+          'inFileLoadStim',
+          "Select file and click Load Data",
+          accept = c("text/csv", 
+                     "text/comma-separated-values,text/plain", 
+                     "application/gzip", 
+                     "application/bz2"), 
+        ),
+        actionButton("inButLoadStim", "Load Data")
+      ),
       
       tags$hr(),
 
       uiOutput('varSelTrackLabel'),
-      #tags$hr(),
       checkboxInput('chBtrackUni', 'Create unique track ID', F),
       bsTooltip('chBtrackUni', helpText.server[["chBtrackUni"]], placement = "top", trigger = "hover", options = NULL),
       uiOutput('varSelSite'),
@@ -85,17 +105,65 @@ shinyUI(fluidPage(
       tags$hr(),
       checkboxInput('chBtimeTrim', 'Trim X-axis', FALSE),
       bsTooltip('chBtimeTrim', helpText.server[["chBtimeTrim"]], placement = "top", trigger = "hover", options = NULL),
-      uiOutput('uiSlTimeTrim'),
+      
+      conditionalPanel(
+        condition = "input.chBtimeTrim",
+        
+        uiOutput('uiSlTimeTrim')
+      ),
 
       checkboxInput('chBtrajInter', 'Interpolate NAs and missing data', value = F),
       bsAlert("alertAnchorSidePanelNAsPresent"),
       bsTooltip('chBtrajInter', helpText.server[["chBtrajInter"]], placement = "top", trigger = "hover", options = NULL),
-      uiOutput('varSelTimeFreq'),
+      
+      conditionalPanel(
+        condition = "input.chBtrajInter",
+        
+        numericInput(
+          'inSelTimeFreq',
+          'Interval between 2 time points',
+          min = 0,
+          step = 1,
+          width = '100%',
+          value = 1
+        )
+      ),
       
       checkboxInput('chBnorm', 'Normalization', FALSE),
       bsTooltip('chBnorm', helpText.server[["chBnorm"]], placement = "top", trigger = "hover", options = NULL),
-      uiOutput('uiChBnorm'),
-      uiOutput('uiSlNorm'),
+      
+      conditionalPanel(
+        condition = "input.chBnorm",
+        
+        # select normalisation method
+        # - fold-change calculates fold change with respect to the mean
+        # - z-score calculates z-score of the selected region of the time series
+        radioButtons(
+          'rBnormMeth',
+          label = 'Method',
+          choices = list('fold-change' = 'mean', 'z-score' = 'z.score'),
+          width = "40%"
+        ),
+        bsTooltip('rBnormMeth', helpText.server[["rBnormMeth"]], placement = "top", trigger = "hover", options = NULL),
+        
+        # slider for selecting normalisation range
+        uiOutput('uiSlNorm'),
+        
+        # use robust stats (median instead of mean, mad instead of sd)
+        checkboxInput('chBnormRobust',
+                      label = 'Robust stats',
+                      FALSE, 
+                      width = "40%"),
+        bsTooltip('chBnormRobust', helpText.server[["chBnormRobust"]], placement = "top", trigger = "hover", options = NULL),
+        
+        # choose whether normalisation should be calculated for the entire dataset, group, or trajectory
+        radioButtons('chBnormGroup',
+                     label = 'Grouping',
+                     choices = list('Entire dataset' = 'none', 'Per group' = 'group', 'Per trajectory' = 'id'), 
+                     width = "40%"),
+        bsTooltip('chBnormGroup', helpText.server[["chBnormGroup"]], placement = "top", trigger = "hover", options = NULL)
+      ),
+      
       uiOutput('uiChBnormRobust'),
       uiOutput('uiChBnormGroup'),
 
@@ -123,7 +191,12 @@ shinyUI(fluidPage(
               "Individual",
               br(),
               checkboxInput('chBhighlightTraj', 'Highlight trajectories', FALSE),
-              uiOutput('varSelHighlight'),
+              conditionalPanel(
+                condition = "input.chBhighlightTraj",
+                
+                uiOutput('varSelHighlight')
+              ),
+              
               br(),
               modTrajPlotUI('modTrajPlot')
             ),

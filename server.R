@@ -36,7 +36,7 @@ library(pracma) # for trapz used in AUC calculation
 # change to increase the limit of the upload file size
 options(shiny.maxRequestSize = 200 * 1024 ^ 2)
 
-# Important when joining, grouping or ordering numeric (i.e. double, POSIXct) columns.
+# Important when joining, grouping or ordering by numeric (i.e. double, POSIXct) columns.
 # https://stackoverflow.com/questions/58230619/xy-join-of-keyed-data-table-fails-when-key-on-numeric-column-and-data-fread-fr
 setNumericRounding(2)
 
@@ -58,17 +58,17 @@ shinyServer(function(input, output, session) {
     dataLoadTrajRem = isolate(input$inButLoadTrajRem),
     dataLoadStim    = isolate(input$inButLoadStim)
   )
-
+  
   nCellsCounter <- reactiveValues(
     nCellsOrig = 0,
     nCellsAfterOutlierTrim = 0
   )
-    
+  
   myReactVals = reactiveValues(
     outlierIDs = NULL
   )
   
-  # UI-side-panel-data-load ----
+  # Data load logic ----
   
   # Generate random dataset
   dataGen1 <- eventReactive(input$inDataGen1, {
@@ -82,7 +82,7 @@ shinyServer(function(input, output, session) {
   dataLoadNuc <- eventReactive(input$inButLoadNuc, {
     if (DEB)
       cat("server:dataLoadNuc\n")
-
+    
     locFilePath = input$inFileLoadNuc$datapath
     
     counter$dataLoadNuc <- input$inButLoadNuc - 1
@@ -98,7 +98,7 @@ shinyServer(function(input, output, session) {
   observeEvent(input$butReset, {
     reset("inFileLoadNuc")  # reset is a shinyjs function
   })
-
+  
   # Load data with trajectories to remove
   dataLoadTrajRem <- eventReactive(input$inButLoadTrajRem, {
     if (DEB)
@@ -130,57 +130,6 @@ shinyServer(function(input, output, session) {
       return(fread(locFilePath))
     }
   })
-  
-    
-  # UI for loading csv with cell IDs for trajectory removal
-  output$uiFileLoadTrajRem = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:uiFileLoadTrajRem\n')
-    
-    if(input$chBtrajRem) 
-      fileInput(
-        'inFileLoadTrajRem',
-        "Select file and click Load Data",
-        accept = c("text/csv", 
-                   "text/comma-separated-values,text/plain", 
-                   "application/gzip", 
-                   "application/bz2"), 
-      )
-  })
-  
-  output$uiButLoadTrajRem = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:uiButLoadTrajRem\n')
-    
-    if(input$chBtrajRem)
-      actionButton("inButLoadTrajRem", "Load Data")
-  })
-
-  # UI for loading csv with stimulation pattern
-  output$uiFileLoadStim = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:uiFileLoadStim\n')
-    
-    if(input$chBstim) 
-      fileInput(
-        'inFileLoadStim',
-        "Select file and click Load Data",
-        accept = c("text/csv", 
-                   "text/comma-separated-values,text/plain", 
-                   "application/gzip", 
-                   "application/bz2"), 
-      )
-  })
-  
-  output$uiButLoadStim = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:uiButLoadStim\n')
-    
-    if(input$chBstim)
-      actionButton("inButLoadStim", "Load Data")
-  })
-  
-
   
   # UI-side-panel-column-selection ----
   
@@ -217,7 +166,7 @@ shinyServer(function(input, output, session) {
       selected = locColSel
     )
   })
-
+  
   # This is the main field to select plot facet grouping
   # It's typically a column with the entire experimental description,
   # e.g.1 Stim_All_Ch or Stim_All_S.
@@ -232,7 +181,7 @@ shinyServer(function(input, output, session) {
       
       if (!is.null(locCols)) {
         locColSel = locCols[grep('(G|g)roup|(S|s)tim|(S|s)timulation|(S|s)ite|(T|t)reat', locCols)[1]]
-
+        
         #cat('UI varSelGroup::locColSel ', locColSel, '\n')
         selectInput(
           'inSelGroup',
@@ -275,7 +224,7 @@ shinyServer(function(input, output, session) {
     
     if (!is.null(locCols)) {
       locColSel = locCols[grep('(R|r)atio|(I|i)ntensity|(Y|y)|(M|m)eas', locCols)[1]] # index 1 at the end in case more matches; select 1st
-
+      
       selectInput(
         'inSelMeas1',
         '1st measurement column',
@@ -297,7 +246,7 @@ shinyServer(function(input, output, session) {
     if (!is.null(locCols) &&
         !(input$inSelMath %in% c('', '1 / '))) {
       locColSel = locCols[grep('(R|r)atio|(I|i)ntensity|(Y|y)|(M|m)eas', locCols)[1]] # index 1 at the end in case more matches; select 1st
-
+      
       selectInput(
         'inSelMeas2',
         '2nd measurement column',
@@ -314,88 +263,47 @@ shinyServer(function(input, output, session) {
     if (DEB)
       cat(file = stdout(), 'server:uiSlTimeTrim\n')
     
-    if (input$chBtimeTrim) {
-      locTpts  = getDataTpts()
-      
-      if(is.null(locTpts))
-        return(NULL)
-      
-      locRTmin = min(locTpts)
-      locRTmax = max(locTpts)
-      
-      sliderInput(
-        'slTimeTrim',
-        label = 'Use time range',
-        min = locRTmin,
-        max = locRTmax,
-        value = c(locRTmin, locRTmax),
-        step = 1
-      )
-      
-    }
+    locTpts  = getDataTpts()
+    
+    if(is.null(locTpts))
+      return(NULL)
+    
+    locRTmin = min(locTpts)
+    locRTmax = max(locTpts)
+    
+    sliderInput(
+      'slTimeTrim',
+      label = 'Use time range',
+      min = locRTmin,
+      max = locRTmax,
+      value = c(locRTmin, locRTmax),
+      step = 1
+    )
   }) 
   
-  # Return the value of slider for trimming time; 
+  # Return the slider value for trimming time; 
   # output delayed by MILLIS
   returnValSlTimeTrim = reactive({
     return(input$slTimeTrim)
   }) %>% debounce(MILLIS)
   
-  # UI-side-panel-interpolation ----
-  # Provide interval between 2 time points (for interpolation of NAs and missing time points)
-  output$varSelTimeFreq = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:varSelTimeFreq\n')
-    
-    if (input$chBtrajInter) {
-      numericInput(
-        'inSelTimeFreq',
-        'Interval between 2 time points',
-        min = 0,
-        step = 1,
-        width = '100%',
-        value = 1
-      )
-    }
-  })
   
   # UI-side-panel-normalization ----
-  
-  # select normalisation method
-  # - fold-change calculates fold change with respect to the mean
-  # - z-score calculates z-score of the selected regione of the time series
-  output$uiChBnorm = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:uiChBnorm\n')
-    
-    if (input$chBnorm) {
-      tagList(
-      radioButtons(
-        'rBnormMeth',
-        label = 'Method',
-        choices = list('fold-change' = 'mean', 'z-score' = 'z.score'),
-        width = "40%"
-      ),
-      bsTooltip('rBnormMeth', helpText.server[["rBnormMeth"]], placement = "top", trigger = "hover", options = NULL)
-      )
-    }
-  })
   
   # select the region of the time series for normalisation
   output$uiSlNorm = renderUI({
     if (DEB)
       cat(file = stdout(), 'server:uiSlNorm\n')
     
-    if (input$chBnorm) {
-      locTpts  = getDataTpts()
-      
-      if(is.null(locTpts))
-        return(NULL)
-      
-      locRTmin = min(locTpts)
-      locRTmax = max(locTpts)
-      
-      tagList(
+    locTpts  = getDataTpts()
+    
+    if(is.null(locTpts))
+      return(NULL)
+    
+    locRTmin = min(locTpts)
+    locRTmax = max(locTpts)
+    
+    tagList(
       sliderInput(
         'slNormRtMinMax',
         label = 'Time span',
@@ -405,8 +313,7 @@ shinyServer(function(input, output, session) {
         step = 1
       ),
       bsTooltip('slNormRtMinMax', helpText.server[["slNormRtMinMax"]], placement = "top", trigger = "hover", options = NULL)
-      )
-    }
+    )
   })
   
   # Return the value of slider for normalisation time; 
@@ -416,39 +323,6 @@ shinyServer(function(input, output, session) {
   }) %>% debounce(MILLIS)
   
   
-  # use robust stats (median instead of mean, mad instead of sd)
-  output$uiChBnormRobust = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:uiChBnormRobust\n')
-    
-    if (input$chBnorm) {
-      tagList(
-      checkboxInput('chBnormRobust',
-                    label = 'Robust stats',
-                    FALSE, 
-                    width = "40%"),
-      bsTooltip('chBnormRobust', helpText.server[["chBnormRobust"]], placement = "top", trigger = "hover", options = NULL)
-      )
-    }
-  })
-  
-  # choose whether normalisation should be calculated for the entire dataset, group, or trajectory
-  output$uiChBnormGroup = renderUI({
-    if (DEB)
-      cat(file = stdout(), 'server:uiChBnormGroup\n')
-    
-    if (input$chBnorm) {
-      tagList(
-      radioButtons('chBnormGroup',
-                   label = 'Grouping',
-                   choices = list('Entire dataset' = 'none', 'Per group' = 'group', 'Per trajectory' = 'id'), 
-                   width = "40%"),
-      bsTooltip('chBnormGroup', helpText.server[["chBnormGroup"]], placement = "top", trigger = "hover", options = NULL)
-      )
-    }
-  })
-  
-  
   # Pop-overs ----
   addPopover(session, 
              "alDataFormat",
@@ -456,7 +330,7 @@ shinyServer(function(input, output, session) {
              content = helpText.server[["alDataFormat"]],
              trigger = "click")
   
-
+  
   # Processing-data ----
   
   # Obtain data either from an upload or by generating a synthetic dataset
@@ -519,10 +393,10 @@ shinyServer(function(input, output, session) {
                       append = FALSE,
                       style = "danger")
           
-
+          
         } else {
           closeAlert(session, "alertWideTooFewColumns")
-
+          
           # obtain column headers from the wide format data
           # headers for grouping and track id columns
           loc.cols.idvars = names(dm)[1:2]
@@ -555,7 +429,7 @@ shinyServer(function(input, output, session) {
             
           } else {
             dm = NULL
-
+            
             createAlert(session, "alertAnchorSidePanelDataFormat", "alertWideMissesNumericTime", title = "Error",
                         content = helpText.server[["alertWideMissesNumericTime"]], 
                         append = FALSE,
@@ -586,12 +460,27 @@ shinyServer(function(input, output, session) {
     if (is.null(loc.dt))
       return(NULL)
     
+    if (nrow(loc.dt) < 1)
+      return(NULL)
+    
     if (input$chBtrackUni) {
-      # create unique track ID based on columns specified in input$inSelSite field and combine with input$inSelTrackLabel
-      loc.dt[, (COLIDUNI) := do.call(paste, c(.SD, sep = "_")), .SDcols = c(input$inSelSite, input$inSelTrackLabel) ]
+      # create unique track ID based on columns specified in the input$inSelSite field 
+      # and combine with the column speciefied in the input$inSelTrackLabel field
+      
+      req(input$inSelSite, input$inSelTrackLabel)
+      
+      loc.dt[, 
+             (COLIDUNI) := do.call(paste, c(.SD, sep = "_")), 
+             .SDcols = c(input$inSelSite, 
+                         input$inSelTrackLabel) ]
     } else {
-      # Leave track ID provided in the loaded dataset; has to be unique
-      loc.dt[, (COLIDUNI) := get(input$inSelTrackLabel)]
+      # Leave track ID provided in the loaded dataset; 
+      # has to be unique across the entire dataset to plot properly.
+      
+      req(input$inSelTrackLabel)
+      
+      loc.dt[, 
+             (COLIDUNI) := get(input$inSelTrackLabel)]
     }
     
     # remove trajectories based on uploaded csv
@@ -624,23 +513,36 @@ shinyServer(function(input, output, session) {
       cat(file = stdout(), 'server:dataLong\n')
     
     loc.dt = dataMod()
+    
     if (is.null(loc.dt))
       return(NULL)
     
-    # create expression for 'y' column based on measurements and math operations selected in UI
-    if (input$inSelMath == '')
-      loc.s.y = input$inSelMeas1
-    else if (input$inSelMath == '1 / ')
-      loc.s.y = paste0(input$inSelMath, input$inSelMeas1)
-    else
-      loc.s.y = paste0(input$inSelMeas1, input$inSelMath, input$inSelMeas2)
+    if (nrow(loc.dt) < 1)
+      return(NULL)
     
-    # create expression for 'group' column
-    # creates a merged column based on other columns from input
-    # used for grouping of plot facets
+    # create expression for 'y' column based on measurements and math operations selected in UI
+    if (input$inSelMath == '') {
+      req(input$inSelMeas1)
+      
+      loc.s.y = input$inSelMeas1
+    } else if (input$inSelMath == '1 / ') {
+      req(input$inSelMeas1)
+      
+      loc.s.y = paste0(input$inSelMath, input$inSelMeas1)
+    } else {
+      req(input$inSelMeas1, input$inSelMeas2)
+      
+      loc.s.y = paste0(input$inSelMeas1, input$inSelMath, input$inSelMeas2)
+    }
+    
+    # create an expression for the 'group' column
+    # creates a merged column based on other columns from 
+    # the input used for grouping of plot facets
     if (input$chBgroup) {
-      if(length(input$inSelGroup) == 0)
-        return(NULL)
+      # if(length(input$inSelGroup) == 0)
+      #   return(NULL)
+      
+      req(input$inSelGroup)
       
       loc.s.gr = sprintf("paste(%s, sep=';')",
                          paste(input$inSelGroup, sep = '', collapse = ','))
@@ -650,13 +552,10 @@ shinyServer(function(input, output, session) {
       loc.s.gr = "paste('0')"
     }
     
-
-    # column name with time
-    loc.s.rt = input$inSelTime
     
-    # Assign tracks selected for highlighting in UI
-    loc.tracks.highlight = input$inSelHighlight
-    locButHighlight = input$chBhighlightTraj
+    # column name with time
+    req(input$inSelTime)
+    loc.s.rt = input$inSelTime
     
     
     # Find column names with position
@@ -730,7 +629,12 @@ shinyServer(function(input, output, session) {
     
     
     # if track selection ON
-    if (locButHighlight){
+    if (input$chBhighlightTraj){
+      
+      # Assign tracks selected for highlighting in UI
+      req(input$inSelHighlight)
+      loc.tracks.highlight = input$inSelHighlight
+
       # add a 3rd level with status of track selection
       # to a column with trajectory filtering status in the uploaded file
       if(locMidIn)
@@ -739,8 +643,8 @@ shinyServer(function(input, output, session) {
         # add a column with status of track selection
         loc.out[, mid.in := ifelse(get(COLID) %in% loc.tracks.highlight, 'SELECTED', 'NOT SEL')]
     }
-      
-
+    
+    
     ## Interpolate missing data and NA data points
     # From: https://stackoverflow.com/questions/28073752/r-how-to-add-rows-for-missing-values-for-unique-group-sequences
     # Tracks are interpolated only within first and last time points of every track id
@@ -750,7 +654,7 @@ shinyServer(function(input, output, session) {
     
     # required for subsetting downstream
     setkeyv(loc.out, c(COLGR, COLID, COLRT))
-
+    
     if (input$chBtrajInter) {
       # check if time between 2 time points provided and greater than 0
       if (input$inSelTimeFreq > 0) {
@@ -852,8 +756,8 @@ shinyServer(function(input, output, session) {
     
     # convert from long to wide format
     loc.dt.wide = dcast(loc.dt, 
-                    reformulate(response = COLID, termlabels = COLRT), 
-                    value.var = COLY)
+                        reformulate(response = COLID, termlabels = COLRT), 
+                        value.var = COLY)
     
     # store row names for later
     loc.rownames = loc.dt.wide[[COLID]]
@@ -869,7 +773,7 @@ shinyServer(function(input, output, session) {
     # Here, we are not checking for explicit NAs in COLY column
     if ((sum(is.na(loc.dt[[COLY]])) == 0) & (sum(is.na(loc.dt.wide)) > 0))
       cat(helpText.server[["alertNAsPresentLong2WideConv"]], "\n")
-
+    
     return(loc.m.out)
   }) 
   
@@ -911,17 +815,20 @@ shinyServer(function(input, output, session) {
   
   # Return all unique time points (real time)
   # Used to set limits of sliders for trimming time and for normalisation
-  # These timepoints are from the original dt and aren't affected by trimming of x-axis
+  # These time points are from the original dt and aren't affected by trimming of x-axis
   getDataTpts <- reactive({
     if (DEB)
       cat(file = stdout(), 'server:getDataTpts\n')
     
     loc.dt = dataMod()
     
-    if (is.null(loc.dt))
+    if (is.null(loc.dt)) {
       return(NULL)
-    else
+    }
+    else {
+      req(input$inSelTime)
       return(unique(loc.dt[[input$inSelTime]]))
+    }
   })
   
   
@@ -938,26 +845,15 @@ shinyServer(function(input, output, session) {
     else
       return(colnames(loc.dt))
   })
-  
-  # Unfinished f-n!
-  # prepare y-axis label in time series plots, depending on UI setting
-  createYaxisLabel = reactive({
-    locLabel = input$inSelMeas1
-    
-    return(locLabel)
-  })
+
   
   # Plotting-trajectories ----
-
+  
   # UI for selecting trajectories
   # The output data table of dataLong is modified based on inSelHighlight field
   output$varSelHighlight = renderUI({
     if (DEB)  
       cat(file = stdout(), 'server:varSelHighlight\n')
-    
-    locBut = input$chBhighlightTraj
-    if (!locBut)
-      return(NULL)
     
     loc.v = getDataTrackObjLabUni()
     if (!is.null(loc.v)) {
@@ -968,7 +864,8 @@ shinyServer(function(input, output, session) {
         width = '100%',
         multiple = TRUE
       )
-    }
+    } else
+      return(NULL)
   })
   
   # Modules within main window ----
@@ -981,7 +878,7 @@ shinyServer(function(input, output, session) {
       write.csv(dataLongNoOut(), file, row.names = FALSE)
     }
   )
-
+  
   # Taking out outliers 
   dataLongNoOut = callModule(modSelOutliers, 'returnOutlierIDs', dataLong)
   
