@@ -1,3 +1,4 @@
-# Data Flow
+# Documentation
 
-Data flow charts in the TCI created using [draw.io](https://app.diagrams.net).
+## Data flow
+Charts of data flow in TCI created with [draw.io](https://app.diagrams.net).
