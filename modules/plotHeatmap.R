@@ -107,7 +107,7 @@ plotHeatmapUI <- function(id, label = "Hierarchical Clustering") {
       downPlotUI(ns('downPlotHier'), "")
     ),
     
-    actionButton(ns('butPlotHierHeatMap'), 'Plot!'),
+    actionButton(ns('butPlot'), 'Plot!'),
     withSpinner(plotOutput(ns('outPlotHier')))
   )
 }
@@ -182,13 +182,11 @@ plotHeatmap <- function(input, output, session,
     cat(file = stderr(), 'plotHeatmap:plotHier: in\n')
     
     # make the f-n dependent on the button click
-    locBut = input$butPlotHierHeatMap
+    locBut = input$butPlot
     
-    # Check if main data exists
-    # Thanks to isolate all mods in the left panel are delayed 
-    # until clicking the Plot button
-    locDM = shiny::isolate(inDataWide())
-    locDend = shiny::isolate(inDend())
+    # Check if data exists
+    locDM = inDataWide()
+    locDend = inDend()
 
     shiny::validate(
       shiny::need(!is.null(locDM), "Nothing to plot. Load data first!"),
