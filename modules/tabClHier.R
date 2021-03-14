@@ -445,6 +445,7 @@ tabClHier <- function(input, output, session,
     return(locDT)    
   })
   
+  
   data4stimPlotCl <- reactive({
     cat(file = stderr(), 'tabClHier:data4stimPlotCl: in\n')
     
@@ -510,35 +511,6 @@ tabClHier <- function(input, output, session,
   })
   
   
-  
-  # download a CSV with a list of cellIDs with cluster assignments
-  output$downCellCl <- downloadHandler(
-    filename = function() {
-      paste0('clust_hier_data_',
-             input$selDiss,
-             '_',
-             input$selLink, '.csv')
-    },
-    
-    content = function(file) {
-      write.csv(x = dtIDwithCl(), file = file, row.names = FALSE)
-    }
-  )
-  
-  # download an RDS file with dendrogram objet
-  output$downDend <- downloadHandler(
-    filename = function() {
-      paste0('clust_hier_dend_',
-             input$selDiss,
-             '_',
-             input$selLink, '.rds')
-    },
-    
-    content = function(file) {
-      saveRDS(object = dendCutColor(), file = file)
-    }
-  )
-  
   # Create a list with names of the distance metric and the linkage method.
   # Used for passing to plotting functions.
   createClustMethList = reactive({
@@ -599,6 +571,38 @@ tabClHier <- function(input, output, session,
            input$selLink, 
            '.pdf')
   })
+  
+  
+  ## Download ----
+  
+  
+  # download a CSV with a list of cellIDs with cluster assignments
+  output$downCellCl <- downloadHandler(
+    filename = function() {
+      paste0('clust_hier_data_',
+             input$selDiss,
+             '_',
+             input$selLink, '.csv')
+    },
+    
+    content = function(file) {
+      write.csv(x = dtIDwithCl(), file = file, row.names = FALSE)
+    }
+  )
+  
+  # download an RDS file with dendrogram objet
+  output$downDend <- downloadHandler(
+    filename = function() {
+      paste0('clust_hier_dend_',
+             input$selDiss,
+             '_',
+             input$selLink, '.rds')
+    },
+    
+    content = function(file) {
+      saveRDS(object = dendCutColor(), file = file)
+    }
+  )
   
   
   ## Modules ----
