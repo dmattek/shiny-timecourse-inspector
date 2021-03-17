@@ -105,7 +105,47 @@ tabScatterPlotUI <-
         ns = ns,
         
         fluidRow(
-          column(4,
+          column(3,
+                 numericInput(
+                   ns('inPlotNcolFacet'),
+                   '#columns',
+                   value = PLOTNFACETDEFAULT,
+                   min = 1,
+                   step = 1,
+                   width = "100px"
+                 ),
+                 bsTooltip(
+                   ns('inPlotNcolFacet'),
+                   helpText.tabScatter[["inPlotNcolFacet"]],
+                   placement = "top",
+                   trigger = "hover",
+                   options = NULL
+                 )
+          ),
+          
+          column(
+            3,
+
+            checkboxInput(ns('chBsetXbounds'), 'Bounds for X', FALSE),
+            fluidRow(
+              column(6,
+                     uiOutput(ns('uiSetXboundsLow'))
+              ),
+              column(6,
+                     uiOutput(ns('uiSetXboundsHigh'))
+              )),
+            
+            checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
+            fluidRow(
+              column(6,
+                     uiOutput(ns('uiSetYboundsLow'))
+              ),
+              column(6,
+                     uiOutput(ns('uiSetYboundsHigh'))
+              ))
+          ),
+          
+          column(3,
                  numericInput(
                    ns('inPlotHeight'),
                    'Height [px]',
@@ -122,23 +162,6 @@ tabScatterPlotUI <-
                    options = NULL
                  )
           ),
-          column(4,
-                 numericInput(
-                   ns('inPlotNcolFacet'),
-                   '#columns',
-                   value = PLOTNFACETDEFAULT,
-                   min = 1,
-                   step = 1,
-                   width = "100px"
-                 ),
-                 bsTooltip(
-                   ns('inPlotNcolFacet'),
-                   helpText.tabScatter[["inPlotNcolFacet"]],
-                   placement = "top",
-                   trigger = "hover",
-                   options = NULL
-                 )
-          )
         )
       ),
       
@@ -168,6 +191,109 @@ tabScatterPlot <-
     ns <- session$ns
     
     # UI rendering ----
+    
+    # UI for bounding the x-axis
+    output$uiSetXboundsLow = renderUI({
+      ns <- session$ns
+      
+      if(input$chBsetXbounds) {
+        
+        loc.dt = data4scatterPlot()
+        
+        if (is.null(loc.dt)) {
+          cat(file = stderr(), 'uiSetXboundsLow: dt is NULL\n')
+          return(NULL)
+        }
+        
+        if (nrow(loc.dt) < 1)
+          return(NULL)
+        
+        numericInput(
+          ns('inSetXboundsLow'),
+          label = 'Lower',
+          step = 0.1, 
+          value = floor(min(loc.dt[["x"]], na.rm = T))
+        )
+      }
+    })
+    
+    
+    output$uiSetXboundsHigh = renderUI({
+      ns <- session$ns
+      
+      if(input$chBsetXbounds) {
+        
+        loc.dt = data4scatterPlot()
+        
+        if (is.null(loc.dt)) {
+          cat(file = stderr(), 'uiSetXboundsHigh: dt is NULL\n')
+          return(NULL)
+        }
+        
+        if (nrow(loc.dt) < 1)
+          return(NULL)
+        
+        numericInput(
+          ns('inSetXboundsHigh'),
+          label = 'Upper',
+          step = 0.1, 
+          value = ceil(max(loc.dt[["x"]], na.rm = T))
+        )
+      }
+    })
+    
+    
+    # UI for bounding the y-axis
+    output$uiSetYboundsLow = renderUI({
+      ns <- session$ns
+      
+      if(input$chBsetYbounds) {
+        
+        loc.dt = data4scatterPlot()
+        
+        if (is.null(loc.dt)) {
+          cat(file = stderr(), 'uiSetYboundsLow: dt is NULL\n')
+          return(NULL)
+        }
+        
+        if (nrow(loc.dt) < 1)
+          return(NULL)
+        
+        numericInput(
+          ns('inSetYboundsLow'),
+          label = 'Lower',
+          step = 0.1, 
+          value = min(loc.dt[["y"]], na.rm = T)
+        )
+      }
+    })
+    
+    
+    output$uiSetYboundsHigh = renderUI({
+      ns <- session$ns
+      
+      if(input$chBsetYbounds) {
+        
+        loc.dt = data4scatterPlot()
+        
+        if (is.null(loc.dt)) {
+          cat(file = stderr(), 'uiSetYboundsHigh: dt is NULL\n')
+          return(NULL)
+        }
+        
+        if (nrow(loc.dt) < 1)
+          return(NULL)
+        
+        numericInput(
+          ns('inSetYboundsHigh'),
+          label = 'Upper',
+          step = 0.1, 
+          value = max(loc.dt[["y"]], na.rm = T)
+        )
+      }
+    })
+    
+    
     # return all unique time points (real time)
     # This will be used to display in UI for box-plot
     # These timepoints are from the original dt and aren't affected by trimming of x-axis
@@ -232,6 +358,8 @@ tabScatterPlot <-
       if (is.null(loc.dt.in))
         return(NULL)
       
+      req(input$inSelTptX, input$inSelTptY)
+      
       # obtain selected time points from UI
       loc.tpt.x = as.numeric(input$inSelTptX)
       loc.tpt.y = as.numeric(input$inSelTptY)
@@ -290,6 +418,7 @@ tabScatterPlot <-
       if (input$rBfoldChange == "diff") {
         loc.dt[, y := y - x]
       }
+      
       return(loc.dt)
       
     })
@@ -315,8 +444,20 @@ tabScatterPlot <-
       
       cat(file = stderr(), 'plotScatter:dt not NULL\n')
       
+      loc.xlim.arg = NULL
+      if(input$chBsetXbounds) {
+        loc.xlim.arg = c(input$inSetXboundsLow, input$inSetXboundsHigh)
+      } 
+      
+      loc.ylim.arg = NULL
+      if(input$chBsetYbounds) {
+        loc.ylim.arg = c(input$inSetYboundsLow, input$inSetYboundsHigh)
+      } 
+      
       p.out = LOCggplotScat(
         dt.arg = loc.dt,
+        xlim.arg = loc.xlim.arg,
+        ylim.arg = loc.ylim.arg,
         plotlab.arg = NULL,
         facet.arg = COLGR,
         facet.ncol.arg = input$inPlotNcolFacet,

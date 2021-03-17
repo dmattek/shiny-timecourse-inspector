@@ -66,6 +66,7 @@ COLCL = 'cl'
 COLCLCOLOR = 'clColor'
 COLNTRAJ = "nCells"
 COLSILW = "silWidth"
+COLAUC = "AUC"
 
 # file names
 FCSVOUTLIERS = 'outliers.csv'
@@ -1473,6 +1474,8 @@ LOCplotPSD <- function(dt.arg,
 LOCggplotScat = function(dt.arg,
                          facet.arg = NULL,
                          facet.ncol.arg = 2,
+                         xlim.arg = NULL,
+                         ylim.arg = NULL,
                          xlab.arg = NULL,
                          ylab.arg = NULL,
                          plotlab.arg = NULL,
@@ -1511,6 +1514,9 @@ LOCggplotScat = function(dt.arg,
     p.tmp = p.tmp +
       ggtitle(paste0(plotlab.arg, "\n"))
   
+  p.tmp = p.tmp + 
+    coord_cartesian(xlim = xlim.arg, 
+                    ylim = ylim.arg)
   p.tmp = p.tmp +
     LOCggplotTheme(
       in.font.base = PLOTFONTBASE,
