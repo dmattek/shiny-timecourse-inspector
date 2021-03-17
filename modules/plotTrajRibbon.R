@@ -20,7 +20,20 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Group Averages") {
       fluidRow(
         column(
           3,
-          radioButtons(ns('rBlegendPos'), 'Legend', list('top' = 'top', 'right' = 'right'))
+          radioButtons(ns('rBlegendPos'), 'Legend', list('top' = 'top', 'right' = 'right')),
+          checkboxInput(ns("chBfacet"), "Groups in facets", FALSE),
+          conditionalPanel(
+            condition = "input.chBfacet",
+            ns = ns,
+            numericInput(
+              ns('inFacetNcol'),
+              '#columns',
+              value = PLOTNFACETDEFAULT,
+              min = 1,
+              width = '100px',
+              step = 1
+            )
+          )
         ),
         column(
           2,
@@ -71,7 +84,7 @@ modTrajRibbonPlotUI =  function(id, label = "Plot Group Averages") {
         )
       )
     ),
-
+    
     fluidRow(
       column(2,
              actionButton(ns('butPlotTraj'), 'Plot!')),
@@ -138,6 +151,9 @@ modTrajRibbonPlot = function(input, output, session,
         return(NULL)
       }
       
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
       numericInput(
         ns('inSetXboundsLow'),
         label = 'Lower',
@@ -159,6 +175,9 @@ modTrajRibbonPlot = function(input, output, session,
         cat(file = stderr(), 'uiSetXboundsHigh: dt is NULL\n')
         return(NULL)
       }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
       
       numericInput(
         ns('inSetXboundsHigh'),
@@ -183,6 +202,9 @@ modTrajRibbonPlot = function(input, output, session,
         return(NULL)
       }
       
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
       numericInput(
         ns('inSetYboundsLow'),
         label = 'Lower',
@@ -204,6 +226,9 @@ modTrajRibbonPlot = function(input, output, session,
         cat(file = stderr(), 'uiSetYboundsHigh: dt is NULL\n')
         return(NULL)
       }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
       
       numericInput(
         ns('inSetYboundsHigh'),
@@ -281,7 +306,7 @@ modTrajRibbonPlot = function(input, output, session,
       
       return(NULL)
     }
-      
+    
     if (nrow(loc.dt) < 1) {
       cat(file = stderr(), 'plotTrajRibbon: dt has 0 rows\n')
       
@@ -295,12 +320,16 @@ modTrajRibbonPlot = function(input, output, session,
       cat(file = stderr(), 'plotTrajRibbon: stim is NULL\n')
     } else {
       cat(file = stderr(), 'plotTrajRibbon: stim not NULL\n')
-      # choose only 1st group of stimulation pattern for ribbon plot
       
-      loc.groups = unique(loc.dt.stim[['group']])
-      if(length(loc.groups) > 1) {
-        cat(file = stderr(), 'plotTrajRibbon: more than 1 group in stim; choosing 1st\n')
-        loc.dt.stim = loc.dt.stim[group == loc.groups[1]]
+      if (!input$chBfacet) {
+        # choose only 1st group of stimulation pattern for ribbon plot
+        # if everything plotted in the same facet
+        
+        loc.groups = unique(loc.dt.stim[['group']])
+        if(length(loc.groups) > 1) {
+          cat(file = stderr(), 'plotTrajRibbon: more than 1 group in stim; choosing 1st\n')
+          loc.dt.stim = loc.dt.stim[group == loc.groups[1]]
+        }
       }
     }
     
@@ -347,7 +376,10 @@ modTrajRibbonPlot = function(input, output, session,
     
     if(input$rBPlotTrajStat == "Mean") {
       # calculate the mean
-      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY), na.rm = T)), by = c(in.group, COLRT)]
+      loc.dt.aggr = loc.dt[, 
+                           .(Mean = mean(get(COLY), 
+                                         na.rm = T)), 
+                           by = c(in.group, COLRT)]
       
     } else if(input$rBPlotTrajStat == "CI") {
       # calculate the mean and the confidence intervals
@@ -360,9 +392,10 @@ modTrajRibbonPlot = function(input, output, session,
       
     } else if(input$rBPlotTrajStat == "SE") {
       # calculate the mean and the standard error of the mean
-      loc.dt.aggr = loc.dt[, .(Mean = mean(get(COLY), na.rm = T),
-                               Lower = mean(get(COLY), na.rm = T) - LOCstderr(get(COLY), na.rm = T),
-                               Upper = mean(get(COLY), na.rm = T) + LOCstderr(get(COLY), na.rm = T)), 
+      loc.dt.aggr = loc.dt[, 
+                           .(Mean = mean(get(COLY), na.rm = T),
+                             Lower = mean(get(COLY), na.rm = T) - LOCstderr(get(COLY), na.rm = T),
+                             Upper = mean(get(COLY), na.rm = T) + LOCstderr(get(COLY), na.rm = T)), 
                            by = c(in.group, COLRT)]
       
       loc.ribbon.lohi = c('Lower', 'Upper')
@@ -371,7 +404,8 @@ modTrajRibbonPlot = function(input, output, session,
     
     
     # set the grouing column to a factor (for plotting)
-    loc.dt.aggr[, (in.group) := as.factor(get(in.group))]
+    loc.dt.aggr[, 
+                (in.group) := as.factor(get(in.group))]
     
     # setting bounds for displaying of x and y axes
     loc.xlim.arg = NULL
@@ -387,8 +421,10 @@ modTrajRibbonPlot = function(input, output, session,
     p.out = LOCplotTrajRibbon(dt.arg = loc.dt.aggr, 
                               x.arg = COLRT, 
                               y.arg = 'Mean',
-                              col.arg = loc.group.color,
                               group.arg = in.group,
+                              facet.arg = input$chBfacet,
+                              facet.ncol.arg = input$inFacetNcol,
+                              col.arg = loc.group.color,
                               dt.stim.arg = loc.dt.stim,
                               x.stim.arg = c('tstart', 'tend'),
                               y.stim.arg = c('ystart', 'yend'), 
