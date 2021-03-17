@@ -123,6 +123,12 @@ modDistPlotUI =  function(id, label = "Plot distributions") {
                  ), 
                  width = "120px",
                  selected = 'top'
+               ),
+               selectInput(
+                 ns("selColPal"),
+                 label = "Colour palette",
+                 choices = l.col.pal.dend.2,
+                 selected = 'Tableau 20'
                )),
         column(4,
                radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
@@ -184,6 +190,7 @@ modDistPlot = function(input, output, session,
   ns <- session$ns
   
   ## Plotting ----
+
   # Boxplot - display
   output$outPlotBox = renderPlot({
     
@@ -293,9 +300,9 @@ modDistPlot = function(input, output, session,
           NA
       ) 
     
-    # Get a tableau "Color Blind" palette; recycle 10 available colours, if more groups
+    # Get a selected tableau palette; recycle available colours, if more groups.
     loc.ngroups = uniqueN(loc.dt[, get(in.cols$group)])
-    loc.col = LOCreturnTableauPalette("Color Blind", loc.ngroups)
+    loc.col = LOCreturnTableauPalette(input$selColPal, loc.ngroups)
     
     p.out = p.out +
       xlab(in.labels$x) +

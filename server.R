@@ -847,6 +847,8 @@ shinyServer(function(input, output, session) {
   })
 
   
+  # Return the number of groups
+  
   # Plotting-trajectories ----
   
   # UI for selecting trajectories
@@ -868,6 +870,20 @@ shinyServer(function(input, output, session) {
       return(NULL)
   })
   
+  # Create a vector with colours for the plot of
+  # averages based on the user input in selColPal. 
+  # Used to supply to plotTrajRibbon.
+  # When the inNcolors is set to NULL, a vector with the entire palette is returned.
+  
+  vecColPalette <- reactive({
+    
+    locColPal = LOCreturnTableauPalette(
+      inPalName = input$selColPal, 
+      inNcolors = NULL, 
+      inDeb = F
+    )
+  })
+  
   # Modules within main window ----
   
   # download data as prepared for plotting
@@ -887,7 +903,7 @@ shinyServer(function(input, output, session) {
              in.data = dataLongNoOut,
              in.data.stim = dataStim,
              in.group = COLGR,
-             in.group.color = NULL,
+             in.group.color = vecColPalette,
              in.fname = function() return(FPDFTCMEAN))
   
   # Trajectory plotting - individual

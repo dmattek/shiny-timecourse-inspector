@@ -1033,7 +1033,18 @@ LOCrotatedAxisElementText = function(angle,
 #' Return recycled tableau palette
 #'
 #' Cycle through a tableau palette (e.g. "Color Blind") and return repeated 
-#' colours depending on the required number of colours
+#' colours depending on the required number of colours.
+#' 
+#' If \code{inNcolors} is NULL, return a colour vector with a full colour palette.
+#' 
+#' If \code{inNcolors} is not NULL and smaller than the maximum number of colours available in a palette, 
+#' return a colour vector with a specified number of colours from the palette.
+#' 
+#' If \code{inNcolors} is NULL, and greater than the maximum number of colours available in a palette, 
+#' recycle colours and return a specified number of colours from the palette.
+#' 
+#' 
+#' Used for supplying a vector with colours to plotting functions.
 #'
 #' @param inPalName Name of the tableau colour palette, e.g. "Color Blind"
 #' @param inNcolors Number of required colours, default 10
@@ -1044,28 +1055,53 @@ LOCrotatedAxisElementText = function(angle,
 #' @examples
 #' # The Colour Blind palette has only 10 colours; here the 11th will be recycled
 #' LOCreturnTableauPalette("Color Blind", 11)
-LOCreturnTableauPalette = function(inPalName, inNcolors = 10, inDeb = F) {
+LOCreturnTableauPalette = function(inPalName, inNcolors = NULL, inDeb = F) {
   
   # get the max N of colours in the palette
-  loc.max.col = attr(ggthemes::tableau_color_pal(inPalName), "max_n")
-  
-  if (loc.max.col < inNcolors) {
-    cat(file = stderr(), 'auxfunc:LOCreturnTableauPalette Warning! The palette provides less colours than required in UI.\n')
-  }
+  locMaxNcol = attr(ggthemes::tableau_color_pal(inPalName), "max_n")
   
   # get all colours in the palette
-  loc.col = ggthemes::tableau_color_pal(inPalName)(n = loc.max.col)
+  locCol = ggthemes::tableau_color_pal(inPalName)(n = locMaxNcol)
   
-  # repeat the full palette for the required number of colours
-  loc.col = rep(loc.col, ((inNcolors-1) %/% loc.max.col) + 1)
-  
-  if (inDeb) {
-    cat("auxfunc:LOCreturnTableauPalette: loc.col[1:inNcolors]=\n")
-    print(loc.col[1:inNcolors])
+  if (is.null(inNcolors)) {
+    # Return a full colour palette
+    if (inDeb) {
+      cat(file = stdout(), 
+          sprintf('auxfunc:LOCreturnTableauPalette return a full %s palette with %d colour(s).\n', 
+                  inPalName,
+                  locMaxNcol))
+    }
+  } else {
+    # Return a specified number of colours from the palette
+    
+    if (locMaxNcol < inNcolors) {
+      # Recycle colours from the palette
+      
+      if (inDeb) {
+        cat(file = stderr(), 
+            sprintf('auxfunc:LOCreturnTableauPalette Warning! The %s palette provides %d colours, which is less than the required %d.\nColours will be recycled.\n',
+                    inPalName,
+                    locMaxNcol,
+                    inNcolors))
+      }
+      
+      # Repeat the full palette for the required number of colours
+      locCol = rep(locCol, 
+                   ((inNcolors-1) %/% locMaxNcol) + 1)    
+    } else {
+      if (inDeb) {
+        cat(file = stdout(), 
+            sprintf('auxfunc:LOCreturnTableauPalette return %d colour(s) from %s.\n', 
+                    inNcolors, 
+                    inPalName))
+      }
+    }
+    
+    # return only the required number of colours
+    locCol = locCol[1:inNcolors]
   }
   
-  # return only the required number of colours
-  return(loc.col[1:inNcolors])
+  return(locCol)
 }
 
 
@@ -1164,7 +1200,7 @@ LOCplotTraj = function(dt.arg,
         sort(
           unique(
             dt.arg[[facet.arg]]))]
-
+    
     p.tmp = p.tmp +
       geom_hline(
         color = loc.facet.color,
@@ -1261,7 +1297,7 @@ LOCplotTraj = function(dt.arg,
 #' @param x.arg String with column name for x-axis
 #' @param y.arg String with column name for y-axis
 #' @param group.arg String with column name for grouping time series (e.g. a column with grouping by condition)
-#' @param col.arg Colour pallette for individual time series
+#' @param col.arg A vector with colours for individual time series
 #' @param dt.stim.arg Data.table with stimulation segments to plot under time series
 #' @param x.stim.arg Column names in stimulation dt with x and xend parameters, default c('tstart', 'tend')
 #' @param y.stim.arg Column names in stimulation dt with y and yend parameters, default c('ystart', 'yend')
@@ -1408,11 +1444,11 @@ LOCplotPSD <- function(dt.arg,
         size = 4
       )
   }
-
+  
   p.tmp = p.tmp +
     facet_wrap(group.arg) +
     labs(x = xlab.arg, y = ylab.arg)
-    
+  
   return(p.tmp)
 }
 

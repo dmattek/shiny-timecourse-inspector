@@ -7,7 +7,7 @@
 
 ## UI ----
 
-modTrajRibbonPlotUI =  function(id, label = "Plot Individual Time Series") {
+modTrajRibbonPlotUI =  function(id, label = "Plot Group Averages") {
   ns <- NS(id)
   
   tagList(
@@ -331,12 +331,13 @@ modTrajRibbonPlot = function(input, output, session,
     # The number of colours in the palette has to be equal to the number of groups.
     # This might differ if the user selects manually groups (e.g. clusters) to display.
     
-    # Get existing groups in dt for sub-setting the externally provided group-colour table
-    loc.groups = unique(loc.dt[, ..in.group])
-    
     if (is.null(in.group.color)) {
-      # If no colour scale provided, assign a default palette from Tableau
-      loc.group.color = LOCreturnTableauPalette("Color Blind", nrow(loc.groups))
+      # If no colour scale provided, create a vector with colours 
+      # from a default Tableau palette.
+      
+      # Get existing groups in dt for sub-setting the externally provided group-colour table
+      loc.groups = unique(loc.dt[, ..in.group])
+      loc.group.color = LOCreturnTableauPalette("Tableau 20", nrow(loc.groups))
     } else {
       loc.group.color = in.group.color()
     }

@@ -79,7 +79,7 @@ modClDistPlot = function(input, output, session,
     
     if(is.null(in.colors)) {
       # If no colour scale provided, assign a default palette from Tableau
-      loc.col.vec = LOCreturnTableauPalette("Color Blind", nrow(loc.groups))
+      loc.col.vec = LOCreturnTableauPalette("Tableau 20", nrow(loc.groups))
 
     }
     else {

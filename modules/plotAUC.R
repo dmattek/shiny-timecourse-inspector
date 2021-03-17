@@ -65,18 +65,6 @@ modAUCplotUI =  function(id, label = "Plot AUC distributions") {
       
       fluidRow(
         column(4,
-               selectInput(
-                 ns('selPlotBoxLegendPos'),
-                 label = 'Legend position',
-                 choices = list(
-                   "Top" = 'top',
-                   "Right" = 'right',
-                   "Bottom" = 'bottom'
-                 ), 
-                 width = "120px",
-                 selected = 'top'
-               )),
-        column(4,
                radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
                             c("horizontal" = 0,
                               "45 deg" = 45,
@@ -129,8 +117,8 @@ modAUCplot = function(input, output, session,
                                      meas.y = COLY,
                                      group = COLGR,
                                      id = COLID), 
-                      in.labels = list(x = "",       # plot labels
-                                       y = "", 
+                      in.labels = list(x = "Groups",       # plot labels
+                                       y = "AUC", 
                                        legend = ""),
                       in.fname) {                      # file name for saving the plot                 
   
@@ -154,7 +142,9 @@ modAUCplot = function(input, output, session,
     if (names(dev.cur()) != "null device") dev.off()
     pdf(NULL)
     
-    return( ggplotly(plotBox())  %>% layout(boxmode = 'group', width = '100%', height = '100%'))
+    return( ggplotly(plotBox())  %>% layout(boxmode = 'group', 
+                                            width = '100%', 
+                                            height = '100%'))
     
   })
   

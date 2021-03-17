@@ -11,8 +11,8 @@ library(shinyBS) # for tooltips
 library(shinycssloaders) # for loader animations
 
 shinyUI(fluidPage(
-  useShinyjs(),
   # Include shinyjs
+  useShinyjs(),
   
   # Application title
   title = "Timecourse Inspector",
@@ -184,6 +184,12 @@ shinyUI(fluidPage(
           tabsetPanel(
             tabPanel("Averages",
                      br(),
+                     selectInput(
+                       "selColPal",
+                       label = "Colour palette",
+                       choices = l.col.pal.dend.2,
+                       selected = 'Tableau 20'
+                     ),
                      modTrajRibbonPlotUI('modTrajRibbon')
             ),
             
