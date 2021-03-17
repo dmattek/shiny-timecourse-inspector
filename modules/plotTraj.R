@@ -161,6 +161,9 @@ modTrajPlot = function(input, output, session,
         return(NULL)
       }
       
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
       numericInput(
         ns('inSetXboundsLow'),
         label = 'Lower',
@@ -182,6 +185,9 @@ modTrajPlot = function(input, output, session,
         cat(file = stderr(), 'uiSetXboundsHigh: dt is NULL\n')
         return(NULL)
       }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
       
       numericInput(
         ns('inSetXboundsHigh'),
@@ -206,6 +212,9 @@ modTrajPlot = function(input, output, session,
         return(NULL)
       }
       
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
       numericInput(
         ns('inSetYboundsLow'),
         label = 'Lower',
@@ -227,6 +236,9 @@ modTrajPlot = function(input, output, session,
         cat(file = stderr(), 'uiSetYboundsHigh: dt is NULL\n')
         return(NULL)
       }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
       
       numericInput(
         ns('inSetYboundsHigh'),
