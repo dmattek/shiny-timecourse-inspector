@@ -1319,6 +1319,8 @@ LOCplotTrajRibbon = function(dt.arg,
                              x.arg,
                              y.arg,
                              group.arg = NULL,
+                             facet.arg = FALSE,
+                             facet.ncol.arg = 1,
                              col.arg = NULL,
                              dt.stim.arg = NULL,
                              x.stim.arg = c('tstart', 'tend'),
@@ -1369,7 +1371,8 @@ LOCplotTrajRibbon = function(dt.arg,
       )
   }
   
-  p.tmp = p.tmp + coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
+  p.tmp = p.tmp + 
+    coord_cartesian(xlim = xlim.arg, ylim = ylim.arg)
   
   if (is.null(col.arg)) {
     p.tmp = p.tmp +
@@ -1381,6 +1384,9 @@ LOCplotTrajRibbon = function(dt.arg,
   
   if (!is.null(plotlab.arg))
     p.tmp = p.tmp + ggtitle(plotlab.arg)
+  
+  if (facet.arg)
+    p.tmp = p.tmp + facet_wrap(group.arg, ncol = facet.ncol.arg)
   
   p.tmp = p.tmp +
     xlab(xlab.arg) +
