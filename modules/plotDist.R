@@ -249,14 +249,6 @@ modDistPlot = function(input, output, session,
     }
   })
   
-  vecYbounds <- reactive({
-    req(input$inSetYboundsLow, 
-        input$inSetYboundsHigh)
-    
-    return(c(input$inSetYboundsLow, 
-             input$inSetYboundsHigh))
-  })
-  
   ## Plotting ----
   
   # Boxplot - display
