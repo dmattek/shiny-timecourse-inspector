@@ -64,12 +64,22 @@ modAUCplotUI =  function(id, label = "Plot AUC distributions") {
       ns = ns,
       
       fluidRow(
-        column(4,
+        column(3,
                radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
                             c("horizontal" = 0,
                               "45 deg" = 45,
                               "90 deg" = 90))),
-        column(4,
+        column(3,
+               checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
+               fluidRow(
+                 column(6,
+                        uiOutput(ns('uiSetYboundsLow'))
+                 ),
+                 column(6,
+                        uiOutput(ns('uiSetYboundsHigh'))
+                 ))
+        ),
+        column(3,
                numericInput(
                  ns('inPlotBoxWidth'),
                  'Width [%]',
@@ -123,7 +133,58 @@ modAUCplot = function(input, output, session,
                       in.fname) {                      # file name for saving the plot                 
   
   ns <- session$ns
-
+  
+  ## UI rendering ----
+  # UI for bounding the y-axis
+  output$uiSetYboundsLow = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetYbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsLow: dt is NULL\n')
+        return(NULL)
+      }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
+      numericInput(
+        ns('inSetYboundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = min(loc.dt[[COLAUC]], na.rm = T)
+      )
+    }
+  })
+  
+  
+  output$uiSetYboundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetYbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsHigh: dt is NULL\n')
+        return(NULL)
+      }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
+      numericInput(
+        ns('inSetYboundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = max(loc.dt[[COLAUC]], na.rm = T)
+      )
+    }
+  })
+  
   ## Plotting ----
   
   # Boxplot - display
@@ -187,7 +248,8 @@ modAUCplot = function(input, output, session,
     
     cat(file = stderr(), 'plotBox:dt not NULL\n')
     
-    p.out = ggplot(loc.dt, aes_string(x = sprintf("factor(%s)", in.cols$meas.x), 
+    p.out = ggplot(loc.dt, 
+                   aes_string(x = sprintf("factor(%s)", in.cols$meas.x), 
                                       y = in.cols$meas.y)) 
     
     
@@ -236,6 +298,10 @@ modAUCplot = function(input, output, session,
       theme(axis.text.x = LOCrotatedAxisElementText(as.numeric(input$rBAxisLabelsRotate), 
                                                     size = PLOTFONTAXISTEXT))
     
+    if (input$chBsetYbounds) 
+      p.out = p.out +
+      coord_cartesian(ylim = c(input$inSetYboundsLow,
+                               input$inSetYboundsHigh))
     
     return(p.out)
   }
