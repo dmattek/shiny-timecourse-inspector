@@ -112,7 +112,7 @@ modDistPlotUI =  function(id, label = "Plot distributions") {
       ns = ns,
       
       fluidRow(
-        column(4,
+        column(3,
                selectInput(
                  ns('selPlotBoxLegendPos'),
                  label = 'Legend position',
@@ -130,12 +130,21 @@ modDistPlotUI =  function(id, label = "Plot distributions") {
                  choices = l.col.pal.dend.2,
                  selected = 'Tableau 20'
                )),
-        column(4,
+        column(3,
                radioButtons(ns("rBAxisLabelsRotate"), "X-axis labels",
                             c("horizontal" = 0,
                               "45 deg" = 45,
                               "90 deg" = 90))),
-        column(4,
+        column(3,
+               checkboxInput(ns('chBsetYbounds'), 'Bounds for Y', FALSE),
+               fluidRow(
+                 column(6,
+                        uiOutput(ns('uiSetYboundsLow'))
+                 ),
+                 column(6,
+                        uiOutput(ns('uiSetYboundsHigh'))
+                 ))),
+        column(3,
                numericInput(
                  ns('inPlotBoxWidth'),
                  'Width [%]',
@@ -189,8 +198,67 @@ modDistPlot = function(input, output, session,
   
   ns <- session$ns
   
+  ## UI rendering ----
+  # UI for bounding the y-axis
+  output$uiSetYboundsLow = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetYbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsLow: dt is NULL\n')
+        return(NULL)
+      }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
+      numericInput(
+        ns('inSetYboundsLow'),
+        label = 'Lower',
+        step = 0.1, 
+        value = min(loc.dt[[COLY]], na.rm = T)
+      )
+    }
+  })
+  
+  
+  output$uiSetYboundsHigh = renderUI({
+    ns <- session$ns
+    
+    if(input$chBsetYbounds) {
+      
+      loc.dt = in.data()
+      
+      if (is.null(loc.dt)) {
+        cat(file = stderr(), 'uiSetYboundsHigh: dt is NULL\n')
+        return(NULL)
+      }
+      
+      if (nrow(loc.dt) < 1)
+        return(NULL)
+      
+      numericInput(
+        ns('inSetYboundsHigh'),
+        label = 'Upper',
+        step = 0.1, 
+        value = max(loc.dt[[COLY]], na.rm = T)
+      )
+    }
+  })
+  
+  vecYbounds <- reactive({
+    req(input$inSetYboundsLow, 
+        input$inSetYboundsHigh)
+    
+    return(c(input$inSetYboundsLow, 
+             input$inSetYboundsHigh))
+  })
+  
   ## Plotting ----
-
+  
   # Boxplot - display
   output$outPlotBox = renderPlot({
     
@@ -317,6 +385,11 @@ modDistPlot = function(input, output, session,
                                                     size = PLOTFONTAXISTEXT)) +
       scale_fill_manual(name = in.labels$legend, 
                         values = loc.col)
+    
+    if (input$chBsetYbounds) 
+      p.out = p.out +
+      coord_cartesian(ylim = c(input$inSetYboundsLow,
+                               input$inSetYboundsHigh))
     
     
     return(p.out)
