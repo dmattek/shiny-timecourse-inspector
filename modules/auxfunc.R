@@ -798,6 +798,41 @@ LOCnbclust <-
     }
   }
 
+# Cluster comparison ----
+
+#' Return a list of dendrograms using the input distance matrix and a list of linkages
+#' @param x a dist object
+#' @param hc_func the hierarchical clustering function to be used. Default value is "hclust". Possible values is one of "hclust", "agnes", "diana".
+#' @param hc_method the agglomeration method to be used
+#' @param hc_metric character string specifying the metric to be used for calculating dissimilarities between observations.
+#' 
+#' @return a list of dendrograms as returned by dendextend::dendlist
+#' 
+LOChcList <-
+  function(x,
+           hc_method = c("ward.D",
+                         "single",
+                         "complete",
+                         "average",
+                         "mcquitty",
+                         "ward.D2"))
+    {
+  
+      if (!inherits(x, "dist")) {
+        stop("x must be a distance matrix")
+      }
+      
+      my_dendlist <- dendextend::dendlist()
+      for(i in seq_along(hc_method)){
+        hc <- hclust(x, method = hc_method[i])
+        my_dendlist <- dendextend::dendlist(my_dendlist, as.dendrogram(hc))
+      }
+      names(my_dendlist) <- hc_method
+      
+      return(my_dendlist)
+  }
+
+
 # Clustering ----
 
 

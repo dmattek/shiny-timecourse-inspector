@@ -948,4 +948,8 @@ shinyServer(function(input, output, session) {
   callModule(tabClValid, 'tabClValid', 
              dataWide)
   
+  ##### Hierarchical comparison
+  callModule(tabClComp, 'tabClComp', 
+             dataWide)
+  
 })

@@ -245,6 +245,12 @@ shinyUI(fluidPage(
            clustHierSparUI('tabClHierSpar')
         ),
         
+        # Clustering comparison
+        tabPanel(
+          'Clust. corr',
+          tabClCompUI('tabClComp')
+        ),
+        
         # cluster validation
         tabPanel(
           'Validation',
