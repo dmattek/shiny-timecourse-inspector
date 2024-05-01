@@ -12,6 +12,7 @@ helpText.clHier = c(alertNAsPresentClDTW = paste0("NAs (still) present. DTW cann
                                                "missing data can be due to removed outlier time points."),
                     alertNAsInDist = "NAs in distance matrix. Possible non-overlapping time series in the dataset.",
                     alertNAsPresentLong2WideConv = "Missing rows. Consider interpolation.",
+                    alertDuplPresentCl = "Duplicate track IDs. Heatmap cannot be plotted correctly.",
                     alLearnMore = paste0("<p><a href=\"https://en.wikipedia.org/wiki/Hierarchical_clustering\" target=\"_blank\" title=\"External link\">Agglomerative hierarchical clustering</a> ",
                                          "initially assumes that all time series are forming their own clusters. It then grows a clustering dendrogram using two inputs:<p>",
                                          "A <b>dissimilarity matrix</b> between all pairs ",
@@ -200,6 +201,23 @@ tabClHier <- function(input, output, session,
       cat(file = stdout(), 'tabClHier:dataWide: dt not NULL\n')
     }
     
+    # Check whether there were more objects with the same track ID in the frame
+    # Such track IDs will have TRUE assigned in the 'dup' column
+    # Keep only s.track column with dup=TRUE
+    loc.duptracks = loc.dt[, 
+                           .(dup = (sum(duplicated(get(COLRT))) > 0)), 
+                           by = COLID][dup == TRUE, COLID, with = FALSE]
+    
+    if (nrow(loc.duptracks) > 0) {
+      createAlert(session, "alertAnchorClHierNAsPresent", "alertDuplPresentCl", title = "Warning",
+                  content = helpText.clHier[["alertDuplPresentCl"]], 
+                  append = FALSE, 
+                  style = "warning")
+    } else {
+      closeAlert(session, 'alertDuplPresentClDTW')
+    }
+      
+    
     # convert from long to wide format
     loc.dt.wide = dcast(loc.dt, 
                         reformulate(response = COLID, termlabels = COLRT), 
@@ -239,8 +257,8 @@ tabClHier <- function(input, output, session,
     # Throw some warnings if NAs present in the dataset.
     # DTW cannot compute distance when NA's are preset.
     # Other distance measures can be calculated but caution is required with interpretation.
-    # NAs in the wide format can result from explicit NAs in the measurment column or
-    # from missing rows that cause NAs to appear when convertinf from long to wide (dcast)
+    # NAs in the wide format can result from explicit NAs in the measurement column or
+    # from missing rows that cause NAs to appear when converting from long to wide (dcast)
     if(sum(is.na(locDM)) > 0) {
       if (input$selDiss == "DTW") {
         createAlert(session, "alertAnchorClHierNAsPresent", "alertNAsPresentClDTW", title = "Error",
