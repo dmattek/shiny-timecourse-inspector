@@ -191,7 +191,8 @@ helpText.server = c(
   alertNAsPresent              = "NAs present in the measurement column. Consider interpolation.",
   alertTimeFreq0 = "The interval between 2 time points has to be greater than 0.",
   alertWideMissesNumericTime = "Non-numeric headers of time columns. Data in wide format should have numeric column headers corresponding to time points.",
-  alertWideTooFewColumns     = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point."
+  alertWideTooFewColumns     = "Insufficient columns. Data in wide format should contain at least 3 columns: grouping, track ID, and a single time point.",
+  alertNAsPresentLong2WideConv = "Missing rows. Consider interpolation."
 )
 
 # Functions for data processing ----
@@ -382,7 +383,7 @@ LOCgenTraj2 <-
            sampleFreq = 0.2,
            endTime = 50) {
     
-    # Function definition ----------------------------------
+    # Function definition
     sim_expodecay_lagged_stim <-
       function (n,
                 noise,
@@ -426,7 +427,7 @@ LOCgenTraj2 <-
       }
     
     
-    # Dataset creation -----------------------------------------------
+    # Dataset creation
     dt1 <-
       sim_expodecay_lagged_stim(
         n = n_perGroup,
@@ -971,7 +972,7 @@ LOCggplotTheme = function(in.font.base = 12,
       panel.grid.minor = element_blank(),
       panel.grid.major = element_blank(),
       panel.border = element_blank(),
-      axis.line = element_line(color = "black", size = 0.25),
+      axis.line = element_line(color = "black", linewidth = 0.25),
       axis.text = element_text(size = in.font.axis.text),
       axis.title = element_text(size = in.font.axis.title),
       strip.text = element_text(size = in.font.strip, face = "bold"),
