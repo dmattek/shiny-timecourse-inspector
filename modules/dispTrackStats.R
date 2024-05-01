@@ -187,8 +187,8 @@ modTrackStats = function(input, output, session,
       shiny::need(!is.null(loc.dt), "Cannot calculate statistics. Load data first!")
     )
     
-    # Look whether there were more objects with the same track ID in the frame
-    # Such track IDs will have TRUE assigned in 'dup' column
+    # Check whether there were more objects with the same track ID in the frame
+    # Such track IDs will have TRUE assigned in the 'dup' column
     # Keep only s.track column with dup=TRUE
     loc.duptracks = loc.dt[, 
                            .(dup = (sum(duplicated(get(COLRT))) > 0)), 
