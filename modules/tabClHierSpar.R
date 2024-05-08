@@ -68,32 +68,39 @@ tabClHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
           ticks = TRUE,
           round = TRUE
         ),
-        checkboxInput(ns('chBPlotHierSparClSel'), 'Manually select clusters to display'),
-        uiOutput(ns('uiPlotHierSparClSel')),
+        checkboxInput(ns('chBclDisp'), 'Select clusters to display'),
+        uiOutput(ns('selClDispUI')),
         
-        downloadButton(ns('downCellClSpar'), 'Cluster assignments'),
-        bsTooltip(ns("downCellClSpar"),
-                  helpText.clHierSpar[["downCellClSpar"]],
-                  placement = "top",
-                  trigger = "hover",
-                  options = NULL),
-        
-        downloadButton(ns('downDendSpar'), 'Dendrogram object'),
-        bsTooltip(ns("downDendSpar"),
-                  helpText.clHierSpar[["downDendSpar"]],
-                  placement = "top",
-                  trigger = "hover",
-                  options = NULL)
-        
-      ),
-      
-      column(
-        4,
         checkboxInput(ns('inHierSparAdv'),
                       'Advanced options',
                       FALSE),
         uiOutput(ns('uiPlotHierSparNperms')),
-        uiOutput(ns('uiPlotHierSparNiter'))
+        uiOutput(ns('uiPlotHierSparNiter')),
+      ),
+      
+      column(3,
+             selectInput(
+               ns("selPalDend"),
+               label = "Cluster colour palette",
+               choices = l.col.pal.dend.2,
+               selected = 'Color Blind'
+             ),
+             
+             downloadButton(ns('downCellClSpar'), 'Cluster assignments'),
+             bsTooltip(ns("downCellClSpar"),
+                       helpText.clHierSpar[["downCellClSpar"]],
+                       placement = "top",
+                       trigger = "hover",
+                       options = NULL),
+             br(),
+             
+             downloadButton(ns('downDendSpar'), 'Dendrogram object'),
+             bsTooltip(ns("downDendSpar"),
+                       helpText.clHierSpar[["downDendSpar"]],
+                       placement = "top",
+                       trigger = "hover",
+                       options = NULL),
+             
       )
     ),
     
@@ -126,12 +133,6 @@ tabClHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
                         )
                  ),
                  column(3,
-                        selectInput(
-                          ns("selectPlotHierSparPaletteDend"),
-                          label = "Dendrogram\'s colour palette",
-                          choices = l.col.pal.dend.2,
-                          selected = 'Color Blind'
-                        ),
                         checkboxInput(ns('selectPlotHierSparDend'), 'Plot dendrogram and re-order samples', TRUE),
                         sliderInput(
                           ns('inPlotHierSparNAcolor'),
@@ -223,9 +224,10 @@ tabClHierSpar <- function(input, output, session,
   
   # Return the number of clusters from the slider 
   # and delay by a constant in milliseconds defined in auxfunc.R
-  returnNclust = reactive({
+  intNclust = reactive({
     return(input$inPlotHierSparNclust)
   }) %>% debounce(MILLIS)
+  
   
   # UI for advanced options
   output$uiPlotHierSparNperms = renderUI({
@@ -291,21 +293,21 @@ tabClHierSpar <- function(input, output, session,
       )
   })
   
-  
-  output$uiPlotHierSparClSel = renderUI({
+  # Manually choose clusters to display
+  output$selClDispUI = renderUI({
     ns <- session$ns
     
-    if(input$chBPlotHierSparClSel) {
-      selectInput('inPlotHierSparClSel', 'Select clusters to display', 
-                  choices = seq(1, input$inPlotHierSparNclust, 1),
+    if(input$chBclDisp) {
+      selectInput(ns('selClDisp'), 'Select clusters to display', 
+                  choices = seq(1, intNclust(), 1),
                   multiple = TRUE, 
                   selected = 1)
     }
   })
   
   
-  userFitHierSpar <- reactive({
-    cat(file = stderr(), 'userFitHierSpar \n')
+  objHclust <- reactive({
+    cat(file = stderr(), 'objHclust \n')
     
     dm.t = in.dataWide()
     if (is.null(dm.t)) {
@@ -322,7 +324,7 @@ tabClHierSpar <- function(input, output, session,
       dissimilarity = input$selDiss
     )
     
-    loc.hc <- HierarchicalSparseCluster(
+    locHC <- HierarchicalSparseCluster(
       dists = perm.out$dists,
       wbound = perm.out$bestw,
       niter = ifelse(input$inHierSparAdv, input$inPlotHierSparNiter, 1),
@@ -330,35 +332,34 @@ tabClHierSpar <- function(input, output, session,
       dissimilarity = input$selDiss
     )
     
-    #cat('=============\nloc.hc:\n')
-    #print(loc.hc$hc)
+    #cat('=============\nlocHC:\n')
+    #print(locHC$hc)
     
-    return(loc.hc)
+    return(locHC)
   })
   
   
   
-  # return dendrogram colour coded according to the cut level of the dendrogram
-  userFitDendHierSpar <- reactive({
-    loc.hc = userFitHierSpar()
-    if (is.null(loc.hc)) {
-      return()
+  # Return a cut dendrogram with branches coloured according to a chosen palette.
+  dendCutColor <- reactive({
+    if (DEB) {
+      cat(file = stderr(), 'tabClHierSpar:dendCutColor\n')
+    }
+    
+    # calculate sparse hierarchical clustering
+    locHC = objHclust()
+    if (is.null(locHC)) {
+      return(NULL)
     }
     
     # number of clusters at which dendrogram is cut
-    loc.k = input$inPlotHierSparNclust
+    locK = intNclust()
     
-    # make a palette with the amount of colours equal to the number of clusters
-    #loc.col = get(input$selectPlotHierSparPaletteDend)(n = loc.k)
-    loc.col = ggthemes::tableau_color_pal(input$selectPlotHierSparPaletteDend)(n = loc.k)
+    locDend = LOCdendCutColor(inHclust = locHC$hc,
+                              inK = locK,
+                              inColPal = input$selPalDend)
     
-    
-    dend <- as.dendrogram(loc.hc$hc)
-    dend <- color_branches(dend, 
-                           col = loc.col,
-                           k = loc.k)
-    
-    return(dend)
+    return(locDend)
   })
   
   # Returns a table prepared with f-n getClCol
@@ -368,12 +369,12 @@ tabClHierSpar <- function(input, output, session,
   getClColHierSpar <- reactive({
     cat(file = stderr(), 'getClColHierSpar \n')
     
-    loc.dend = userFitDendHierSpar()
-    if (is.null(loc.dend))
+    locDend = dendCutColor()
+    if (is.null(locDend))
       return(NULL)
     
     # obtain relations between cluster and colors from the dendrogram
-    locVecCol = LOCvecColWithCl(loc.dend, 
+    locVecCol = LOCvecColWithCl(locDend, 
                                 input$inPlotHierSparNclust)
     
     return(locVecCol)
@@ -423,22 +424,23 @@ tabClHierSpar <- function(input, output, session,
     #cat('rownames: ', rownames(in.dataWide()), '\n')
     
     # get cellIDs with cluster assignments based on dendrogram cut
-    loc.dt.cl = getDataClSpar(userFitDendHierSpar(), 
+    loc.dt.cl = LOCgetDataClSpar(dendCutColor(), 
                               input$inPlotHierSparNclust, 
                               getDataTrackObjLabUni_afterTrim())
-    
-    ####
-    ## PROBLEM!!!
-    ## the dendrogram from sparse hier clust doesn't contain cellID's
-    ## the following merge won't work...
-    ## No idea how to solve it
-    
+
+    # Keep only clusters manually specified in input$selClDisp
+    # The order of clusters in the input field doesn't matter!
+    if(input$chBclDisp) {
+      if (length(input$selClDisp) > 0) {
+        loc.dt.cl = loc.dt.cl[get(COLCL) %in% input$selClDisp]
+      } else {
+        return(NULL)
+      }
+    }
+
+    # add the column with cluster assignment to the main dataset
     loc.dt = merge(loc.dt, loc.dt.cl, by = COLID)
-    
-    # display only selected clusters
-    if(input$chBPlotHierSparClSel)
-      loc.dt = loc.dt[cl %in% input$inPlotHierSparClSel]
-    
+
     return(loc.dt)    
   })
   
@@ -467,7 +469,7 @@ tabClHierSpar <- function(input, output, session,
     },
     
     content = function(file) {
-      write.csv(x = getDataClSpar(userFitDendHierSpar(), 
+      write.csv(x = LOCgetDataClSpar(dendCutColor(), 
                                   input$inPlotHierSparNclust, 
                                   getDataTrackObjLabUni_afterTrim()), 
                 file = file, row.names = FALSE)
@@ -484,7 +486,7 @@ tabClHierSpar <- function(input, output, session,
     },
     
     content = function(file) {
-      saveRDS(object = userFitDendHierSpar(), file = file)
+      saveRDS(object = dendCutColor(), file = file)
     }
   )
   
@@ -493,31 +495,45 @@ tabClHierSpar <- function(input, output, session,
     cat(file = stderr(), 'data4clSparDistPlot: in\n')
     
     # get cell IDs with cluster assignments depending on dendrogram cut
-    loc.dend <- userFitDendHierSpar()
-    if (is.null(loc.dend)) {
-      cat(file = stderr(), 'plotClSparDist: loc.dend is NULL\n')
+    locDend <- dendCutColor()
+    if (is.null(locDend)) {
+      cat(file = stderr(), 'plotClSparDist: locDend is NULL\n')
       return(NULL)
     }
     
     # get cell id's with associated cluster numbers
-    loc.dt.cl = getDataClSpar(loc.dend, input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
+    locDTcl = LOCgetDataClSpar(locDend, input$inPlotHierSparNclust, getDataTrackObjLabUni_afterTrim())
     
     # get cellIDs with condition name
-    loc.dt.gr = getDataCond()
-    if (is.null(loc.dt.gr)) {
-      cat(file = stderr(), 'plotClSparDist: loc.dt.gr is NULL\n')
+    locDTgr = getDataCond()
+    if (is.null(locDTgr)) {
+      cat(file = stderr(), 'plotClSparDist: locDTgr is NULL\n')
       return(NULL)
     }
     
-    loc.dt = merge(loc.dt.cl, loc.dt.gr, by = 'id')
+    locDT = merge(locDTcl, 
+                   locDTgr, 
+                   by = COLID)
     
-    # display only selected clusters
-    if(input$chBPlotHierSparClSel)
-      loc.dt = loc.dt[cl %in% input$inPlotHierSparClSel]
+    # Keep only clusters manually specified in input$selClDisp
+    # The order of clusters in the input field doesn't matter!
+    if(input$chBclDisp) {
+      if (length(input$selClDisp) > 0) {
+        locDT = locDT[get(COLCL) %in% input$selClDisp]
+      } else {
+        return(NULL)
+      }
+    }
     
-    loc.dt.aggr = loc.dt[, .(nCells = .N), by = .(group, cl)]
+    # Count the number of time series per group, per cluster
+    locDTaggr = locDT[, 
+                      .(xxx = .N), 
+                      by = c(COLGR, 
+                             COLCL)]
     
-    return(loc.dt.aggr)
+    setnames(locDTaggr, "xxx", COLNTRAJ)
+    
+    return(locDTaggr)
     
   })
   
@@ -534,34 +550,34 @@ tabClHierSpar <- function(input, output, session,
     # Thanks to isolate all mods in the left panel are delayed 
     # until clicking the Plot button
     loc.dm = shiny::isolate(in.dataWide())
-    loc.hc = shiny::isolate(userFitHierSpar())
-    loc.dend = shiny::isolate(userFitDendHierSpar())
+    locHC = shiny::isolate(objHclust())
+    locDend = shiny::isolate(dendCutColor())
     
     shiny::validate(
       shiny::need(!is.null(loc.dm), "Nothing to plot. Load data first!"),
-      shiny::need(!is.null(loc.hc), "Did not cluster"),
-      shiny::need(!is.null(loc.dend), "Did not create dendrogram")
+      shiny::need(!is.null(locHC), "Did not cluster"),
+      shiny::need(!is.null(locDend), "Did not create dendrogram")
     )
     
     # Dummy dependency to redraw the heatmap without clicking Plot
     # when changing the number of clusters to highlight
-    loc.k = returnNclust()
+    locK = intNclust()
     
     # create column labels according to importance weights
-    loc.colnames = paste0(ifelse(loc.hc$ws == 0, "",
+    loc.colnames = paste0(ifelse(locHC$ws == 0, "",
                                  ifelse(
-                                   loc.hc$ws <= 0.1,
+                                   locHC$ws <= 0.1,
                                    "* ",
-                                   ifelse(loc.hc$ws <= 0.5, "** ", "*** ")
+                                   ifelse(locHC$ws <= 0.5, "** ", "*** ")
                                  )),  colnames(loc.dm))
     
     # add color to column labels according to importance weights
-    loc.colcol   = ifelse(loc.hc$ws == 0,
+    loc.colcol   = ifelse(locHC$ws == 0,
                           "black",
                           ifelse(
-                            loc.hc$ws <= 0.1,
+                            locHC$ws <= 0.1,
                             "blue",
-                            ifelse(loc.hc$ws <= 0.5, "green", "red")
+                            ifelse(locHC$ws <= 0.5, "green", "red")
                           ))
     
     loc.col.bounds = NULL
@@ -572,7 +588,7 @@ tabClHierSpar <- function(input, output, session,
     
     
     loc.p = LOCplotHMdend(loc.dm,
-                          loc.dend, 
+                          locDend, 
                           palette.arg = input$selectPlotHierSparPalette, 
                           palette.rev.arg = input$inPlotHierSparRevPalette, 
                           dend.show.arg = input$selectPlotHierSparDend, 
@@ -641,7 +657,7 @@ tabClHierSpar <- function(input, output, session,
            ifelse(input$selDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
            input$selLink, '.pdf')  
-    })
+  })
   
   # Sparse Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHierSparHM", createFnameHeatMap, plotHierSpar)
