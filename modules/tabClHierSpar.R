@@ -19,7 +19,7 @@ helpText.clHierSpar = c(alImportance = paste0("<p>Weight factors (WF) calculated
                         downDendSpar = "Download an RDS file with dendrogram object. Read later with readRDS() function.")
 
 # UI ----
-clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
+tabClHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
   ns <- NS(id)
   
   tagList(
@@ -37,14 +37,14 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
       column(
         3,
         selectInput(
-          ns("selectPlotHierSparDiss"),
+          ns("selDiss"),
           label = ("Dissimilarity measure"),
           choices = list("Euclidean" = "squared.distance",
                          "Manhattan" = "absolute.value"),
           selected = 1
         ),
         selectInput(
-          ns("selectPlotHierSparLinkage"),
+          ns("selLink"),
           label = ("Linkage method"),
           choices = list(
             "Average"  = "average",
@@ -191,7 +191,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
                actionButton(ns('butPlot'), 'Plot!'),
                downPlotUI(ns('downPlotHierSparHM'), "Download Plot"),
                withSpinner(plotOutput(ns('outPlotHierSpar')))
-
+               
       ),
       
       tabPanel('Cluster averages',
@@ -214,7 +214,7 @@ clustHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
 }
 
 # SERVER ----
-clustHierSpar <- function(input, output, session, 
+tabClHierSpar <- function(input, output, session, 
                           in.dataWide, 
                           in.data4trajPlot, 
                           in.data4stimPlot) {
@@ -319,15 +319,15 @@ clustHierSpar <- function(input, output, session,
       dm.t,
       wbounds = NULL,
       nperms = ifelse(input$inHierSparAdv, input$inPlotHierSparNperms, 1),
-      dissimilarity = input$selectPlotHierSparDiss
+      dissimilarity = input$selDiss
     )
     
     loc.hc <- HierarchicalSparseCluster(
       dists = perm.out$dists,
       wbound = perm.out$bestw,
       niter = ifelse(input$inHierSparAdv, input$inPlotHierSparNiter, 1),
-      method = input$selectPlotHierSparLinkage,
-      dissimilarity = input$selectPlotHierSparDiss
+      method = input$selLink,
+      dissimilarity = input$selDiss
     )
     
     #cat('=============\nloc.hc:\n')
@@ -344,7 +344,7 @@ clustHierSpar <- function(input, output, session,
     if (is.null(loc.hc)) {
       return()
     }
-
+    
     # number of clusters at which dendrogram is cut
     loc.k = input$inPlotHierSparNclust
     
@@ -373,12 +373,10 @@ clustHierSpar <- function(input, output, session,
       return(NULL)
     
     # obtain relations between cluster and colors from the dendrogram
-    loc.dt = LOCgetClCol(loc.dend, input$inPlotHierSparNclust)
+    locVecCol = LOCvecColWithCl(loc.dend, 
+                                input$inPlotHierSparNclust)
     
-    # set the key to allow subsetting
-    setkey(loc.dt, gr.no)
-    
-    return(loc.dt)
+    return(locVecCol)
   })
   
   
@@ -463,9 +461,9 @@ clustHierSpar <- function(input, output, session,
   output$downCellClSpar <- downloadHandler(
     filename = function() {
       paste0('clust_hierSpar_data_',
-             ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
+             ifelse(input$selDiss == "squared.distance", "euclidean", "manhattan"),
              '_',
-             input$selectPlotHierSparLinkage, '.csv')
+             input$selLink, '.csv')
     },
     
     content = function(file) {
@@ -480,9 +478,9 @@ clustHierSpar <- function(input, output, session,
   output$downDendSpar <- downloadHandler(
     filename = function() {
       paste0('clust_hierSpar_dend_',
-             input$selectPlotHierSparDiss,
+             input$selDiss,
              '_',
-             input$selectPlotHierSparLinkage, '.rds')
+             input$selLink, '.rds')
     },
     
     content = function(file) {
@@ -525,7 +523,7 @@ clustHierSpar <- function(input, output, session,
   
   # Function instead of reactive as per:
   # http://stackoverflow.com/questions/26764481/downloading-png-from-shiny-r
-  # This function is used to plot and to downoad a pdf
+  # This function is used to plot and to download a pdf
   plotHierSpar <- function() {
     cat(file = stderr(), 'plotHierSpar: in\n')
     
@@ -573,26 +571,26 @@ clustHierSpar <- function(input, output, session,
       loc.col.bounds = NULL
     
     
-    loc.p = LOCplotHeatmap(loc.dm,
-                           loc.dend, 
-                           palette.arg = input$selectPlotHierSparPalette, 
-                           palette.rev.arg = input$inPlotHierSparRevPalette, 
-                           dend.show.arg = input$selectPlotHierSparDend, 
-                           key.show.arg = input$selectPlotHierSparKey, 
-                           margin.x.arg = input$inPlotHierSparMarginX, 
-                           margin.y.arg = input$inPlotHierSparMarginY, 
-                           nacol.arg = input$inPlotHierSparNAcolor, 
-                           colCol.arg = loc.colcol,
-                           labCol.arg = loc.colnames,
-                           font.row.arg = input$inPlotHierSparFontX, 
-                           font.col.arg = input$inPlotHierSparFontY, 
-                           breaks.arg = loc.col.bounds,
-                           title.arg = paste(
-                             "Distance measure: ",
-                             input$selectPlotHierSparDiss,
-                             "\nLinkage method: ",
-                             input$selectPlotHierSparLinkage
-                           ))
+    loc.p = LOCplotHMdend(loc.dm,
+                          loc.dend, 
+                          palette.arg = input$selectPlotHierSparPalette, 
+                          palette.rev.arg = input$inPlotHierSparRevPalette, 
+                          dend.show.arg = input$selectPlotHierSparDend, 
+                          key.show.arg = input$selectPlotHierSparKey, 
+                          margin.x.arg = input$inPlotHierSparMarginX, 
+                          margin.y.arg = input$inPlotHierSparMarginY, 
+                          nacol.arg = input$inPlotHierSparNAcolor, 
+                          colCol.arg = loc.colcol,
+                          labCol.arg = loc.colnames,
+                          font.row.arg = input$inPlotHierSparFontX, 
+                          font.col.arg = input$inPlotHierSparFontY, 
+                          breaks.arg = loc.col.bounds,
+                          title.arg = paste(
+                            "Distance measure: ",
+                            input$selDiss,
+                            "\nLinkage method: ",
+                            input$selLink
+                          ))
     
     return(loc.p)
   }
@@ -604,47 +602,46 @@ clustHierSpar <- function(input, output, session,
   createFnameHeatMap = reactive({
     
     paste0('clust_hierSparse_heatMap_',
-           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
+           ifelse(input$selDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
-           input$selectPlotHierSparLinkage,
+           input$selLink,
            '.png')
   })
   
   createFnameTrajPlot = reactive({
     
     paste0('clust_hierSparse_tCourses_',
-           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
+           ifelse(input$selDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
-           input$selectPlotHierSparLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
   createFnameRibbonPlot = reactive({
     
     paste0('clust_hierSparse_tCoursesMeans_',
-           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
+           ifelse(input$selDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
-           input$selectPlotHierSparLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
   createFnamePsdPlot = reactive({
     
     paste0('clust_hierSparse_tCoursesPsd_',
-           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
+           ifelse(input$selDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
-           input$selectPlotHierSparLinkage, 
+           input$selLink, 
            '.pdf')
   })
   
   createFnameDistPlot = reactive({
     
     paste0('clust_hierSparse_clDist_',
-           ifelse(input$selectPlotHierSparDiss == "squared.distance", "euclidean", "manhattan"),
+           ifelse(input$selDiss == "squared.distance", "euclidean", "manhattan"),
            '_',
-           input$selectPlotHierSparLinkage, '.pdf')  })
-  
-  
+           input$selLink, '.pdf')  
+    })
   
   # Sparse Hierarchical - Heat Map - download pdf
   callModule(downPlot, "downPlotHierSparHM", createFnameHeatMap, plotHierSpar)
@@ -684,7 +681,7 @@ clustHierSpar <- function(input, output, session,
   output$outPlotHierSpar <- renderPlot({
     plotHierSpar()
   }, height = getPlotHierSparHeatMapHeight)
-
+  
   # Pop-overs ----
   
   addPopover(session, 
@@ -692,7 +689,7 @@ clustHierSpar <- function(input, output, session,
              title = "Variable importance",
              content = helpText.clHierSpar[["alImportance"]],
              trigger = "click")
-
+  
 }
 
 
