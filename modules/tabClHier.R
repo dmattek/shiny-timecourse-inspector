@@ -122,7 +122,7 @@ tabClHierUI <- function(id, label = "Hierarchical Clustering") {
       
       tabPanel('Heatmap',
                br(),
-               plotHeatmapUI(ns('plotHeatmap'))),
+               modPlotHMdendUI(ns('modPlotHMdend'))),
       
       tabPanel('Cluster averages',
                br(),
@@ -626,7 +626,7 @@ tabClHier <- function(input, output, session,
   ## Modules ----
   
   # heatmap plot module 
-  callModule(plotHeatmap, 'plotHeatmap', 
+  callModule(modPlotHMdend, 'modPlotHMdend', 
              inDataWide = dataWide, 
              inDend = dendCutColor,
              inMeth = createClustMethList)
