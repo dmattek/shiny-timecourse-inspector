@@ -53,7 +53,6 @@ source('modules/plotAUC.R')
 source('modules/plotDist.R')
 source('modules/plotHeatmap.R')
 source('modules/plotHeatmapDend.R')
-#source('modules/plotHeatmapDendSpar.R') # coming soon
 source('modules/plotPCA.R')
 source('modules/plotSilh.R')
 source('modules/plotClDist.R')

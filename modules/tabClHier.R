@@ -327,16 +327,15 @@ tabClHier <- function(input, output, session,
     }
     
     # calculate hierarchical clustering
-    locHc = objHclust()
-    
-    if (is.null(locHc)) {
+    locHC = objHclust()
+    if (is.null(locHC)) {
       return(NULL)
     }
     
     # number of clusters at which dendrogram is cut
     locK = intNclust()
     
-    locDend = LOCdendCutColor(inHclust = locHc,
+    locDend = LOCdendCutColor(inHclust = locHC,
                               inK = locK,
                               inColPal = input$selPalDend)
     
