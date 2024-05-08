@@ -24,7 +24,7 @@ modPlotHMUI <- function(id, label = "Heatmap") {
                  selected = 'Spectral'
                ),
                checkboxInput(ns('inPlotHMRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
-               checkboxInput(ns('selectPlotHMyaxisLabels'), 'Plot y-axis labels', TRUE),
+               checkboxInput(ns('selectPlotHMyaxisLabels'), 'Plot y-axis labels', FALSE),
         ),
         column(3,
                sliderInput(

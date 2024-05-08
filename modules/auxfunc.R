@@ -1060,9 +1060,6 @@ LOCrotatedAxisElementText = function(angle,
 #' # The Colour Blind palette has only 10 colours; here the 11th will be recycled
 #' LOCreturnTableauPalette("Color Blind", 11)
 LOCreturnTableauPalette = function(inPalName, inNcolors = NULL, inDeb = F) {
-  
-  cat("LOCreturnTableauPalette::inPalName", inPalName, "\n")
-  cat("LOCreturnTableauPalette::inNcolors", inNcolors, "\n")
 
   # get the max N of colours in the palette
   locMaxNcol = attr(ggthemes::tableau_color_pal(inPalName), "max_n")
