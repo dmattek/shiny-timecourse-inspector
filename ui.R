@@ -180,6 +180,8 @@ shinyUI(fluidPage(
             "Plot time series: averages per group or individual"
           ),
           br(),
+          modSelTrackNoDuplUI('returnTracksNoDupl'),
+          modSelTrackLenUI('returnTracksLen'),
           modSelOutliersUI('returnOutlierIDs'),
           tabsetPanel(
             tabPanel("Averages",
@@ -205,6 +207,12 @@ shinyUI(fluidPage(
               
               br(),
               modTrajPlotUI('modTrajPlot')
+            ),
+            
+            tabPanel(
+              "Heatmap",
+              br(),
+              modPlotHMUI('modPlotHM')
             ),
             
             tabPanel(
@@ -242,7 +250,7 @@ shinyUI(fluidPage(
         # sparse hierarchical clustering package sparcl temporarily unavailable from CRAN
         tabPanel(
            'Hier. Sparse',
-           clustHierSparUI('tabClHierSpar')
+           tabClHierSparUI('tabClHierSpar')
         ),
         
         # cluster validation

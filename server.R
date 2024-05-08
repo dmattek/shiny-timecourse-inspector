@@ -895,8 +895,14 @@ shinyServer(function(input, output, session) {
     }
   )
   
+  # Removing duplicate tracks
+  dataLongTracksNoDupl = callModule(modSelTrackNoDupl, 'returnTracksNoDupl', dataLong)
+  
+  # Selecting tracks by length
+  dataLongTracksLong = callModule(modSelTrackLen, 'returnTracksLen', dataLongTracksNoDupl)
+    
   # Taking out outliers 
-  dataLongNoOut = callModule(modSelOutliers, 'returnOutlierIDs', dataLong)
+  dataLongNoOut = callModule(modSelOutliers, 'returnOutlierIDs', dataLongTracksLong)
   
   # Trajectory plotting - ribbon
   callModule(modTrajRibbonPlot, 'modTrajRibbon', 
@@ -912,7 +918,13 @@ shinyServer(function(input, output, session) {
              in.data.stim = dataStim,
              in.fname = function() {return(FPDFTCSINGLE)},
              in.ylab = createYaxisLabel)
-  
+
+  # Trajectory plotting - heatmap
+  callModule(modPlotHM, 'modPlotHM', 
+             in.data = dataLongNoOut, 
+             in.fname = function() {return(FPDFTCHM)})
+
+    
   # Trajectory plotting - PSD
   callModule(modPSDPlot, 'modPSDPlot',
              in.data = dataLongNoOut,
@@ -941,8 +953,10 @@ shinyServer(function(input, output, session) {
              inDataStim = dataStim)
   
   ##### Sparse hierarchical clustering using sparcl
-  callModule(clustHierSpar, 'tabClHierSpar', 
-             dataWide, dataLongNoOut, dataStim)
+  callModule(tabClHierSpar, 'tabClHierSpar', 
+             in.dataWide = dataWide, 
+             in.data4trajPlot = dataLongNoOut, 
+             in.data4stimPlot = dataStim)
   
   ##### Hierarchical validation
   callModule(tabClValid, 'tabClValid', 

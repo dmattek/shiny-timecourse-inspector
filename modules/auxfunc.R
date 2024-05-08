@@ -70,9 +70,11 @@ COLAUC = "AUC"
 
 # file names
 FCSVOUTLIERS = 'outliers.csv'
+FCSVREMTRACKS= 'removedTracks.csv'
 FCSVTCCLEAN  = 'tCoursesProcessed.csv'
 FPDFTCMEAN   = "tCoursesMeans.pdf"
 FPDFTCSINGLE = "tCourses.pdf"
+FPDFTCHM     = "tCoursesHM.pdf"
 FPDFTCPSD    = 'tCoursesPsd.pdf'
 FPDFBOXAUC   = 'distributionAUC.pdf'
 FPDFBOXTP    = 'distributionTP.pdf'
@@ -809,7 +811,7 @@ LOCnbclust <-
 # in.k - level at which dendrogram should be cut
 # in.id - vector of cell id's
 
-getDataClSpar = function(in.dend, in.k, in.id) {
+LOCgetDataClSpar = function(in.dend, in.k, in.id) {
   cat(file = stderr(), 'auxfunc:getDataClSpar \n')
   
   loc.m = dendextend::cutree(in.dend, 
@@ -1059,6 +1061,9 @@ LOCrotatedAxisElementText = function(angle,
 #' LOCreturnTableauPalette("Color Blind", 11)
 LOCreturnTableauPalette = function(inPalName, inNcolors = NULL, inDeb = F) {
   
+  cat("LOCreturnTableauPalette::inPalName", inPalName, "\n")
+  cat("LOCreturnTableauPalette::inNcolors", inNcolors, "\n")
+
   # get the max N of colours in the palette
   locMaxNcol = attr(ggthemes::tableau_color_pal(inPalName), "max_n")
   
@@ -1155,11 +1160,11 @@ LOCplotTraj = function(dt.arg,
   
   # aux.label12 are required for plotting XY positions in the tooltip of the interactive (plotly) graph
   p.tmp = ggplot(dt.arg,
-                 aes_string(
-                   x = x.arg,
-                   y = y.arg,
-                   group = group.arg,
-                   label = group.arg
+                 aes(
+                   x = get(x.arg),
+                   y = get(y.arg),
+                   group = get(group.arg),
+                   label = get(group.arg)
                  ))
   
   if (is.null(line.col.arg)) {
@@ -1169,7 +1174,7 @@ LOCplotTraj = function(dt.arg,
   }
   else {
     p.tmp = p.tmp +
-      geom_line(aes_string(colour = line.col.arg),
+      geom_line(aes(colour = get(line.col.arg)),
                 alpha = 0.5,
                 size = 0.5) +
       scale_color_manual(
@@ -1214,7 +1219,7 @@ LOCplotTraj = function(dt.arg,
   if ('mean' %in% loc.stat)
     p.tmp = p.tmp +
     stat_summary(
-      aes_string(y = y.arg, group = 1),
+      aes(y = get(y.arg), group = 1),
       fun = mean,
       na.rm = T,
       colour = 'red',
@@ -1227,7 +1232,7 @@ LOCplotTraj = function(dt.arg,
   if ('CI' %in% loc.stat)
     p.tmp = p.tmp +
     stat_summary(
-      aes_string(y = y.arg, group = 1),
+      aes(y = get(y.arg), group = 1),
       fun.data = mean_cl_normal,
       na.rm = T,
       colour = 'red',
@@ -1239,7 +1244,7 @@ LOCplotTraj = function(dt.arg,
   if ('SE' %in% loc.stat)
     p.tmp = p.tmp +
     stat_summary(
-      aes_string(y = y.arg, group = 1),
+      aes(y = get(y.arg), group = 1),
       fun.data = mean_se,
       na.rm = T,
       colour = 'red',
@@ -1259,12 +1264,12 @@ LOCplotTraj = function(dt.arg,
   if (!is.null(dt.stim.arg)) {
     p.tmp = p.tmp + geom_segment(
       data = dt.stim.arg,
-      aes_string(
-        x = x.stim.arg[1],
-        xend = x.stim.arg[2],
-        y = y.stim.arg[1],
-        yend = y.stim.arg[2],
-        group = 'group'
+      aes(
+        x = get(x.stim.arg[1]),
+        xend = get(x.stim.arg[2]),
+        y = get(y.stim.arg[1]),
+        yend = get(y.stim.arg[2]),
+        group = get('group')
       ),
       colour = rhg_cols[[3]],
       size = stim.bar.width.arg
@@ -1532,21 +1537,23 @@ LOCggplotScat = function(dt.arg,
 }
 
 
-LOCplotHeatmap <- function(data.arg,
-                           dend.arg,
-                           palette.arg,
-                           palette.rev.arg = TRUE,
-                           dend.show.arg = TRUE,
-                           key.show.arg = TRUE,
-                           margin.x.arg = 5,
-                           margin.y.arg = 20,
-                           nacol.arg = 0.5,
-                           colCol.arg = NULL,
-                           labCol.arg = NULL,
-                           font.row.arg = 1,
-                           font.col.arg = 1,
-                           breaks.arg = NULL,
-                           title.arg = 'Clustering') {
+# Wrapper for gplots::heatmap.2
+# Plots a heatmap with dendrogram
+LOCplotHMdend <- function(data.arg,
+                          dend.arg,
+                          palette.arg,
+                          palette.rev.arg = TRUE,
+                          dend.show.arg = TRUE,
+                          key.show.arg = TRUE,
+                          margin.x.arg = 5,
+                          margin.y.arg = 20,
+                          nacol.arg = 0.5,
+                          colCol.arg = NULL,
+                          labCol.arg = NULL,
+                          font.row.arg = 1,
+                          font.col.arg = 1,
+                          breaks.arg = NULL,
+                          title.arg = 'Clustering') {
   loc.n.colbreaks = 99
   
   if (palette.rev.arg)
@@ -1598,6 +1605,65 @@ LOCplotHeatmap <- function(data.arg,
     else
       seq(breaks.arg[1], breaks.arg[2], length.out = loc.n.colbreaks + 1)
   )
+  
+  return(loc.p)
+}
+
+# Wrapper for ggplot2::geom_tile
+# Plot a plain heatmap (no clustering, dendrogram, etc.)
+LOCplotHM <- function(dt.arg,
+                      # input data table
+                      x.arg,
+                      # string with column name for x-axis
+                      y.arg,
+                      # string with column name for y-axis
+                      z.arg,
+                      # string with column name for filling tiles with color
+                      facet.arg,
+                      # string with column name for facetting
+                      facet.ncol.arg = 2,
+                      # default number of facet columns
+                      facet.color.arg = NULL,
+                      # vector with list of colours for adding colours to facet names (currently a horizontal line on top of the facet is drawn)
+                      xlab.arg = NULL,
+                      # string with x-axis label
+                      ylab.arg = NULL,
+                      # string with y-axis label
+                      xlim.arg = NULL,
+                      # limits of x-axis; for visualisation only, not trimmimng data
+                      ylim.arg = NULL,
+                      # limits of y-axis; for visualisation only, not trimmimng data
+                      palette.arg,
+                      palette.rev.arg = TRUE) {
+  
+  loc.n.colbreaks = 99
+  
+  if (palette.rev.arg)
+    my_palette <-
+      rev(colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks))
+  else
+    my_palette <-
+      colorRampPalette(brewer.pal(9, palette.arg))(n = loc.n.colbreaks)
+  
+  loc.p <- ggplot(dt.arg,
+                  aes(x = get(x.arg),
+                      y = get(y.arg),
+                      fill = get(z.arg))) +
+    geom_tile() +
+    scale_fill_gradientn("Meas.",
+                         colors = my_palette) +
+    facet_wrap(as.formula(paste("~", facet.arg)),
+               ncol = facet.ncol.arg,
+               scales = "free") +
+    xlab(xlab.arg) +
+    ylab(ylab.arg) +
+    LOCggplotTheme(
+      in.font.base = PLOTFONTBASE,
+      in.font.axis.text = PLOTFONTAXISTEXT,
+      in.font.axis.title = PLOTFONTAXISTITLE,
+      in.font.strip = PLOTFONTFACETSTRIP,
+      in.font.legend = PLOTFONTLEGEND
+    )
   
   return(loc.p)
 }
