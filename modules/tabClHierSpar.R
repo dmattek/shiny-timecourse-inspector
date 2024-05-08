@@ -110,87 +110,101 @@ tabClHierSparUI <- function(id, label = "Sparse Hierarchical Clustering") {
     tabsetPanel(
       tabPanel('Heatmap',
                br(),
-               fluidRow(
-                 column(3,
-                        selectInput(
-                          ns("selectPlotHierSparPalette"),
-                          label = "Heatmap\'s colour palette",
-                          choices = l.col.pal,
-                          selected = 'Spectral'
-                        ),
-                        checkboxInput(ns('inPlotHierSparRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
-                        checkboxInput(ns('selectPlotHierSparKey'), 'Plot colour key', TRUE),
-                        
-                        checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
-                        
-                        fluidRow(
-                          column(3,
-                                 uiOutput(ns('uiSetColBoundsLow'))
+               checkboxInput(ns('chBplotStyle'),
+                             'Appearance',
+                             FALSE),
+               conditionalPanel(
+                 condition = "input.chBplotStyle",
+                 ns = ns,
+                 fluidRow(
+                   column(3,
+                          selectInput(
+                            ns("selectPlotHierSparPalette"),
+                            label = "Heatmap\'s colour palette",
+                            choices = l.col.pal,
+                            selected = 'Spectral'
                           ),
-                          column(3,
-                                 uiOutput(ns('uiSetColBoundsHigh'))
+                          checkboxInput(ns('inPlotHierSparRevPalette'), 'Reverse heatmap\'s colour palette', TRUE),
+                          checkboxInput(ns('selectPlotHierSparKey'), 'Plot colour key', TRUE),
+                          
+                          checkboxInput(ns('chBsetColBounds'), 'Set bounds for colour scale', FALSE),
+                          
+                          fluidRow(
+                            column(3,
+                                   uiOutput(ns('uiSetColBoundsLow'))
+                            ),
+                            column(3,
+                                   uiOutput(ns('uiSetColBoundsHigh'))
+                            )
                           )
-                        )
-                 ),
-                 column(3,
-                        checkboxInput(ns('selectPlotHierSparDend'), 'Plot dendrogram and re-order samples', TRUE),
-                        sliderInput(
-                          ns('inPlotHierSparNAcolor'),
-                          'Shade of grey for NA values',
-                          min = 0,
-                          max = 1,
-                          value = 0.8,
-                          step = .1,
-                          ticks = TRUE
-                        )
-                        
-                 ),
-                 column(3,
-                        numericInput(
-                          ns('inPlotHierSparMarginX'),
-                          'Bottom margin',
-                          5,
-                          min = 1,
-                          width = "120px"
-                        ),
-                        numericInput(
-                          ns('inPlotHierSparFontY'),
-                          'Font size column labels',
-                          1,
-                          min = 0,
-                          width = "180px",
-                          step = 0.1
-                        ),
-                        numericInput(ns('inPlotHierSparHeatMapHeight'), 
-                                     'Display plot height [px]', 
-                                     value = 600, 
-                                     min = 100,
-                                     step = 50, 
-                                     width = "180px")
-                        
-                 ),
-                 column(3,
-                        numericInput(
-                          ns('inPlotHierSparMarginY'),
-                          'Right margin',
-                          20,
-                          min = 1,
-                          width = "120px"
-                        ),
-                        numericInput(
-                          ns('inPlotHierSparFontX'),
-                          'Font size row labels',
-                          1,
-                          min = 0,
-                          width = "180px",
-                          step = 0.1
-                        )
+                   ),
+                   column(3,
+                          sliderInput(
+                            ns('inPlotHierSparNAcolor'),
+                            'Shade of grey for NA values',
+                            min = 0,
+                            max = 1,
+                            value = 0.8,
+                            step = .1,
+                            ticks = TRUE
+                          ),
+                          checkboxInput(ns('selectPlotHierSparDend'), 'Plot dendrogram and re-order samples', TRUE),
+                   ),
+                   column(3,
+                          numericInput(
+                            ns('inPlotHierSparMarginX'),
+                            'Bottom margin',
+                            5,
+                            min = 1,
+                            width = "120px"
+                          ),
+                          numericInput(
+                            ns('inPlotHierSparFontY'),
+                            'Font size column labels',
+                            1,
+                            min = 0,
+                            width = "180px",
+                            step = 0.1
+                          ),
+                          numericInput(ns('inPlotHierSparHeatMapHeight'), 
+                                       'Display plot height [px]', 
+                                       value = 600, 
+                                       min = 100,
+                                       step = 50, 
+                                       width = "180px")
+                          
+                   ),
+                   column(3,
+                          numericInput(
+                            ns('inPlotHierSparMarginY'),
+                            'Right margin',
+                            20,
+                            min = 1,
+                            width = "120px"
+                          ),
+                          numericInput(
+                            ns('inPlotHierSparFontX'),
+                            'Font size row labels',
+                            1,
+                            min = 0,
+                            width = "180px",
+                            step = 0.1
+                          )
+                   )
                  )
                ),
                
-               br(),
+               checkboxInput(ns('chBdownload'),
+                             'Download',
+                             FALSE),
+               conditionalPanel(
+                 condition = "input.chBdownload",
+                 ns = ns,
+                 
+                 downPlotUI(ns('downPlotHMspar'), "")
+               ),
+
                actionButton(ns('butPlot'), 'Plot!'),
-               downPlotUI(ns('downPlotHierSparHM'), "Download Plot"),
                withSpinner(plotOutput(ns('outPlotHierSpar')))
                
       ),
@@ -425,9 +439,9 @@ tabClHierSpar <- function(input, output, session,
     
     # get cellIDs with cluster assignments based on dendrogram cut
     loc.dt.cl = LOCgetDataClSpar(dendCutColor(), 
-                              input$inPlotHierSparNclust, 
-                              getDataTrackObjLabUni_afterTrim())
-
+                                 input$inPlotHierSparNclust, 
+                                 getDataTrackObjLabUni_afterTrim())
+    
     # Keep only clusters manually specified in input$selClDisp
     # The order of clusters in the input field doesn't matter!
     if(input$chBclDisp) {
@@ -437,10 +451,10 @@ tabClHierSpar <- function(input, output, session,
         return(NULL)
       }
     }
-
+    
     # add the column with cluster assignment to the main dataset
     loc.dt = merge(loc.dt, loc.dt.cl, by = COLID)
-
+    
     return(loc.dt)    
   })
   
@@ -470,8 +484,8 @@ tabClHierSpar <- function(input, output, session,
     
     content = function(file) {
       write.csv(x = LOCgetDataClSpar(dendCutColor(), 
-                                  input$inPlotHierSparNclust, 
-                                  getDataTrackObjLabUni_afterTrim()), 
+                                     input$inPlotHierSparNclust, 
+                                     getDataTrackObjLabUni_afterTrim()), 
                 file = file, row.names = FALSE)
     }
   )
@@ -512,8 +526,8 @@ tabClHierSpar <- function(input, output, session,
     }
     
     locDT = merge(locDTcl, 
-                   locDTgr, 
-                   by = COLID)
+                  locDTgr, 
+                  by = COLID)
     
     # Keep only clusters manually specified in input$selClDisp
     # The order of clusters in the input field doesn't matter!
@@ -660,7 +674,7 @@ tabClHierSpar <- function(input, output, session,
   })
   
   # Sparse Hierarchical - Heat Map - download pdf
-  callModule(downPlot, "downPlotHierSparHM", createFnameHeatMap, plotHierSpar)
+  callModule(downPlot, "downPlotHMspar", createFnameHeatMap, plotHierSpar)
   
   # plot individual trajectories withina cluster  
   callModule(modTrajPlot, 'modPlotHierSparTraj', 
