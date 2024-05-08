@@ -123,7 +123,7 @@ modSelOutliers = function(input, output, session, in.data) {
     nOutlierTpts = 0
   )
   
-  # reactive vector with cell ids
+  # reactive vector with cell ids (id = COLID)
   vOut = reactiveValues(
     id = NULL
   )
@@ -143,7 +143,7 @@ modSelOutliers = function(input, output, session, in.data) {
   output$downOutlierCSV <- downloadHandler(
     filename = FCSVOUTLIERS,
     content = function(file) {
-      loc.dt = vOut[['id']]
+      loc.dt = vOut[[COLID]]
       
       if (is.null(loc.dt))
         return(NULL)
@@ -338,7 +338,7 @@ modSelOutliers = function(input, output, session, in.data) {
       loc.out[, y.sc := NULL]
       
       # store a vector of outlier timepoints with the corresponding IDs
-      vOut[['id']] = loc.outpts
+      vOut[[COLID]] = loc.outpts
     } else {
       # no outlier removal
       # !(input$numOutliersPerc > 0)
