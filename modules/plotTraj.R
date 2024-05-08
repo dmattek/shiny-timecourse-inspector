@@ -83,7 +83,7 @@ modTrajPlotUI =  function(id, label = "Plot Individual Time Series") {
       ),
       
     ),
-
+    
     fluidRow(
       column(2,
              actionButton(ns('butPlotTraj'), 'Plot!')),
@@ -250,7 +250,7 @@ modTrajPlot = function(input, output, session,
   })
   
   ## Plotting ====
-
+  
   output$outPlotTraj <- renderPlot({
     
     loc.p = plotTraj()
@@ -382,7 +382,7 @@ modTrajPlot = function(input, output, session,
   }
   
   ## Download ----
-
+  
   # Trajectory plot - download pdf
   callModule(downPlot, "downPlotTraj", 
              in.fname, 
