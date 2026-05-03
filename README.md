@@ -16,6 +16,8 @@
   * [Clustering](#clustering)
     + [Cluster validation](#cluster-validation)
 
+A TCI R package can be found [here](https://github.com/dmattek/TCourseInspector-rpkg).
+
 ## What is TCI?
 Time Course Inspector (TCI) is a software for visualization, analysis and clustering of time-series. The driving philosophy is to provide a simple, yet flexible GUI to perform various time-series analyses without any programming knowledge. TCI is written as an R shiny web app which provides a reactive, fast and customizable framework to produce elegant visualizations.
 
@@ -38,6 +40,12 @@ If you use TCI for your work, please cite the following paper:
 Dobrzyński, M., Jacques, M. A., & Pertz, O. (2019). Mining single-cell time-series datasets with Time Course Inspector. Bioinformatics, Volume 36, Issue 6, 15 March 2020, Pages 1968–1969.
 ```
 [Link to DOI](https://doi.org/10.1093/bioinformatics/btz846).
+
+```
+Dobrzyński, M., Jacques, M. A., & Pertz, O. (2022). Mining of Single-Cell Signaling Time-Series for Dynamic Phenotypes with Clustering, in TGF-beta Signaling: Methods and Protocols, Springer, pp 183–206.
+```
+[Link to DOI](https://doi.org/10.1007/978-1-0716-2277-3_13).
+
 
 ## Getting started
 
