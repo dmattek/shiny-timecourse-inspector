@@ -249,9 +249,8 @@ modAUCplot = function(input, output, session,
     cat(file = stderr(), 'plotBox:dt not NULL\n')
     
     p.out = ggplot(loc.dt, 
-                   aes_string(x = sprintf("factor(%s)", in.cols$meas.x), 
-                                      y = in.cols$meas.y)) 
-    
+                   aes(x = as.factor(get(in.cols$meas.x)), 
+                       y = get(in.cols$meas.y))) 
     
     if(input$chBplotTypeDot) {
       # calculate bin width for dot-plot based on nBins provided in the UI
