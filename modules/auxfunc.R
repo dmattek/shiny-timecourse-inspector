@@ -1339,21 +1339,23 @@ LOCplotTrajRibbon = function(dt.arg,
                              ylab.arg = NULL,
                              plotlab.arg = NULL) {
   
-  p.tmp = ggplot(dt.arg, aes_string(x = x.arg, 
-                                    group = group.arg))
+  p.tmp = ggplot(dt.arg, 
+                 aes(x = get(x.arg), 
+                     group = get(group.arg)))
   
   if (!is.null(ribbon.lohi.arg))
     p.tmp = p.tmp +
       geom_ribbon(
-        aes_string(ymin = ribbon.lohi.arg[1], 
-                   ymax = ribbon.lohi.arg[2]),
+        aes(ymin = get(ribbon.lohi.arg[1]), 
+            ymax = get(ribbon.lohi.arg[2])),
         fill = ribbon.fill.arg,
         alpha = ribbon.alpha.arg
       )
   
   p.tmp = p.tmp + 
-    geom_line(aes_string(y = y.arg, 
-                         colour = group.arg), size = 1.25)
+    geom_line(aes(y = get(y.arg), 
+                  colour = get(group.arg)), 
+              size = 1.25)
   
   
   # plot stimulation bars underneath time series
@@ -1363,12 +1365,11 @@ LOCplotTrajRibbon = function(dt.arg,
     p.tmp = p.tmp + 
       geom_segment(
         data = dt.stim.arg,
-        aes_string(
-          x = x.stim.arg[1],
-          xend = x.stim.arg[2],
-          y = y.stim.arg[1],
-          yend = y.stim.arg[2]
-        ),
+        aes(
+          x = get(x.stim.arg[1]),
+          xend = get(x.stim.arg[2]),
+          y = get(y.stim.arg[1]),
+          yend = get(y.stim.arg[2])),
         colour = rhg_cols[[3]],
         size = stim.bar.width.arg,
         group = 1
@@ -1421,7 +1422,9 @@ LOCplotPSD <- function(dt.arg,
     )))
   }
   
-  p.tmp <- ggplot(dt.arg, aes_string(x = x.arg, y = y.arg)) +
+  p.tmp <- ggplot(dt.arg, 
+                  aes(x = get(x.arg), 
+                      y = get(y.arg))) +
     geom_line() +
     geom_rug(sides = "b",
              alpha = 1,
