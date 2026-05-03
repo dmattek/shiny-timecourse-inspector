@@ -16,6 +16,8 @@
   * [Clustering](#clustering)
     + [Cluster validation](#cluster-validation)
 
+## R Package
+
 A TCI R package can be found [here](https://github.com/dmattek/TCourseInspector-rpkg).
 
 ## What is TCI?
@@ -52,6 +54,11 @@ Dobrzyński, M., Jacques, M. A., & Pertz, O. (2022). Mining of Single-Cell Signa
 The app can be run either locally or on a server. The installation process is detailed below.
 
 ### Running the app locally
+
+The app can be installed as an R package from [this repository](https://github.com/dmattek/TCourseInspector-rpkg).
+By installing TCI as an R package, all package dependencies are taken care of automatically. 
+Installing from this repository, requires the steps described below.
+
 
 #### Prerequisites
 TCI works on all major OS (Windows, macOS, standard Linux distributions) and only requires a recent R installation on which the standard package `shiny` is installed. Instructions to install R can be found on the official [R-project website](https://www.r-project.org/). Once R is installed, one can install the `shiny` package by typing: `install.packages("shiny")` in the R console.
