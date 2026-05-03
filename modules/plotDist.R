@@ -312,15 +312,17 @@ modDistPlot = function(input, output, session,
       loc.par.dodge <- position_dodge(width = input$slPlotBoxDodge)
       
       # Color fill for all oplots except line, in which groups are plotted per facet
-      p.out = ggplot(loc.dt, aes_string(x = sprintf("factor(%s)", in.cols$meas.x), 
-                                        y = in.cols$meas.y,
-                                        fill = in.cols$group)) 
+      p.out = ggplot(loc.dt, 
+                     aes(x = as.factor(get(in.cols$meas.x)), 
+                         y = get(in.cols$meas.y),
+                         fill = get(in.cols$group))) 
       
     }
     else {
       loc.par.dodge = position_dodge(width = 1)
-      p.out = ggplot(loc.dt, aes_string(x = sprintf("factor(%s)", in.cols$meas.x), 
-                                        y = in.cols$meas.y)) 
+      p.out = ggplot(loc.dt, 
+                     aes(x = as.factor(get(in.cols$meas.x)), 
+                         y = get(in.cols$meas.y))) 
       
     }
     
@@ -345,7 +347,7 @@ modDistPlot = function(input, output, session,
     
     if(input$chBplotTypeLine)
       p.out = p.out + 
-      geom_path(aes_string(group = in.cols$id),
+      geom_path(aes(group = get(in.cols$id)),
                 alpha = input$slPlotLineAlpha) +
       facet_wrap(as.formula(paste("~", in.cols$group)))
     
